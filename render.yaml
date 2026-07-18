@@ -1,0 +1,33 @@
+# Render Blueprint — one-click backend + Postgres.
+# Docs: https://render.com/docs/blueprint-spec
+# The Next.js app is deployed as a Web Service here (SSR + API routes need a
+# Node server). If you instead host the frontend on Vercel, point Vercel at
+# this same repo and use Render ONLY for the database (delete the web service).
+services:
+  - type: web
+    name: electrocup-web
+    runtime: node
+    plan: starter
+    buildCommand: npm install && npm run build && npm run db:migrate && npm run db:seed
+    startCommand: npm run start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: electrocup-db
+          property: connectionString
+      - key: PGSSL
+        value: "true"
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: NODE_VERSION
+        value: "20"
+
+databases:
+  - name: electrocup-db
+    plan: starter
+    databaseName: electrocup
+    user: electrocup

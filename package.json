@@ -1,0 +1,29 @@
+{
+  "name": "electrocup",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ELECTROCUP 26 — NexGen PLC. Next.js full-stack tournament platform (landing, phone-OTP registration, admin dashboard, bracket/standings/profiles).",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:migrate": "node scripts/migrate.mjs",
+    "db:seed": "node scripts/seed.mjs",
+    "db:reset": "node scripts/migrate.mjs && node scripts/seed.mjs"
+  },
+  "dependencies": {
+    "next": "14.2.5",
+    "pg": "8.12.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "20.14.10",
+    "@types/pg": "8.11.6",
+    "@types/react": "18.3.3",
+    "@types/react-dom": "18.3.0",
+    "dotenv": "16.4.5",
+    "typescript": "5.5.3"
+  }
+}
