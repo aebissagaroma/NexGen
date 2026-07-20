@@ -5,7 +5,7 @@ import * as React from 'react';
 import { PageHeader, PageTitle } from '@/components/PageHeader';
 import { CLUBS } from '@/data/static';
 
-interface Reg { id: string; full_name: string; phone: string; gamertag: string; club_code: string; club_name: string; platform: string | null; city: string | null; payment_status: string; status: string; created_at: string; }
+interface Reg { id: string; full_name: string; email: string; gamertag: string; club_code: string; club_name: string; platform: string | null; city: string | null; payment_status: string; status: string; created_at: string; }
 
 export default function DashboardPage() {
   const [authed, setAuthed] = React.useState<boolean | null>(null);
@@ -64,7 +64,7 @@ export default function DashboardPage() {
         </div>
 
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
-          <input className="field" style={{ maxWidth: 280 }} placeholder="Search name, gamertag, phone…" value={q} onChange={(e) => setQ(e.target.value)} />
+          <input className="field" style={{ maxWidth: 280 }} placeholder="Search name, gamertag, email…" value={q} onChange={(e) => setQ(e.target.value)} />
           <select className="field" style={{ maxWidth: 200 }} value={club} onChange={(e) => setClub(e.target.value)}>
             <option value="">All clubs</option>
             {CLUBS.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
@@ -74,14 +74,14 @@ export default function DashboardPage() {
 
         <div style={{ overflowX: 'auto', border: '1px solid var(--line-2)', borderRadius: 4 }}>
           <table className="data-table">
-            <thead><tr><th>Name</th><th>Gamertag</th><th>Club</th><th>Phone</th><th>Platform</th><th>Payment</th><th>Status</th><th>When</th></tr></thead>
+            <thead><tr><th>Name</th><th>Gamertag</th><th>Club</th><th>Email</th><th>Platform</th><th>Payment</th><th>Status</th><th>When</th></tr></thead>
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id}>
                   <td style={{ color: 'var(--ink)' }}>{r.full_name}</td>
                   <td>{r.gamertag}</td>
                   <td className="mono" style={{ color: 'var(--ink-3)' }}>{r.club_code}</td>
-                  <td className="mono">{r.phone}</td>
+                  <td className="mono">{r.email}</td>
                   <td>{r.platform || '—'}</td>
                   <td>
                     <select className="field" style={{ height: 32, fontSize: 12, maxWidth: 120 }} value={r.payment_status} onChange={(e) => update(r.id, { paymentStatus: e.target.value })}>

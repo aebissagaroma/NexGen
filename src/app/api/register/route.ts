@@ -4,11 +4,11 @@ import { getSession } from '@/lib/session';
 import { str } from '@/lib/validation';
 
 // POST /api/register — create a qualifier registration for the logged-in player.
-// Requires a verified phone session (see /api/auth/otp/verify).
+// Requires a verified email session (see /api/auth/otp/verify).
 export async function POST(req: Request) {
   const session = getSession('user');
   if (!session) {
-    return NextResponse.json({ error: 'Verify your phone first.' }, { status: 401 });
+    return NextResponse.json({ error: 'Verify your email first.' }, { status: 401 });
   }
 
   const body = await req.json().catch(() => ({}));
@@ -28,9 +28,9 @@ export async function POST(req: Request) {
 
   try {
     const row = await queryOne<{ id: string }>(
-      `INSERT INTO registrations (user_id, full_name, phone, gamertag, club_code, platform, city)
+      `INSERT INTO registrations (user_id, full_name, email, gamertag, club_code, platform, city)
        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-      [session.sub, fullName, session.phone, gamertag, clubCode.toUpperCase(), platform, city],
+      [session.sub, fullName, session.email, gamertag, clubCode.toUpperCase(), platform, city],
     );
     return NextResponse.json({ ok: true, id: row!.id });
   } catch (e: unknown) {

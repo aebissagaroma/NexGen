@@ -182,7 +182,7 @@ export function RegisterCTA() {
       <div className="wrap" style={{ position: 'relative', textAlign: 'center' }} data-reveal>
         <div className="marker" style={{ justifyContent: 'center' }}>FILE/09 · ENTER</div>
         <h2 className="display" style={{ fontSize: 'clamp(64px, 10vw, 144px)', margin: '20px 0 24px', lineHeight: 0.92 }}>EARN <span style={{ fontStyle: 'italic', color: 'var(--ink-3)' }}>YOUR</span> CLUB.<br /><span style={{ background: 'linear-gradient(180deg, var(--ink), var(--chrome-2))', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>DRIVE THE PRIZE.</span></h2>
-        <p style={{ color: 'var(--ink-2)', fontSize: 17, lineHeight: 1.6, maxWidth: '52ch', margin: '0 auto' }}>Registration is open. Verify your phone, pick your club, and enter its qualifier bracket. Winners are drawn live on 05 July 2026.</p>
+        <p style={{ color: 'var(--ink-2)', fontSize: 17, lineHeight: 1.6, maxWidth: '52ch', margin: '0 auto' }}>Registration is open. Verify your email, pick your club, and enter its qualifier bracket. Winners are drawn live on 05 July 2026.</p>
         <div style={{ marginTop: 36, display: 'flex', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
           <Link href="/register" className="btn" style={{ padding: '18px 28px', fontSize: 13 }}>REGISTER NOW →</Link>
           <a href="#format" className="btn-ghost" style={{ padding: '18px 28px', fontSize: 13 }}>READ THE FORMAT</a>

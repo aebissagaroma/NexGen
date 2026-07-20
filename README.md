@@ -25,6 +25,12 @@ accessed with **plain SQL via `pg`** (no ORM).
 
 ---
 
+## Deployment
+
+Deploying to production (Vercel + Neon, email/SMTP setup, verification steps) is
+documented in **[`DEPLOYMENT.md`](./DEPLOYMENT.md)**. The mobile app has its own
+guide in `electrocup-mobile/DEPLOYMENT.md`.
+
 ## Run it locally
 
 ```bash

@@ -1,18 +1,18 @@
 'use client';
-// Registration flow: phone → OTP → details → confirmation.
+// Registration flow: email → OTP → details → confirmation.
 import * as React from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { PageHeader, PageTitle } from '@/components/PageHeader';
 import { CLUBS } from '@/data/static';
 
-type Step = 'phone' | 'otp' | 'details' | 'done';
+type Step = 'email' | 'otp' | 'details' | 'done';
 
 function RegisterInner() {
   const params = useSearchParams();
   const preClub = params.get('club') || '';
-  const [step, setStep] = React.useState<Step>('phone');
-  const [phone, setPhone] = React.useState('');
+  const [step, setStep] = React.useState<Step>('email');
+  const [email, setEmail] = React.useState('');
   const [devCode, setDevCode] = React.useState<string | null>(null);
   const [err, setErr] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
@@ -20,15 +20,15 @@ function RegisterInner() {
 
   async function requestOtp(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setErr(null);
-    const res = await fetch('/api/auth/otp/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone }) });
+    const res = await fetch('/api/auth/otp/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
     const data = await res.json(); setBusy(false);
     if (!res.ok) { setErr(data.error); return; }
-    setPhone(data.phone); setDevCode(data.devCode); setStep('otp');
+    setEmail(data.email); setDevCode(data.devCode); setStep('otp');
   }
   async function verifyOtp(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setErr(null);
     const fd = new FormData(e.target as HTMLFormElement);
-    const res = await fetch('/api/auth/otp/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone, code: fd.get('code') }) });
+    const res = await fetch('/api/auth/otp/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, code: fd.get('code') }) });
     const data = await res.json(); setBusy(false);
     if (!res.ok) { setErr(data.error); return; }
     setStep('details');
@@ -46,27 +46,27 @@ function RegisterInner() {
     <>
       <PageHeader />
       <div className="page-wrap" style={{ maxWidth: 720 }}>
-        <PageTitle file="ENTER · QUALIFIER" title={<>REGISTER<br /><span style={{ color: 'var(--accent-glow)' }}>YOUR RUN.</span></>} sub="Verify your phone, then enter the club bracket you want to represent. One entry per phone per club." />
+        <PageTitle file="ENTER · QUALIFIER" title={<>REGISTER<br /><span style={{ color: 'var(--accent-glow)' }}>YOUR RUN.</span></>} sub="Verify your email, then enter the club bracket you want to represent. One entry per email per club." />
 
         <Steps step={step} />
 
         <div className="form-card" style={{ marginTop: 28 }}>
-          {step === 'phone' && (
+          {step === 'email' && (
             <form onSubmit={requestOtp} style={{ display: 'grid', gap: 18 }}>
-              <div><label className="label">Phone number</label><input className="field" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="09xx xxx xxx or +2519xxxxxxxx" required /></div>
+              <div><label className="label">Email address</label><input className="field" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required /></div>
               {err && <div className="notice notice-err">{err}</div>}
               <button className="btn" disabled={busy}>{busy ? 'SENDING…' : 'SEND CODE →'}</button>
-              <p className="mono" style={{ fontSize: 10.5, letterSpacing: '.06em', color: 'var(--ink-4)' }}>We&apos;ll text you a 6-digit verification code.</p>
+              <p className="mono" style={{ fontSize: 10.5, letterSpacing: '.06em', color: 'var(--ink-4)' }}>We&apos;ll email you a 6-digit verification code.</p>
             </form>
           )}
           {step === 'otp' && (
             <form onSubmit={verifyOtp} style={{ display: 'grid', gap: 18 }}>
-              {devCode && <div className="notice notice-ok">Dev mode — your code is <strong>{devCode}</strong> (no SMS sent locally).</div>}
-              <div><label className="label">6-digit code sent to {phone}</label><input className="field" name="code" inputMode="numeric" maxLength={6} placeholder="••••••" required style={{ letterSpacing: '.4em', fontFamily: 'var(--f-mono)' }} /></div>
+              {devCode && <div className="notice notice-ok">Dev mode — your code is <strong>{devCode}</strong> (no email sent locally).</div>}
+              <div><label className="label">6-digit code sent to {email}</label><input className="field" name="code" inputMode="numeric" maxLength={6} placeholder="••••••" required style={{ letterSpacing: '.4em', fontFamily: 'var(--f-mono)' }} /></div>
               {err && <div className="notice notice-err">{err}</div>}
               <div style={{ display: 'flex', gap: 12 }}>
                 <button className="btn" disabled={busy}>{busy ? 'VERIFYING…' : 'VERIFY →'}</button>
-                <button type="button" className="btn-ghost" onClick={() => setStep('phone')}>CHANGE NUMBER</button>
+                <button type="button" className="btn-ghost" onClick={() => setStep('email')}>CHANGE EMAIL</button>
               </div>
             </form>
           )}
@@ -112,8 +112,8 @@ function RegisterInner() {
 }
 
 function Steps({ step }: { step: Step }) {
-  const order: Step[] = ['phone', 'otp', 'details', 'done'];
-  const labels = { phone: 'PHONE', otp: 'VERIFY', details: 'DETAILS', done: 'DONE' };
+  const order: Step[] = ['email', 'otp', 'details', 'done'];
+  const labels = { email: 'EMAIL', otp: 'VERIFY', details: 'DETAILS', done: 'DONE' };
   const idx = order.indexOf(step);
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>

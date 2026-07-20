@@ -13,7 +13,7 @@ export interface Club {
 // `registrations` table together. Candidate additions are stubbed below.
 export interface RegistrationInput {
   fullName: string;
-  phone: string;        // taken from the verified session in practice
+  email: string;        // taken from the verified session in practice
   gamertag: string;
   clubCode: string;
   platform?: string;    // TODO(dev): enum 'PS5' | 'PC' | 'XBOX' once confirmed

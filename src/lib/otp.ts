@@ -1,68 +1,89 @@
-// Phone OTP: generate → store hashed → verify. SMS delivery is stubbed.
+// Email OTP: generate → store hashed → verify. Delivery via SMTP (nodemailer).
 //
-// DEV MODE (no SMS_PROVIDER env set): the code is NOT sent by SMS. Instead it is
-// logged to the server console and returned in the API response so you can test
-// the whole flow locally. This is disabled automatically in production.
+// DEV MODE (no SMTP_HOST env set): the code is NOT emailed. Instead it is logged
+// to the server console and returned in the API response so you can test the
+// whole flow locally. This is disabled automatically in production.
 //
-// TODO(dev): implement sendSms() against a real provider (Afromessage / GeezSMS /
-// Twilio). Ethiopian numbers → an Ethiopian gateway is cheapest & most reliable.
+// To send real email, set SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASS /
+// SMTP_FROM (e.g. a Gmail app password or a Brevo SMTP key) — see .env.example.
 import crypto from 'node:crypto';
+import nodemailer from 'nodemailer';
 import { query, queryOne } from './db';
 
 const OTP_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const MAX_ATTEMPTS = 5;
 
-function hashCode(phone: string, code: string): string {
+function hashCode(email: string, code: string): string {
   return crypto
     .createHmac('sha256', process.env.SESSION_SECRET || 'dev')
-    .update(`${phone}:${code}`)
+    .update(`${email}:${code}`)
     .digest('hex');
 }
 
-/** Normalise Ethiopian numbers to E.164 (+251…). Adjust for other regions. */
-export function normalizePhone(raw: string): string | null {
-  const d = raw.replace(/[^\d+]/g, '');
-  if (/^\+251\d{9}$/.test(d)) return d;
-  if (/^251\d{9}$/.test(d)) return `+${d}`;
-  if (/^0\d{9}$/.test(d)) return `+251${d.slice(1)}`;
-  if (/^9\d{8}$/.test(d)) return `+251${d}`;
-  return null;
+/** Normalise an email to a canonical lowercase form, or null if invalid. */
+export function normalizeEmail(raw: string): string | null {
+  const s = raw.trim().toLowerCase();
+  if (s.length > 254) return null;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) ? s : null;
 }
 
-async function sendSms(phone: string, message: string): Promise<void> {
-  if (!process.env.SMS_PROVIDER) {
-    // DEV: no provider configured — just log.
-    console.log(`\n📱 [DEV OTP] to ${phone}: ${message}\n`);
+// Lazily-built, reused SMTP transport (undefined in dev / when unconfigured).
+let transport: nodemailer.Transporter | null | undefined;
+function getTransport(): nodemailer.Transporter | null {
+  if (transport !== undefined) return transport;
+  const host = process.env.SMTP_HOST;
+  if (!host) return (transport = null);
+  const port = Number(process.env.SMTP_PORT || 587);
+  transport = nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465, // 465 = implicit TLS; 587 = STARTTLS
+    auth: process.env.SMTP_USER
+      ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+      : undefined,
+  });
+  return transport;
+}
+
+async function sendEmail(to: string, code: string): Promise<void> {
+  const t = getTransport();
+  if (!t) {
+    // DEV: no SMTP configured — just log.
+    console.log(`\n📧 [DEV OTP] to ${to}: ${code}\n`);
     return;
   }
-  // TODO(dev): real SMS integration, e.g.:
-  //   await fetch('https://api.afromessage.com/api/send', { ... SMS_API_KEY ... });
-  throw new Error('SMS_PROVIDER set but sendSms() not implemented — see src/lib/otp.ts');
+  await t.sendMail({
+    from: process.env.SMTP_FROM || 'ELECTROCUP <no-reply@electrocup.com>',
+    to,
+    subject: 'Your ELECTROCUP verification code',
+    text: `Your ELECTROCUP code is ${code}. It is valid for 5 minutes.`,
+    html: `<p>Your ELECTROCUP code is <strong style="font-size:20px;letter-spacing:2px">${code}</strong>.</p><p>It is valid for 5 minutes.</p>`,
+  });
 }
 
-const isDev = () => !process.env.SMS_PROVIDER && process.env.NODE_ENV !== 'production';
+const isDev = () => !process.env.SMTP_HOST && process.env.NODE_ENV !== 'production';
 
 /** Create + "send" a code. Returns the code only in dev mode (else null). */
-export async function requestOtp(phone: string): Promise<{ devCode: string | null }> {
+export async function requestOtp(email: string): Promise<{ devCode: string | null }> {
   const code = String(crypto.randomInt(0, 1_000_000)).padStart(6, '0');
   const expires = new Date(Date.now() + OTP_TTL_MS);
   await query(
-    `INSERT INTO otp_codes (phone, code_hash, expires_at) VALUES ($1, $2, $3)`,
-    [phone, hashCode(phone, code), expires],
+    `INSERT INTO otp_codes (email, code_hash, expires_at) VALUES ($1, $2, $3)`,
+    [email, hashCode(email, code), expires],
   );
-  await sendSms(phone, `Your ELECTROCUP code is ${code}. Valid 5 minutes.`);
+  await sendEmail(email, code);
   return { devCode: isDev() ? code : null };
 }
 
 export type VerifyResult = { ok: true } | { ok: false; reason: string };
 
-/** Verify the most recent unconsumed code for a phone. */
-export async function verifyOtp(phone: string, code: string): Promise<VerifyResult> {
+/** Verify the most recent unconsumed code for an email. */
+export async function verifyOtp(email: string, code: string): Promise<VerifyResult> {
   const row = await queryOne<{ id: string; code_hash: string; expires_at: string; attempts: number }>(
     `SELECT id, code_hash, expires_at, attempts FROM otp_codes
-     WHERE phone = $1 AND consumed_at IS NULL
+     WHERE email = $1 AND consumed_at IS NULL
      ORDER BY created_at DESC LIMIT 1`,
-    [phone],
+    [email],
   );
   if (!row) return { ok: false, reason: 'No code requested. Request a new one.' };
   if (new Date(row.expires_at).getTime() < Date.now()) return { ok: false, reason: 'Code expired.' };
@@ -70,7 +91,7 @@ export async function verifyOtp(phone: string, code: string): Promise<VerifyResu
 
   const match = crypto.timingSafeEqual(
     Buffer.from(row.code_hash),
-    Buffer.from(hashCode(phone, code)),
+    Buffer.from(hashCode(email, code)),
   );
   if (!match) {
     await query(`UPDATE otp_codes SET attempts = attempts + 1 WHERE id = $1`, [row.id]);

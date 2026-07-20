@@ -11,7 +11,7 @@ export type SessionRole = 'user' | 'admin';
 export interface Session {
   role: SessionRole;
   sub: string;      // user id, or admin email
-  phone?: string;
+  email?: string;
   iat: number;
 }
 
@@ -38,6 +38,16 @@ function decode(token: string | undefined): Session | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * Produce the raw signed token for a session — identical to the cookie value.
+ * Native clients (React Native) can't read httpOnly cookies, so the mobile app
+ * stores this token and sends it back as a `Cookie: ec_session=<token>` header,
+ * which getSession() reads transparently. Web keeps using the cookie set below.
+ */
+export function issueSessionToken(session: Session): string {
+  return encode(session);
 }
 
 export function setSession(session: Session): void {

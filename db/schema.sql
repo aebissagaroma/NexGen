@@ -4,11 +4,11 @@
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";  -- gen_random_uuid()
 
--- ── Players / accounts (phone-OTP auth) ─────────────────────────────────────
+-- ── Players / accounts (email-OTP auth) ─────────────────────────────────────
 CREATE TABLE IF NOT EXISTS users (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  phone        TEXT UNIQUE NOT NULL,          -- E.164, e.g. +2519xxxxxxxx
-  phone_verified BOOLEAN NOT NULL DEFAULT FALSE,
+  email        TEXT UNIQUE NOT NULL,          -- normalised lowercase, e.g. player@mail.com
+  email_verified BOOLEAN NOT NULL DEFAULT FALSE,
   display_name TEXT,
   created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -16,14 +16,14 @@ CREATE TABLE IF NOT EXISTS users (
 -- One-time passwords. We store only a hash of the code, never the plaintext.
 CREATE TABLE IF NOT EXISTS otp_codes (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  phone       TEXT NOT NULL,
+  email       TEXT NOT NULL,
   code_hash   TEXT NOT NULL,
   expires_at  TIMESTAMPTZ NOT NULL,
   consumed_at TIMESTAMPTZ,
   attempts    INT NOT NULL DEFAULT 0,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS idx_otp_phone ON otp_codes (phone, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_otp_email ON otp_codes (email, created_at DESC);
 
 -- ── Clubs (the 20 EPL qualifier brackets) ───────────────────────────────────
 CREATE TABLE IF NOT EXISTS clubs (
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS registrations (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id      UUID REFERENCES users (id) ON DELETE SET NULL,
   full_name    TEXT NOT NULL,
-  phone        TEXT NOT NULL,
+  email        TEXT NOT NULL,
   gamertag     TEXT NOT NULL,
   club_code    TEXT NOT NULL REFERENCES clubs (code),
   -- TODO(dev): replace free-text with an enum/lookup once platforms are fixed.
@@ -52,8 +52,8 @@ CREATE TABLE IF NOT EXISTS registrations (
   status       TEXT NOT NULL DEFAULT 'pending',   -- 'pending' | 'confirmed' | 'rejected'
   notes        TEXT,
   created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
-  -- one entry per phone per club
-  UNIQUE (phone, club_code)
+  -- one entry per email per club
+  UNIQUE (email, club_code)
 );
 CREATE INDEX IF NOT EXISTS idx_reg_club ON registrations (club_code);
 CREATE INDEX IF NOT EXISTS idx_reg_created ON registrations (created_at DESC);
