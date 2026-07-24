@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
+// Registration counts must reflect the database on every request. Without this
+// Next prerenders the route at build time and serves a frozen snapshot in prod.
+export const dynamic = 'force-dynamic';
+
 // GET /api/clubs — the 20 club brackets, with live registration counts.
 export async function GET() {
   const rows = await query(

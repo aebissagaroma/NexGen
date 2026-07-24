@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
+// The table changes as results land, so it must be read live on every request
+// rather than prerendered into a build-time snapshot.
+export const dynamic = 'force-dynamic';
+
 // GET /api/standings — league table, sorted by points then goal difference.
 export async function GET() {
   const rows = await query(
