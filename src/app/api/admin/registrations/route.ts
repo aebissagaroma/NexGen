@@ -36,7 +36,10 @@ export async function PATCH(req: Request) {
   if (!getSession('admin')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const body = await req.json().catch(() => ({}));
   const id = String(body.id ?? '');
-  if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
+  // Validate shape here — a non-UUID would make Postgres throw (=> 500).
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+    return NextResponse.json({ error: 'valid id required' }, { status: 400 });
+  }
 
   const sets: string[] = [];
   const args: unknown[] = [];

@@ -42,9 +42,10 @@ try {
   console.error('✗ failed\n');
   console.error(`  ${e.message}\n`);
   console.error('  Common causes:');
+  console.error('   • Resend: SMTP_USER must be the literal word "resend"; SMTP_PASS is the re_… API key');
   console.error('   • Gmail: use a 16-char App Password (needs 2FA), not your account password');
-  console.error('   • Wrong port: 587 (STARTTLS) or 465 (TLS)');
-  console.error('   • Brevo: SMTP_USER is the SMTP login, SMTP_PASS is the SMTP key (not the API key)\n');
+  console.error('   • Brevo: SMTP_USER is the SMTP login, SMTP_PASS is the SMTP key (not the API key)');
+  console.error('   • Wrong port: 587 (STARTTLS) or 465 (TLS)\n');
   process.exit(1);
 }
 
@@ -68,6 +69,7 @@ try {
   console.error('✗ failed\n');
   console.error(`  ${e.message}\n`);
   console.error('  If auth passed but sending failed, the From address is usually the problem:');
-  console.error('   • SMTP_FROM must be a verified sender/domain with your provider\n');
+  console.error('   • SMTP_FROM must be on a domain/sender verified with your provider');
+  console.error('   • Resend refuses to send until a domain is verified (no shared sender)\n');
   process.exit(1);
 }

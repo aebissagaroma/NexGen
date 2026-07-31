@@ -9,13 +9,14 @@
 import crypto from 'node:crypto';
 import nodemailer from 'nodemailer';
 import { query, queryOne } from './db';
+import { sessionSecret } from './session';
 
 const OTP_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const MAX_ATTEMPTS = 5;
 
 function hashCode(email: string, code: string): string {
   return crypto
-    .createHmac('sha256', process.env.SESSION_SECRET || 'dev')
+    .createHmac('sha256', sessionSecret())
     .update(`${email}:${code}`)
     .digest('hex');
 }
@@ -63,15 +64,45 @@ async function sendEmail(to: string, code: string): Promise<void> {
 
 const isDev = () => !process.env.SMTP_HOST && process.env.NODE_ENV !== 'production';
 
+/**
+ * The code was stored but could not be delivered (provider down, quota hit, bad
+ * credentials). Callers should surface a retryable error, not a generic 500.
+ */
+export class OtpDeliveryError extends Error {
+  constructor(public readonly cause: unknown) {
+    super('Failed to deliver the verification code.');
+    this.name = 'OtpDeliveryError';
+  }
+}
+
 /** Create + "send" a code. Returns the code only in dev mode (else null). */
 export async function requestOtp(email: string): Promise<{ devCode: string | null }> {
   const code = String(crypto.randomInt(0, 1_000_000)).padStart(6, '0');
   const expires = new Date(Date.now() + OTP_TTL_MS);
+
+  // Drop this address's spent/expired codes so the table doesn't grow one row
+  // per attempt forever. Uses idx_otp_email.
   await query(
-    `INSERT INTO otp_codes (email, code_hash, expires_at) VALUES ($1, $2, $3)`,
+    `DELETE FROM otp_codes
+     WHERE email = $1 AND (expires_at < now() OR consumed_at IS NOT NULL)`,
+    [email],
+  );
+
+  const row = await queryOne<{ id: string }>(
+    `INSERT INTO otp_codes (email, code_hash, expires_at) VALUES ($1, $2, $3) RETURNING id`,
     [email, hashCode(email, code), expires],
   );
-  await sendEmail(email, code);
+
+  try {
+    await sendEmail(email, code);
+  } catch (e) {
+    // Delivery failed — remove the code rather than leaving one the user can
+    // never receive (it would otherwise block/confuse their next attempt).
+    await query(`DELETE FROM otp_codes WHERE id = $1`, [row!.id]).catch(() => {});
+    console.error('[otp] delivery failed:', e);
+    throw new OtpDeliveryError(e);
+  }
+
   return { devCode: isDev() ? code : null };
 }
 
@@ -79,24 +110,39 @@ export type VerifyResult = { ok: true } | { ok: false; reason: string };
 
 /** Verify the most recent unconsumed code for an email. */
 export async function verifyOtp(email: string, code: string): Promise<VerifyResult> {
-  const row = await queryOne<{ id: string; code_hash: string; expires_at: string; attempts: number }>(
-    `SELECT id, code_hash, expires_at, attempts FROM otp_codes
+  const row = await queryOne<{ id: string; code_hash: string; expires_at: string }>(
+    `SELECT id, code_hash, expires_at FROM otp_codes
      WHERE email = $1 AND consumed_at IS NULL
      ORDER BY created_at DESC LIMIT 1`,
     [email],
   );
   if (!row) return { ok: false, reason: 'No code requested. Request a new one.' };
   if (new Date(row.expires_at).getTime() < Date.now()) return { ok: false, reason: 'Code expired.' };
-  if (row.attempts >= MAX_ATTEMPTS) return { ok: false, reason: 'Too many attempts. Request a new code.' };
+
+  // Spend an attempt BEFORE checking the guess. The increment is atomic, so
+  // parallel requests can't each read a low counter and exceed the cap
+  // (read-then-increment would allow more than MAX_ATTEMPTS guesses).
+  const spent = await queryOne<{ attempts: number }>(
+    `UPDATE otp_codes SET attempts = attempts + 1 WHERE id = $1 RETURNING attempts`,
+    [row.id],
+  );
+  if (!spent || spent.attempts > MAX_ATTEMPTS) {
+    return { ok: false, reason: 'Too many attempts. Request a new code.' };
+  }
 
   const match = crypto.timingSafeEqual(
     Buffer.from(row.code_hash),
     Buffer.from(hashCode(email, code)),
   );
-  if (!match) {
-    await query(`UPDATE otp_codes SET attempts = attempts + 1 WHERE id = $1`, [row.id]);
-    return { ok: false, reason: 'Incorrect code.' };
-  }
-  await query(`UPDATE otp_codes SET consumed_at = now() WHERE id = $1`, [row.id]);
+  if (!match) return { ok: false, reason: 'Incorrect code.' };
+
+  // Single-use: only the first correct verify wins the consume; a concurrent
+  // duplicate sees consumed_at set and is rejected.
+  const consumed = await queryOne<{ id: string }>(
+    `UPDATE otp_codes SET consumed_at = now()
+     WHERE id = $1 AND consumed_at IS NULL RETURNING id`,
+    [row.id],
+  );
+  if (!consumed) return { ok: false, reason: 'Code already used. Request a new one.' };
   return { ok: true };
 }

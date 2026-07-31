@@ -1,9 +1,20 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { str, email } from '@/lib/validation';
+import { rateLimit, clientIp } from '@/lib/rate-limit';
 
 // POST /api/sponsors — capture a sponsor inquiry from the Partners form.
 export async function POST(req: Request) {
+  // Public unauthenticated insert — throttle so a script can't flood the
+  // inquiries table the staff dashboard reads. Real sponsors send one or two.
+  const rl = await rateLimit(`sponsor:ip:${clientIp(req)}`, 5, 60 * 60);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: 'Too many inquiries from this connection. Try again later.' },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } },
+    );
+  }
+
   const body = await req.json().catch(() => ({}));
   const company = str(body.company, { min: 2, max: 160 });
   const contactName = str(body.contactName, { min: 2, max: 120 });

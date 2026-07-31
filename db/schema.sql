@@ -24,6 +24,19 @@ CREATE TABLE IF NOT EXISTS otp_codes (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_otp_email ON otp_codes (email, created_at DESC);
+-- Supports the expiry sweep in scripts/cleanup.mjs.
+CREATE INDEX IF NOT EXISTS idx_otp_expires ON otp_codes (expires_at);
+
+-- ── Rate limiting (fixed window counters) ───────────────────────────────────
+-- Guards the unauthenticated OTP endpoint: each send costs money and burns
+-- sender reputation, so requests are capped per email and per IP.
+-- `key` is e.g. 'otp:email:someone@example.com' or 'otp:ip:1.2.3.4'.
+CREATE TABLE IF NOT EXISTS rate_limits (
+  key          TEXT PRIMARY KEY,
+  count        INT NOT NULL DEFAULT 0,
+  window_start TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_rate_window ON rate_limits (window_start);
 
 -- ── Clubs (the 20 EPL qualifier brackets) ───────────────────────────────────
 CREATE TABLE IF NOT EXISTS clubs (
