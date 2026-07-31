@@ -26,6 +26,28 @@ export async function POST(req: Request) {
   const club = await queryOne(`SELECT code FROM clubs WHERE code = $1`, [clubCode.toUpperCase()]);
   if (!club) return NextResponse.json({ error: 'Unknown club.' }, { status: 400 });
 
+  // One entry per player, for the whole tournament. These two lookups exist to
+  // give a useful message ("you're already in with ARS"); they are NOT the
+  // enforcement — two concurrent submits would both pass them. The unique
+  // indexes in db/schema.sql are what actually make it impossible, and the
+  // 23505 handler below turns that into the same answer.
+  const existing = await queryOne<{ club_code: string }>(
+    `SELECT club_code FROM registrations
+     WHERE user_id = $1 OR ec_email_canon(email) = ec_email_canon($2) LIMIT 1`,
+    [session.sub, session.email],
+  );
+  if (existing) {
+    return NextResponse.json({ error: alreadyEntered(existing.club_code) }, { status: 409 });
+  }
+
+  const tagTaken = await queryOne(
+    `SELECT 1 FROM registrations WHERE ec_tag_canon(gamertag) = ec_tag_canon($1) LIMIT 1`,
+    [gamertag],
+  );
+  if (tagTaken) {
+    return NextResponse.json({ error: GAMERTAG_TAKEN }, { status: 409 });
+  }
+
   try {
     const row = await queryOne<{ id: string }>(
       `INSERT INTO registrations (user_id, full_name, email, gamertag, club_code, platform, city)
@@ -34,12 +56,24 @@ export async function POST(req: Request) {
     );
     return NextResponse.json({ ok: true, id: row!.id });
   } catch (e: unknown) {
-    // unique_violation → already registered for this club
-    if (typeof e === 'object' && e && 'code' in e && (e as { code: string }).code === '23505') {
-      return NextResponse.json({ error: 'You already registered for this club.' }, { status: 409 });
+    const err = e as { code?: string; constraint?: string };
+    if (err?.code === '23505') {
+      // Lost a race against the player's own duplicate submit (or an alias of
+      // their address). Which index fired tells us what to say.
+      const msg =
+        err.constraint === 'uniq_reg_gamertag' ? GAMERTAG_TAKEN : alreadyEntered(null);
+      return NextResponse.json({ error: msg }, { status: 409 });
     }
     throw e;
   }
+}
+
+const GAMERTAG_TAKEN =
+  'That gamertag is already entered. If it is yours, you are registered — pick a different tag only if you are a different player.';
+
+function alreadyEntered(clubCode: string | null): string {
+  const where = clubCode ? ` You are entered with ${clubCode}.` : '';
+  return `You have already registered for ELECTROCUP 26.${where} One entry per player — contact us if you need to change club.`;
 }
 
 // GET /api/register — the current player's own registrations (for the confirm page).
@@ -50,8 +84,9 @@ export async function GET() {
     `SELECT r.id, r.full_name, r.gamertag, r.club_code, c.name AS club_name,
             r.platform, r.city, r.payment_status, r.status, r.created_at
      FROM registrations r JOIN clubs c ON c.code = r.club_code
-     WHERE r.user_id = $1 ORDER BY r.created_at DESC`,
-    [session.sub],
+     WHERE r.user_id = $1 OR ec_email_canon(r.email) = ec_email_canon($2)
+     ORDER BY r.created_at DESC`,
+    [session.sub, session.email],
   );
   return NextResponse.json({ registrations: rows });
 }

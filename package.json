@@ -12,6 +12,7 @@
     "db:seed": "node scripts/seed.mjs",
     "db:reset": "node scripts/migrate.mjs && node scripts/seed.mjs",
     "db:cleanup": "node scripts/cleanup.mjs",
+    "db:duplicates": "node scripts/duplicates.mjs",
     "email:test": "node scripts/test-email.mjs"
   },
   "dependencies": {
