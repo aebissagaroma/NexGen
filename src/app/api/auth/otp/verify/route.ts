@@ -3,10 +3,21 @@ import { verifyOtp, normalizeEmail } from '@/lib/otp';
 import { setSession, issueSessionToken, type Session } from '@/lib/session';
 import { queryOne } from '@/lib/db';
 import { code6 } from '@/lib/validation';
+import { rateLimit, clientIp } from '@/lib/rate-limit';
 
 // POST /api/auth/otp/verify  { email, code }
 // On success: upserts the user, marks email verified, sets the session cookie.
 export async function POST(req: Request) {
+  // Guessing is already capped per code (5 attempts, 5-min TTL); this per-IP
+  // backstop just keeps a junk flood from turning into free DB writes.
+  const rl = await rateLimit(`otp-verify:ip:${clientIp(req)}`, 100, 15 * 60);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: 'Too many attempts. Try again later.' },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } },
+    );
+  }
+
   const body = await req.json().catch(() => ({}));
   const email = normalizeEmail(String(body.email ?? ''));
   const code = code6(body.code);

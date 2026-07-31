@@ -10,7 +10,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 async function main() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error('DATABASE_URL is not set (copy .env.example to .env.local).');
-  const ssl = process.env.PGSSL === 'true' ? { rejectUnauthorized: false } : undefined;
+  const ssl = process.env.PGSSL === 'true' ? true : process.env.PGSSL === 'no-verify' ? { rejectUnauthorized: false } : undefined;
   const client = new pg.Client({ connectionString: url, ssl });
   await client.connect();
   const sql = readFileSync(join(__dirname, '..', 'db', 'schema.sql'), 'utf8');

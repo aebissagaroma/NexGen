@@ -16,7 +16,15 @@ export async function GET() {
   );
 
   const headers = ['Full name', 'Email', 'Gamertag', 'Club', 'Platform', 'City', 'Payment', 'Status', 'Registered'];
-  const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const esc = (v: unknown) => {
+    let s = String(v ?? '');
+    // Formula-injection guard: these values are player-controlled (name,
+    // gamertag, city) and this file gets opened in Excel/Sheets, where a cell
+    // starting with = + - @ (or tab/CR) executes as a formula. Prefix with '
+    // so spreadsheets render it as text.
+    if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+    return `"${s.replace(/"/g, '""')}"`;
+  };
   const csv = [
     headers.join(','),
     ...rows.map((r) =>

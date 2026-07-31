@@ -15,8 +15,10 @@ services:
         fromDatabase:
           name: electrocup-db
           property: connectionString
+      # Render's internal DB chain isn't publicly signed — keep TLS but skip
+      # verification here. On Neon/other managed PG use "true" (full verify).
       - key: PGSSL
-        value: "true"
+        value: "no-verify"
       - key: SESSION_SECRET
         generateValue: true
       - key: ADMIN_EMAIL
