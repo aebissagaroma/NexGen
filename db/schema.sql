@@ -64,12 +64,74 @@ CREATE TABLE IF NOT EXISTS registrations (
   payment_status TEXT NOT NULL DEFAULT 'unpaid',  -- 'unpaid' | 'paid' | 'waived'
   status       TEXT NOT NULL DEFAULT 'pending',   -- 'pending' | 'confirmed' | 'rejected'
   notes        TEXT,
-  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
-  -- one entry per email per club
-  UNIQUE (email, club_code)
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+  -- Uniqueness is NOT declared here: CREATE TABLE IF NOT EXISTS is a no-op on an
+  -- existing table, so a constraint added here would silently never reach an
+  -- already-deployed database. See the "one entry per player" block below.
 );
 CREATE INDEX IF NOT EXISTS idx_reg_club ON registrations (club_code);
 CREATE INDEX IF NOT EXISTS idx_reg_created ON registrations (created_at DESC);
+
+-- ── One entry per player ────────────────────────────────────────────────────
+-- A player enters ONE club's qualifier and represents that club. Duplicate
+-- entries are blocked in the database, not just in the API, so a double-submit
+-- or two concurrent requests can never both land.
+--
+-- Two people are "the same player" if they share a canonical email or a
+-- canonical gamertag. Canonicalisation defeats the cheap ways to look like a
+-- new person: casing, +tags, and (on Gmail) dots.
+
+-- 'Me+ec@Gmail.com' and 'm.e@googlemail.com' both canonicalise to 'me@gmail.com'.
+-- IMMUTABLE so it can back a unique index. The raw address is still stored in
+-- `email` and is what we actually send mail to; this is only an identity key.
+CREATE OR REPLACE FUNCTION ec_email_canon(raw TEXT) RETURNS TEXT AS $fn$
+  SELECT CASE
+    WHEN split_part(lower(btrim(raw)), '@', 2) IN ('gmail.com', 'googlemail.com')
+      THEN replace(regexp_replace(split_part(lower(btrim(raw)), '@', 1), '\+.*$', ''), '.', '')
+           || '@gmail.com'
+    ELSE regexp_replace(split_part(lower(btrim(raw)), '@', 1), '\+.*$', '')
+         || '@' || split_part(lower(btrim(raw)), '@', 2)
+  END
+$fn$ LANGUAGE sql IMMUTABLE;
+
+-- 'Ripper 07' / 'ripper07' / ' RIPPER07 ' → 'ripper07'.
+CREATE OR REPLACE FUNCTION ec_tag_canon(raw TEXT) RETURNS TEXT AS $fn$
+  SELECT lower(regexp_replace(btrim(raw), '\s+', '', 'g'))
+$fn$ LANGUAGE sql IMMUTABLE;
+
+-- Each index is created inside its own guard: on a database that already holds
+-- duplicate rows the CREATE fails, and an unguarded failure would abort this
+-- whole file mid-way. Warn instead, so the rest of the schema still applies and
+-- ops can clean up with `npm run db:duplicates` and re-run the migration.
+DO $do$ BEGIN
+  CREATE UNIQUE INDEX IF NOT EXISTS uniq_reg_email ON registrations (ec_email_canon(email));
+EXCEPTION WHEN unique_violation THEN
+  RAISE WARNING 'uniq_reg_email NOT created — duplicate emails exist. Run: npm run db:duplicates';
+END $do$;
+
+DO $do$ BEGIN
+  CREATE UNIQUE INDEX IF NOT EXISTS uniq_reg_gamertag ON registrations (ec_tag_canon(gamertag));
+EXCEPTION WHEN unique_violation THEN
+  RAISE WARNING 'uniq_reg_gamertag NOT created — duplicate gamertags exist. Run: npm run db:duplicates';
+END $do$;
+
+-- Partial: user_id goes NULL when an account is deleted (ON DELETE SET NULL),
+-- and many NULLs must stay legal.
+DO $do$ BEGIN
+  CREATE UNIQUE INDEX IF NOT EXISTS uniq_reg_user
+    ON registrations (user_id) WHERE user_id IS NOT NULL;
+EXCEPTION WHEN unique_violation THEN
+  RAISE WARNING 'uniq_reg_user NOT created — duplicate user_ids exist. Run: npm run db:duplicates';
+END $do$;
+
+-- Retire the old per-club rule, which permitted one entry in every club. Only
+-- once the stricter index above is actually in place — otherwise a database
+-- with existing duplicates would end up with no protection at all.
+DO $do$ BEGIN
+  IF EXISTS (SELECT 1 FROM pg_class WHERE relname = 'uniq_reg_email') THEN
+    ALTER TABLE registrations DROP CONSTRAINT IF EXISTS registrations_email_club_code_key;
+  END IF;
+END $do$;
 
 -- ── Sponsor inquiries (from the Partners section form) ──────────────────────
 CREATE TABLE IF NOT EXISTS sponsor_inquiries (

@@ -8,6 +8,9 @@ import { CLUBS } from '@/data/static';
 
 type Step = 'email' | 'otp' | 'details' | 'done';
 
+// An entry the player already has. One per player, so at most one of these.
+type Existing = { club_name: string; gamertag: string; status: string };
+
 function RegisterInner() {
   const params = useSearchParams();
   const preClub = params.get('club') || '';
@@ -17,6 +20,22 @@ function RegisterInner() {
   const [err, setErr] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [confirmName, setConfirmName] = React.useState('');
+  const [existing, setExisting] = React.useState<Existing | null>(null);
+
+  // A verified player gets one entry, so there is no point rendering the details
+  // form to someone who already has one — the API would only reject it.
+  async function loadExisting(): Promise<boolean> {
+    const res = await fetch('/api/register');
+    if (!res.ok) return false;
+    const data = await res.json();
+    const found = data.registrations?.[0];
+    if (found) setExisting(found);
+    return Boolean(found);
+  }
+
+  // Returning players often still hold a valid session cookie from a past visit,
+  // so check before asking them to sit through the OTP again.
+  React.useEffect(() => { void loadExisting(); }, []);
 
   async function requestOtp(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setErr(null);
@@ -29,16 +48,25 @@ function RegisterInner() {
     e.preventDefault(); setBusy(true); setErr(null);
     const fd = new FormData(e.target as HTMLFormElement);
     const res = await fetch('/api/auth/otp/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, code: fd.get('code') }) });
-    const data = await res.json(); setBusy(false);
-    if (!res.ok) { setErr(data.error); return; }
-    setStep('details');
+    const data = await res.json();
+    if (!res.ok) { setBusy(false); setErr(data.error); return; }
+    const already = await loadExisting();
+    setBusy(false);
+    if (!already) setStep('details');
   }
   async function submitDetails(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setErr(null);
     const fd = new FormData(e.target as HTMLFormElement);
     const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fullName: fd.get('fullName'), gamertag: fd.get('gamertag'), clubCode: fd.get('clubCode'), platform: fd.get('platform'), city: fd.get('city') }) });
-    const data = await res.json(); setBusy(false);
-    if (!res.ok) { setErr(data.error); return; }
+    const data = await res.json();
+    if (!res.ok) {
+      // 409 = they already hold an entry (a duplicate submit, or an alias of an
+      // address that is already in). Show the entry itself rather than an error
+      // above a form they cannot submit.
+      if (res.status === 409) await loadExisting();
+      setBusy(false); setErr(data.error); return;
+    }
+    setBusy(false);
     setConfirmName(String(fd.get('fullName') || '')); setStep('done');
   }
 
@@ -46,12 +74,13 @@ function RegisterInner() {
     <>
       <PageHeader />
       <div className="page-wrap" style={{ maxWidth: 720 }}>
-        <PageTitle file="ENTER · QUALIFIER" title={<>REGISTER<br /><span style={{ color: 'var(--accent-glow)' }}>YOUR RUN.</span></>} sub="Verify your email, then enter the club bracket you want to represent. One entry per email per club." />
+        <PageTitle file="ENTER · QUALIFIER" title={<>REGISTER<br /><span style={{ color: 'var(--accent-glow)' }}>YOUR RUN.</span></>} sub="Verify your email, then enter the club bracket you want to represent. One entry per player — you represent a single club." />
 
-        <Steps step={step} />
+        {!existing && <Steps step={step} />}
 
         <div className="form-card" style={{ marginTop: 28 }}>
-          {step === 'email' && (
+          {existing && <AlreadyEntered reg={existing} />}
+          {!existing && step === 'email' && (
             <form onSubmit={requestOtp} style={{ display: 'grid', gap: 18 }}>
               <div><label className="label">Email address</label><input className="field" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required /></div>
               {err && <div className="notice notice-err">{err}</div>}
@@ -59,7 +88,7 @@ function RegisterInner() {
               <p className="mono" style={{ fontSize: 10.5, letterSpacing: '.06em', color: 'var(--ink-4)' }}>We&apos;ll email you a 6-digit verification code.</p>
             </form>
           )}
-          {step === 'otp' && (
+          {!existing && step === 'otp' && (
             <form onSubmit={verifyOtp} style={{ display: 'grid', gap: 18 }}>
               {devCode && <div className="notice notice-ok">Dev mode — your code is <strong>{devCode}</strong> (no email sent locally).</div>}
               <div><label className="label">6-digit code sent to {email}</label><input className="field" name="code" inputMode="numeric" maxLength={6} placeholder="••••••" required style={{ letterSpacing: '.4em', fontFamily: 'var(--f-mono)' }} /></div>
@@ -70,7 +99,7 @@ function RegisterInner() {
               </div>
             </form>
           )}
-          {step === 'details' && (
+          {!existing && step === 'details' && (
             <form onSubmit={submitDetails} style={{ display: 'grid', gap: 18 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }} className="reg-grid">
                 <div><label className="label">Full name</label><input className="field" name="fullName" required placeholder="Your legal name" /></div>
@@ -93,7 +122,7 @@ function RegisterInner() {
               <style>{`@media (max-width:560px){.reg-grid{grid-template-columns:1fr!important}}`}</style>
             </form>
           )}
-          {step === 'done' && (
+          {!existing && step === 'done' && (
             <div style={{ textAlign: 'center', padding: '20px 0' }}>
               <div className="display" style={{ fontSize: 'clamp(36px,6vw,64px)', color: 'var(--accent-glow)', lineHeight: 0.95 }}>YOU&apos;RE IN.</div>
               <p style={{ color: 'var(--ink-2)', fontSize: 15.5, lineHeight: 1.6, maxWidth: '44ch', margin: '18px auto 0' }}>
@@ -108,6 +137,28 @@ function RegisterInner() {
         </div>
       </div>
     </>
+  );
+}
+
+// Shown instead of the form when the player already holds an entry.
+function AlreadyEntered({ reg }: { reg: Existing }) {
+  return (
+    <div style={{ textAlign: 'center', padding: '20px 0' }}>
+      <div className="display" style={{ fontSize: 'clamp(30px,5vw,52px)', color: 'var(--accent-glow)', lineHeight: 0.95 }}>ALREADY IN.</div>
+      <p style={{ color: 'var(--ink-2)', fontSize: 15.5, lineHeight: 1.6, maxWidth: '44ch', margin: '18px auto 0' }}>
+        You are entered as <strong style={{ color: 'var(--ink)' }}>{reg.gamertag}</strong> representing <strong style={{ color: 'var(--ink)' }}>{reg.club_name}</strong>. It is one entry per player, so there is nothing more to submit.
+      </p>
+      <div className="mono" style={{ fontSize: 10.5, letterSpacing: '.14em', color: 'var(--ink-4)', marginTop: 16 }}>
+        STATUS · {String(reg.status).toUpperCase()}
+      </div>
+      <p style={{ color: 'var(--ink-3)', fontSize: 13.5, lineHeight: 1.6, maxWidth: '44ch', margin: '18px auto 0' }}>
+        Need to switch club or fix a detail? Reply to your verification email and NexGen ops will sort it.
+      </p>
+      <div style={{ marginTop: 28, display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+        <Link href="/bracket" className="btn">VIEW BRACKETS →</Link>
+        <Link href="/" className="btn-ghost">BACK HOME</Link>
+      </div>
+    </div>
   );
 }
 
