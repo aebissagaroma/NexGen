@@ -24,7 +24,7 @@ export default function BracketPage() {
     <>
       <PageHeader />
       <div className="page-wrap">
-        <PageTitle file="FILE/04 · BRACKETS" title={<>QUALIFIER<br /><span style={{ color: 'var(--accent-glow)' }}>BRACKETS.</span></>} sub="Single-elimination, BO3 throughout. Brackets are drawn live on 05 July 2026 — until then this view is empty." />
+        <PageTitle file="FILE/04 · BRACKETS" title={<>QUALIFIER<br /><span style={{ color: 'var(--accent-glow)' }}>BRACKETS.</span></>} sub="Single-elimination, BO3 throughout. Brackets are drawn live on 30 September 2026 — until then this view is empty." />
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 32 }}>
           {CLUBS.map((c) => (
@@ -38,7 +38,7 @@ export default function BracketPage() {
           <div className="ticks" style={{ position: 'relative', border: '1px solid var(--line-2)', background: 'linear-gradient(180deg, var(--bg-1), var(--bg))', minHeight: 300, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, textAlign: 'center', padding: 40 }}>
             <span className="tk1" /><span className="tk2" />
             <span className="mono" style={{ fontSize: 10, letterSpacing: '.26em', color: 'var(--accent-glow)' }}>NOT YET DRAWN</span>
-            <div className="display" style={{ fontSize: 'clamp(32px,5vw,56px)', lineHeight: 0.95 }}>{CLUBS.find((c) => c.code === club)?.name}<br /><span style={{ color: 'var(--ink-3)', fontStyle: 'italic' }}>DRAWS 05 JUL 2026</span></div>
+            <div className="display" style={{ fontSize: 'clamp(32px,5vw,56px)', lineHeight: 0.95 }}>{CLUBS.find((c) => c.code === club)?.name}<br /><span style={{ color: 'var(--ink-3)', fontStyle: 'italic' }}>DRAWS 30 SEP 2026</span></div>
             <p style={{ color: 'var(--ink-2)', maxWidth: '46ch', fontSize: 14.5 }}>Seeded by ELO and drawn on the live broadcast. Register now to claim a spot in this bracket.</p>
           </div>
         ) : (

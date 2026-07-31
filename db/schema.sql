@@ -146,7 +146,7 @@ CREATE TABLE IF NOT EXISTS sponsor_inquiries (
   created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- ── Brackets / matches (drawn live on 05 Jul 2026; empty until then) ─────────
+-- ── Brackets / matches (drawn live on 30 Sep 2026; empty until then) ─────────
 -- Minimal shape so the /bracket viewer can read real data once it exists.
 CREATE TABLE IF NOT EXISTS matches (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),

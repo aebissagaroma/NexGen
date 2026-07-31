@@ -31,13 +31,13 @@ export interface TimelinePhase {
   phase: string; sub: string; date: string; note: string; state: 'live' | 'upcoming';
 }
 export const TIMELINE: TimelinePhase[] = [
-  { phase: 'Announcement', sub: 'Public Reveal', date: 'MAY 09, 2026', note: 'This page · launch trailer drops', state: 'live' },
-  { phase: 'Registration', sub: 'Open Sign-up', date: 'JUN 01 — JUL 04', note: '20 brackets · 500 ETB entry', state: 'upcoming' },
-  { phase: 'Bracket Draw', sub: 'Live Broadcast', date: 'JUL 05, 2026', note: 'Seeded by ELO · streamed', state: 'upcoming' },
-  { phase: 'Qualifiers', sub: 'BO3 Knockouts', date: 'JUL 11 — JUL 17', note: '20 winners surface', state: 'upcoming' },
-  { phase: 'Draft Day', sub: 'Live Broadcast', date: 'JUL 18, 2026', note: 'Host venue · Addis Ababa', state: 'upcoming' },
-  { phase: 'Gameweek 1', sub: 'Season Kickoff', date: 'AUG 15, 2026', note: '190 fixtures · 38 weeks', state: 'upcoming' },
-  { phase: 'Cup Final', sub: 'Live Audience', date: 'MAY 30, 2027', note: 'Host venue · Addis Ababa', state: 'upcoming' },
+  { phase: 'Announcement', sub: 'Public Reveal', date: 'AUG 04, 2026', note: 'This page · launch trailer drops', state: 'live' },
+  { phase: 'Registration', sub: 'Open Sign-up', date: 'AUG 27 — SEP 29', note: '20 brackets · 500 ETB entry', state: 'upcoming' },
+  { phase: 'Bracket Draw', sub: 'Live Broadcast', date: 'SEP 30, 2026', note: 'Seeded by ELO · streamed', state: 'upcoming' },
+  { phase: 'Qualifiers', sub: 'BO3 Knockouts', date: 'OCT 06 — OCT 12', note: '20 winners surface', state: 'upcoming' },
+  { phase: 'Draft Day', sub: 'Live Broadcast', date: 'OCT 13, 2026', note: 'Host venue · Addis Ababa', state: 'upcoming' },
+  { phase: 'Gameweek 1', sub: 'Season Kickoff', date: 'NOV 10, 2026', note: '190 fixtures · 38 weeks', state: 'upcoming' },
+  { phase: 'Cup Final', sub: 'Live Audience', date: 'AUG 25, 2027', note: 'Host venue · Addis Ababa', state: 'upcoming' },
 ];
 
 export interface SponsorItem { name: string; sub: string; open: boolean; }
@@ -72,4 +72,4 @@ export const NEXGEN_PILLARS: Pillar[] = [
 ];
 
 // Draft-day countdown target — fixed date so the countdown ticks consistently.
-export const DRAFT_DAY = new Date('2026-07-18T19:00:00+03:00').getTime();
+export const DRAFT_DAY = new Date('2026-10-13T19:00:00+03:00').getTime();

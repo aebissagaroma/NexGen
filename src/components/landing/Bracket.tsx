@@ -18,7 +18,7 @@ export function BracketSection() {
               <div className="marker">FILE/04 · BRACKETS</div>
               <h2 className="section-title" style={{ marginTop: 16 }}>THE PATH<br /><span style={{ color: 'var(--accent-glow)' }}>FROM ENTRY</span> <span style={{ fontStyle: 'italic', color: 'var(--ink-3)' }}>TO</span><br />CLUB REP.</h2>
             </div>
-            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>Each of the 20 club brackets is a single-elimination knockout, BO3 throughout. Brackets are seeded and drawn live on broadcast on <strong style={{ color: 'var(--ink)' }}>05 July 2026</strong>, the day after qualifier registration closes.</p>
+            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>Each of the 20 club brackets is a single-elimination knockout, BO3 throughout. Brackets are seeded and drawn live on broadcast on <strong style={{ color: 'var(--ink)' }}>30 September 2026</strong>, the day after qualifier registration closes.</p>
           </div>
         </div>
 
@@ -35,7 +35,7 @@ export function BracketSection() {
         <div data-reveal className="ticks" style={{ position: 'relative', border: '1px solid var(--line-2)', background: 'repeating-linear-gradient(135deg, rgba(255,255,255,0.018) 0 1px, transparent 1px 14px),linear-gradient(180deg, var(--bg-1), var(--bg))', minHeight: 380, padding: '60px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, textAlign: 'center' }}>
           <span className="tk1" /><span className="tk2" />
           <span className="mono" style={{ fontSize: 10, letterSpacing: '.26em', color: 'var(--accent-glow)' }}>BRACKET DATA · NOT YET DRAWN</span>
-          <h3 className="display" style={{ fontSize: 'clamp(40px, 6vw, 72px)', margin: 0, lineHeight: 0.95 }}>BRACKETS REVEAL<br /><span style={{ fontStyle: 'italic', color: 'var(--ink-3)' }}>05 JUL 2026</span></h3>
+          <h3 className="display" style={{ fontSize: 'clamp(40px, 6vw, 72px)', margin: 0, lineHeight: 0.95 }}>BRACKETS REVEAL<br /><span style={{ fontStyle: 'italic', color: 'var(--ink-3)' }}>30 SEP 2026</span></h3>
           <p style={{ color: 'var(--ink-2)', fontSize: 15, lineHeight: 1.6, maxWidth: '52ch', margin: 0 }}>Once qualifier registration closes, all twenty brackets are seeded by ELO and drawn on a single live broadcast. From draw to final, every match is streamed.</p>
           <div style={{ marginTop: 12, width: 'min(560px, 100%)', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10, opacity: 0.55 }}>
             {[8, 4, 2, 1, 1].map((n, col) => (

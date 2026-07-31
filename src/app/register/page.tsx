@@ -126,7 +126,7 @@ function RegisterInner() {
             <div style={{ textAlign: 'center', padding: '20px 0' }}>
               <div className="display" style={{ fontSize: 'clamp(36px,6vw,64px)', color: 'var(--accent-glow)', lineHeight: 0.95 }}>YOU&apos;RE IN.</div>
               <p style={{ color: 'var(--ink-2)', fontSize: 15.5, lineHeight: 1.6, maxWidth: '44ch', margin: '18px auto 0' }}>
-                Thanks{confirmName ? `, ${confirmName.split(' ')[0]}` : ''} — your entry is logged. You&apos;ll get bracket seeding and match details before the live draw on <strong style={{ color: 'var(--ink)' }}>05 July 2026</strong>.
+                Thanks{confirmName ? `, ${confirmName.split(' ')[0]}` : ''} — your entry is logged. You&apos;ll get bracket seeding and match details before the live draw on <strong style={{ color: 'var(--ink)' }}>30 September 2026</strong>.
               </p>
               <div style={{ marginTop: 28, display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
                 <Link href="/bracket" className="btn">VIEW BRACKETS →</Link>

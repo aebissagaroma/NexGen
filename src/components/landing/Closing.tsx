@@ -16,7 +16,7 @@ export function ScheduleSection() {
               <div className="marker">FILE/06 · CALENDAR</div>
               <h2 className="section-title" style={{ marginTop: 16 }}>NINE MONTHS.<br /><span style={{ fontStyle: 'italic', color: 'var(--ink-3)' }}>ONE</span> CHAMPION.</h2>
             </div>
-            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>Qualifiers run May–July 2026. The season starts in August and concludes with the Cup Final at the host venue on 30 May 2027.</p>
+            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>Qualifiers run August–October 2026. The season starts in November and concludes with the Cup Final at the host venue on 25 August 2027.</p>
           </div>
         </div>
         <div data-reveal style={{ display: 'grid', gridTemplateColumns: `repeat(${TIMELINE.length}, 1fr)`, gap: 0, border: '1px solid var(--line)', background: 'var(--bg-1)', position: 'relative' }} className="timeline-grid">
@@ -182,7 +182,7 @@ export function RegisterCTA() {
       <div className="wrap" style={{ position: 'relative', textAlign: 'center' }} data-reveal>
         <div className="marker" style={{ justifyContent: 'center' }}>FILE/09 · ENTER</div>
         <h2 className="display" style={{ fontSize: 'clamp(64px, 10vw, 144px)', margin: '20px 0 24px', lineHeight: 0.92 }}>EARN <span style={{ fontStyle: 'italic', color: 'var(--ink-3)' }}>YOUR</span> CLUB.<br /><span style={{ background: 'linear-gradient(180deg, var(--ink), var(--chrome-2))', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>DRIVE THE PRIZE.</span></h2>
-        <p style={{ color: 'var(--ink-2)', fontSize: 17, lineHeight: 1.6, maxWidth: '52ch', margin: '0 auto' }}>Registration is open. Verify your email, pick your club, and enter its qualifier bracket. Winners are drawn live on 05 July 2026.</p>
+        <p style={{ color: 'var(--ink-2)', fontSize: 17, lineHeight: 1.6, maxWidth: '52ch', margin: '0 auto' }}>Registration is open. Verify your email, pick your club, and enter its qualifier bracket. Winners are drawn live on 30 September 2026.</p>
         <div style={{ marginTop: 36, display: 'flex', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
           <Link href="/register" className="btn" style={{ padding: '18px 28px', fontSize: 13 }}>REGISTER NOW →</Link>
           <a href="#format" className="btn-ghost" style={{ padding: '18px 28px', fontSize: 13 }}>READ THE FORMAT</a>

@@ -146,7 +146,7 @@ function CountdownPanel({ target }: { target: number }) {
       </div>
       <Countdown target={target} />
       <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px dashed var(--line-2)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-        <span className="mono" style={{ fontSize: 11, letterSpacing: '.14em', color: 'var(--ink-3)' }}>18 JUL 2026 · 19:00 EAT</span>
+        <span className="mono" style={{ fontSize: 11, letterSpacing: '.14em', color: 'var(--ink-3)' }}>13 OCT 2026 · 19:00 EAT</span>
         <span className="mono" style={{ fontSize: 11, letterSpacing: '.14em', color: 'var(--ink-3)' }}>HOST VENUE · ADDIS ABABA</span>
       </div>
     </div>

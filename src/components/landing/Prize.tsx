@@ -4,9 +4,9 @@ import * as React from 'react';
 import { Placeholder } from './primitives';
 
 const SEALED = [
-  { rank: '02', title: 'RUNNER-UP', reveal: 'REVEAL · Q4 2026' },
-  { rank: '03', title: 'SEMI-FINALIST', reveal: 'REVEAL · Q4 2026' },
-  { rank: 'GW', title: 'GOLDEN BOOT', reveal: 'REVEAL · MAR 2027' },
+  { rank: '02', title: 'RUNNER-UP', reveal: 'REVEAL · Q1 2027' },
+  { rank: '03', title: 'SEMI-FINALIST', reveal: 'REVEAL · Q1 2027' },
+  { rank: 'GW', title: 'GOLDEN BOOT', reveal: 'REVEAL · JUN 2027' },
   { rank: '++', title: 'GAMEWEEK & SPECIAL', reveal: 'REVEAL · ROLLING' },
 ];
 
@@ -30,7 +30,7 @@ export function PrizeSection() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <span className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--accent-glow)' }}>LOT 01 · GRAND PRIZE</span>
               <span style={{ width: 1, height: 12, background: 'var(--line-strong)' }} />
-              <span className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--ink-3)' }}>DELIVERED · MAY 2027 · HOST VENUE</span>
+              <span className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--ink-3)' }}>DELIVERED · AUG 2027 · HOST VENUE</span>
             </div>
             <span className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--ink-3)' }}>EC26 / VEH / 001</span>
           </div>
@@ -61,7 +61,7 @@ export function PrizeSection() {
             <span style={{ width: 1, height: 12, background: 'var(--line-strong)' }} />
             <span className="mono" style={{ fontSize: 10, letterSpacing: '.18em', color: 'var(--ink-3)' }}>4 SEALED · UNLOCK ON BROADCAST</span>
           </div>
-          <span className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--ink-3)' }}>PRIZE POOL UNFOLDS THROUGH 2026 →</span>
+          <span className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--ink-3)' }}>PRIZE POOL UNFOLDS THROUGH 2027 →</span>
         </div>
 
         <div data-reveal style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'var(--line)', border: '1px solid var(--line-2)' }} className="side-prizes">
