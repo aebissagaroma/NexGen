@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { NexGenMark, Countdown, Placeholder } from './primitives';
-import { DRAFT_DAY } from '@/data/static';
+import { REGISTRATION_OPENS } from '@/data/static';
 
 const NAV_LINKS = [
   { label: 'FORMAT', href: '#format' }, { label: 'CLUBS', href: '#clubs' },
@@ -125,7 +125,7 @@ function HeroDefault() {
         </div>
       </div>
       <div data-reveal style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        <CountdownPanel target={DRAFT_DAY} />
+        <CountdownPanel target={REGISTRATION_OPENS} />
         <PrizeTeaser />
       </div>
       <style>{`@media (max-width:1100px){.hero-grid{grid-template-columns:1fr!important;gap:40px!important}}`}</style>
@@ -140,14 +140,14 @@ function CountdownPanel({ target }: { target: number }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
         <div>
           <div className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--ink-3)' }}>COUNTDOWN TO</div>
-          <div className="display-2" style={{ fontSize: 22, marginTop: 4, fontWeight: 800, letterSpacing: '.02em' }}>DRAFT DAY</div>
+          <div className="display-2" style={{ fontSize: 22, marginTop: 4, fontWeight: 800, letterSpacing: '.02em' }}>REGISTRATION</div>
         </div>
-        <span className="tag" style={{ color: 'var(--accent-glow)', borderColor: 'rgba(var(--accent-glow-rgb),0.35)' }}>LIVE BROADCAST</span>
+        <span className="tag" style={{ color: 'var(--accent-glow)', borderColor: 'rgba(var(--accent-glow-rgb),0.35)' }}>SIGN-UP OPENS</span>
       </div>
       <Countdown target={target} />
       <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px dashed var(--line-2)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-        <span className="mono" style={{ fontSize: 11, letterSpacing: '.14em', color: 'var(--ink-3)' }}>13 OCT 2026 · 19:00 EAT</span>
-        <span className="mono" style={{ fontSize: 11, letterSpacing: '.14em', color: 'var(--ink-3)' }}>HOST VENUE · ADDIS ABABA</span>
+        <span className="mono" style={{ fontSize: 11, letterSpacing: '.14em', color: 'var(--ink-3)' }}>01 SEP 2026 · 09:00 EAT</span>
+        <span className="mono" style={{ fontSize: 11, letterSpacing: '.14em', color: 'var(--ink-3)' }}>20 CLUB BRACKETS · ETHIOPIA</span>
       </div>
     </div>
   );

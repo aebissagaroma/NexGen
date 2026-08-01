@@ -30,14 +30,18 @@ export const CLUBS: StaticClub[] = [
 export interface TimelinePhase {
   phase: string; sub: string; date: string; note: string; state: 'live' | 'upcoming';
 }
+// Only committed dates appear here. Every later phase is announced as it
+// approaches, so its date reads TBA until ops fixes it — deliberately, not a
+// placeholder to fill in. When a phase is announced, set its `date` and move the
+// `state: 'live'` marker to it.
 export const TIMELINE: TimelinePhase[] = [
   { phase: 'Announcement', sub: 'Public Reveal', date: 'AUG 04, 2026', note: 'This page · launch trailer drops', state: 'live' },
-  { phase: 'Registration', sub: 'Open Sign-up', date: 'AUG 27 — SEP 29', note: '20 brackets · 500 ETB entry', state: 'upcoming' },
-  { phase: 'Bracket Draw', sub: 'Live Broadcast', date: 'SEP 30, 2026', note: 'Seeded by ELO · streamed', state: 'upcoming' },
-  { phase: 'Qualifiers', sub: 'BO3 Knockouts', date: 'OCT 06 — OCT 12', note: '20 winners surface', state: 'upcoming' },
-  { phase: 'Draft Day', sub: 'Live Broadcast', date: 'OCT 13, 2026', note: 'Host venue · Addis Ababa', state: 'upcoming' },
-  { phase: 'Gameweek 1', sub: 'Season Kickoff', date: 'NOV 10, 2026', note: '190 fixtures · 38 weeks', state: 'upcoming' },
-  { phase: 'Cup Final', sub: 'Live Audience', date: 'AUG 25, 2027', note: 'Host venue · Addis Ababa', state: 'upcoming' },
+  { phase: 'Registration', sub: 'Open Sign-up', date: 'SEP 01, 2026', note: '20 brackets · 500 ETB entry', state: 'upcoming' },
+  { phase: 'Bracket Draw', sub: 'Live Broadcast', date: 'TBA', note: 'Seeded by ELO · streamed', state: 'upcoming' },
+  { phase: 'Qualifiers', sub: 'BO3 Knockouts', date: 'TBA', note: '20 winners surface', state: 'upcoming' },
+  { phase: 'Draft Day', sub: 'Live Broadcast', date: 'TBA', note: 'Host venue · Addis Ababa', state: 'upcoming' },
+  { phase: 'Gameweek 1', sub: 'Season Kickoff', date: 'TBA', note: '190 fixtures · 38 weeks', state: 'upcoming' },
+  { phase: 'Cup Final', sub: 'Live Audience', date: 'TBA', note: 'Host venue · Addis Ababa', state: 'upcoming' },
 ];
 
 export interface SponsorItem { name: string; sub: string; open: boolean; }
@@ -71,5 +75,8 @@ export const NEXGEN_PILLARS: Pillar[] = [
   { code: '04', name: 'Stadium', blurb: 'Live-audience finals at flagship venues across Ethiopia.' },
 ];
 
-// Draft-day countdown target — fixed date so the countdown ticks consistently.
-export const DRAFT_DAY = new Date('2026-10-13T19:00:00+03:00').getTime();
+// Countdown target — the next date the tournament has actually committed to.
+// Fixed value so the countdown ticks consistently. Everything after registration
+// is announced step by step, so this points at sign-ups opening rather than at a
+// phase with no published date. Retarget it when the next phase is announced.
+export const REGISTRATION_OPENS = new Date('2026-09-01T09:00:00+03:00').getTime();
