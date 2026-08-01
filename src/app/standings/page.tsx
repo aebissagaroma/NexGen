@@ -17,14 +17,14 @@ export default function StandingsPage() {
     <>
       <PageHeader />
       <div className="page-wrap">
-        <PageTitle file="FILE/06 · TABLE" title={<>LEAGUE<br /><span style={{ color: 'var(--accent-glow)' }}>TABLE.</span></>} sub="38 gameweeks, round-robin. The table populates once the season kicks off on 15 August 2026." />
+        <PageTitle file="FILE/06 · TABLE" title={<>LEAGUE<br /><span style={{ color: 'var(--accent-glow)' }}>TABLE.</span></>} sub="38 gameweeks, round-robin. The table populates once the season kicks off; the date is announced after Draft Day." />
         {loading ? (
           <div className="mono" style={{ color: 'var(--ink-3)', letterSpacing: '.18em', fontSize: 12 }}>LOADING…</div>
         ) : rows.length === 0 ? (
           <div className="ticks" style={{ position: 'relative', border: '1px solid var(--line-2)', minHeight: 240, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, textAlign: 'center', padding: 40, background: 'var(--bg-1)' }}>
             <span className="tk1" /><span className="tk2" />
             <span className="mono" style={{ fontSize: 10, letterSpacing: '.26em', color: 'var(--accent-glow)' }}>SEASON NOT STARTED</span>
-            <div className="display" style={{ fontSize: 'clamp(28px,4vw,48px)' }}>KICKOFF · 15 AUG 2026</div>
+            <div className="display" style={{ fontSize: 'clamp(28px,4vw,48px)' }}>KICKOFF · DATE TBA</div>
           </div>
         ) : (
           <div style={{ overflowX: 'auto', border: '1px solid var(--line-2)', borderRadius: 4 }}>
