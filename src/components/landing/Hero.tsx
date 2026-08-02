@@ -4,6 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { NexGenMark, Countdown, Placeholder } from './primitives';
 import { REGISTRATION_OPENS } from '@/data/static';
+import { AnnouncementBanner } from './Announce';
 
 const NAV_LINKS = [
   { label: 'FORMAT', href: '#format' }, { label: 'CLUBS', href: '#clubs' },
@@ -53,6 +54,9 @@ export function Hero() {
       <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 'var(--scan-opacity, 0.10)', backgroundImage: 'repeating-linear-gradient(0deg, rgba(255,255,255,0.7) 0 1px, transparent 1px 3px)', mixBlendMode: 'overlay' }} />
       <SideRail side="left" /><SideRail side="right" />
       <div className="wrap" style={{ position: 'relative', zIndex: 2 }}>
+        {/* Renders nothing until a phase is marked justAnnounced, so it can live
+            here permanently without affecting the hero's layout in the meantime. */}
+        <AnnouncementBanner />
         <div data-reveal style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 28, borderBottom: '1px solid var(--line)', flexWrap: 'wrap', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <span className="eyebrow-accent">NEXGEN PLC PRESENTS</span>
