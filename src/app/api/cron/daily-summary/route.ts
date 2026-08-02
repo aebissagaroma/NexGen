@@ -4,7 +4,9 @@ import { notifyOps } from '@/lib/mailer';
 
 // GET /api/cron/daily-summary — one roll-up email of the last 24 hours.
 //
-// Runs on a schedule (see `crons` in vercel.json). Vercel sends
+// Runs on a schedule (see `crons` in vercel.json — "0 6 * * *", i.e. 06:00 UTC
+// = 09:00 EAT). That schedule lives there without an explanatory key because
+// Vercel rejects any property it does not recognise in vercel.json. Vercel sends
 // `Authorization: Bearer $CRON_SECRET` on scheduled invocations, which is the
 // only thing distinguishing a real run from anyone hitting the URL — so a
 // missing secret refuses rather than defaults to open.
