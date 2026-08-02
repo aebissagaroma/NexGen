@@ -1,5 +1,10 @@
-'use client';
 // @ts-nocheck
+// NOTE: @ts-nocheck must sit in the file's leading comment block, ABOVE the
+// 'use client' directive. Below a statement it is silently ignored, which is
+// how this verbatim port was leaking ~43 errors into `tsc` and `next build`.
+// Comments before 'use client' are fine — the directive only has to be the
+// first *statement*.
+'use client';
 // Tweaks panel — ported verbatim from the prototype's tweaks-panel.jsx.
 // It's a design-time control surface driven by the editor host's postMessage
 // protocol; in a normal deployment there's no host, so it stays hidden (returns
@@ -129,10 +134,13 @@ export function TweaksPanel({ title = 'Tweaks', children }) {
   );
 }
 
-export function TweakSection({ label, children }) {
+// `children` defaults so it is optional for callers: TweakSection is used as a
+// bare section heading (<TweakSection label="Brand palette" />) as well as a
+// wrapper. Same for TweakRow's `value`, which renders only when non-null.
+export function TweakSection({ label, children = null }) {
   return (<><div className="twk-sect">{label}</div>{children}</>);
 }
-function TweakRow({ label, value, children, inline = false }) {
+function TweakRow({ label, value = null, children, inline = false }) {
   return (
     <div className={inline ? 'twk-row twk-row-h' : 'twk-row'}>
       <div className="twk-lbl"><span>{label}</span>{value != null && <span className="twk-val">{value}</span>}</div>
