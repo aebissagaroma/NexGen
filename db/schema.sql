@@ -12,6 +12,11 @@ CREATE TABLE IF NOT EXISTS users (
   display_name TEXT,
   created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- Set at registration (scrypt, see src/lib/password.ts); sign-in is
+-- email+password so returning players cost no OTP email. NULL until the player
+-- completes registration — those accounts sign in via the OTP reset flow.
+-- (ALTER because CREATE TABLE IF NOT EXISTS never touches an existing table.)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
 
 -- One-time passwords. We store only a hash of the code, never the plaintext.
 CREATE TABLE IF NOT EXISTS otp_codes (
