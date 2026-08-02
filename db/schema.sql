@@ -133,6 +133,24 @@ DO $do$ BEGIN
   END IF;
 END $do$;
 
+-- ── Announcement notifications ──────────────────────────────────────────────
+-- Anyone can ask to be told when a TBA phase gets a date, WITHOUT entering the
+-- tournament — so this is deliberately separate from `registrations`.
+-- Keyed on the canonical email (same helper the one-entry-per-player rule uses),
+-- so +tag and Gmail-dot aliases cannot pad the list. Declared after
+-- ec_email_canon() above, which it depends on.
+CREATE TABLE IF NOT EXISTS notify_subscribers (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email      TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+DO $do$ BEGIN
+  CREATE UNIQUE INDEX IF NOT EXISTS uniq_notify_email
+    ON notify_subscribers (ec_email_canon(email));
+EXCEPTION WHEN unique_violation THEN
+  RAISE WARNING 'uniq_notify_email NOT created — duplicate emails already exist in notify_subscribers.';
+END $do$;
+
 -- ── Sponsor inquiries (from the Partners section form) ──────────────────────
 CREATE TABLE IF NOT EXISTS sponsor_inquiries (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
