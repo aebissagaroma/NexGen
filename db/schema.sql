@@ -56,10 +56,17 @@ CREATE TABLE IF NOT EXISTS registrations (
   user_id      UUID REFERENCES users (id) ON DELETE SET NULL,
   full_name    TEXT NOT NULL,
   email        TEXT NOT NULL,
-  gamertag     TEXT NOT NULL,
+  -- Retired: the tournament supplies the consoles, so neither a gamertag nor a
+  -- platform is asked for any more. Kept nullable rather than dropped so entries
+  -- taken before the change keep their data. See the migration block below.
+  gamertag     TEXT,
   club_code    TEXT NOT NULL REFERENCES clubs (code),
-  -- TODO(dev): replace free-text with an enum/lookup once platforms are fixed.
   platform     TEXT,                          -- 'PS5' | 'PC' | 'XBOX' | ...
+  -- Identity document. `id_hash` is an HMAC of the canonical number and is what
+  -- the uniqueness index keys on; `id_last4` lets ops tell two entries apart.
+  -- The raw number is never stored — see src/lib/national-id.ts.
+  id_hash      TEXT,
+  id_last4     TEXT,
   city         TEXT,
   payment_status TEXT NOT NULL DEFAULT 'unpaid',  -- 'unpaid' | 'paid' | 'waived'
   status       TEXT NOT NULL DEFAULT 'pending',   -- 'pending' | 'confirmed' | 'rejected'
@@ -71,6 +78,25 @@ CREATE TABLE IF NOT EXISTS registrations (
 );
 CREATE INDEX IF NOT EXISTS idx_reg_club ON registrations (club_code);
 CREATE INDEX IF NOT EXISTS idx_reg_created ON registrations (created_at DESC);
+
+-- Bring an already-deployed database in line with the table definition above.
+-- CREATE TABLE IF NOT EXISTS is a no-op once the table exists, so column changes
+-- have to be spelled out or they never reach production.
+ALTER TABLE registrations ADD COLUMN IF NOT EXISTS id_hash  TEXT;
+ALTER TABLE registrations ADD COLUMN IF NOT EXISTS id_last4 TEXT;
+-- Photo of the identity document, held in Vercel Blob. Only the URL is stored.
+-- `id_doc_type` is 'fayda' when supplied at sign-up, or 'kebele'/'other' when a
+-- player without a Fayda uploads an alternative afterwards.
+ALTER TABLE registrations ADD COLUMN IF NOT EXISTS id_doc_url    TEXT;
+ALTER TABLE registrations ADD COLUMN IF NOT EXISTS id_doc_type   TEXT;
+-- 'provided' | 'pending' — pending means they asked to submit another document.
+ALTER TABLE registrations ADD COLUMN IF NOT EXISTS id_doc_status TEXT NOT NULL DEFAULT 'pending';
+-- Players no longer type a gamertag; they pick one the site builds from their
+-- name (src/lib/gamertag.ts). Nullable because entries taken before the change
+-- may have none, and because it is a display handle, not an identity key.
+ALTER TABLE registrations ALTER COLUMN gamertag DROP NOT NULL;
+-- Superseded by the partial uniq_reg_tag below, which tolerates NULLs.
+DROP INDEX IF EXISTS uniq_reg_gamertag;
 
 -- ── One entry per player ────────────────────────────────────────────────────
 -- A player enters ONE club's qualifier and represents that club. Duplicate
@@ -109,10 +135,25 @@ EXCEPTION WHEN unique_violation THEN
   RAISE WARNING 'uniq_reg_email NOT created — duplicate emails exist. Run: npm run db:duplicates';
 END $do$;
 
+-- Identity document. This is what now stops one person entering twice — the
+-- tournament supplies the hardware, so a gamertag no longer identifies anyone.
+-- Partial, because entries taken before this change have no id_hash and many
+-- NULLs must stay legal.
 DO $do$ BEGIN
-  CREATE UNIQUE INDEX IF NOT EXISTS uniq_reg_gamertag ON registrations (ec_tag_canon(gamertag));
+  CREATE UNIQUE INDEX IF NOT EXISTS uniq_reg_idnum
+    ON registrations (id_hash) WHERE id_hash IS NOT NULL;
 EXCEPTION WHEN unique_violation THEN
-  RAISE WARNING 'uniq_reg_gamertag NOT created — duplicate gamertags exist. Run: npm run db:duplicates';
+  RAISE WARNING 'uniq_reg_idnum NOT created — duplicate ID numbers exist. Run: npm run db:duplicates';
+END $do$;
+
+-- Gamertag stays unique, but as a DISPLAY handle rather than an identity check:
+-- it labels a player on brackets, standings and broadcast, so two players cannot
+-- share one. Partial so pre-change rows without a tag remain legal.
+DO $do$ BEGIN
+  CREATE UNIQUE INDEX IF NOT EXISTS uniq_reg_tag
+    ON registrations (ec_tag_canon(gamertag)) WHERE gamertag IS NOT NULL;
+EXCEPTION WHEN unique_violation THEN
+  RAISE WARNING 'uniq_reg_tag NOT created — duplicate gamertags exist. Run: npm run db:duplicates';
 END $do$;
 
 -- Partial: user_id goes NULL when an account is deleted (ON DELETE SET NULL),
@@ -132,6 +173,21 @@ DO $do$ BEGIN
     ALTER TABLE registrations DROP CONSTRAINT IF EXISTS registrations_email_club_code_key;
   END IF;
 END $do$;
+
+-- ── Appeals ─────────────────────────────────────────────────────────────────
+-- Registering twice means disqualification, so there has to be a route back for
+-- anyone caught by mistake — a shared family email, a mistyped ID, a genuine
+-- twin. Deliberately NOT tied to a registration row: the whole point is that the
+-- person may have been blocked before one ever existed.
+CREATE TABLE IF NOT EXISTS appeals (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email       TEXT NOT NULL,
+  full_name   TEXT NOT NULL,
+  reason      TEXT NOT NULL,
+  handled     BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_appeals_created ON appeals (created_at DESC);
 
 -- ── Announcement notifications ──────────────────────────────────────────────
 -- Anyone can ask to be told when a TBA phase gets a date, WITHOUT entering the

@@ -14,15 +14,17 @@ export interface Club {
 export interface RegistrationInput {
   fullName: string;
   email: string;        // taken from the verified session in practice
-  gamertag: string;
   clubCode: string;
-  platform?: string;    // TODO(dev): enum 'PS5' | 'PC' | 'XBOX' once confirmed
+  /**
+   * Raw identity document number. Accepted by the API, used to derive the hash
+   * and last-4, then discarded — it is never persisted. See lib/national-id.ts.
+   */
+  idNumber: string;
   city?: string;
   // TODO(dev): dateOfBirth?: string;      // eligibility: 16+
-  // TODO(dev): psnOrEaId?: string;        // required to schedule matches
   // TODO(dev): jerseyName?: string;       // broadcast lower-third
   // TODO(dev): emergencyContact?: string;
-  // TODO(dev): agreesToRules: boolean;    // rulebook v1.2 acceptance
+  // TODO(dev): agreesToRules: boolean;    // rulebook acceptance
 }
 
 export interface Registration extends RegistrationInput {

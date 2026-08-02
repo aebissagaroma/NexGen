@@ -24,7 +24,7 @@ async function main() {
   // The duplicate-entry indexes are the one part of this file that can be
   // skipped on an existing database, so confirm they actually landed rather
   // than assuming a clean exit means they did.
-  const wanted = ['uniq_reg_email', 'uniq_reg_gamertag', 'uniq_reg_user'];
+  const wanted = ['uniq_reg_email', 'uniq_reg_idnum', 'uniq_reg_tag', 'uniq_reg_user'];
   const { rows } = await client.query(
     `SELECT relname FROM pg_class WHERE relname = ANY($1)`,
     [wanted],
@@ -39,7 +39,7 @@ async function main() {
     console.error('   Resolve them, then re-run this migration.');
     process.exit(1);
   }
-  console.log('✓ one-entry-per-player enforced (3/3 indexes)');
+  console.log(`✓ one-entry-per-player enforced (${wanted.length}/${wanted.length} indexes)`);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
