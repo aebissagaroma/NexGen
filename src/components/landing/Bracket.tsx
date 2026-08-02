@@ -53,7 +53,7 @@ export function BracketSection() {
         </div>
 
         <div data-reveal style={{ marginTop: 28, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0, border: '1px solid var(--line)' }} className="bracket-rail">
-          {[{ k: 'FORMAT', v: 'BO3 · KO' }, { k: 'ROUNDS', v: 'UP TO 8' }, { k: 'SEEDING', v: 'ELO + DRAW' }, { k: 'BROADCAST', v: 'EBS · YOUTUBE' }].map((r, i) => (
+          {[{ k: 'FORMAT', v: 'BO3 · KO' }, { k: 'ROUNDS', v: 'UP TO 8' }, { k: 'SEEDING', v: 'ELO + DRAW' }, { k: 'BROADCAST', v: 'TIKTOK · YT · IG' }].map((r, i) => (
             <div key={r.k} style={{ padding: '20px 22px', borderRight: i < 3 ? '1px solid var(--line)' : 'none' }} className="rail-cell">
               <div className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--ink-3)' }}>{r.k}</div>
               <div className="display-2" style={{ fontSize: 20, fontWeight: 700, marginTop: 6 }}>{r.v}</div>

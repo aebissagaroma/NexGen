@@ -29,14 +29,25 @@ export const CLUBS: StaticClub[] = [
 
 export interface TimelinePhase {
   phase: string; sub: string; date: string; note: string; state: 'live' | 'upcoming';
+  /**
+   * Set to true when this phase's date is first published. It drives the banner
+   * at the top of the page and the highlight in the schedule strip — no other
+   * edit is needed. Clear it once the announcement is no longer news; a phase
+   * still reading TBA must never carry it.
+   */
+  justAnnounced?: boolean;
 }
+
+/** Phases whose date has just been published — drives the announcement banner. */
+export const announcedPhases = (): TimelinePhase[] =>
+  TIMELINE.filter((t) => t.justAnnounced && t.date.toUpperCase() !== 'TBA');
 // Only committed dates appear here. Every later phase is announced as it
 // approaches, so its date reads TBA until ops fixes it — deliberately, not a
 // placeholder to fill in. When a phase is announced, set its `date` and move the
 // `state: 'live'` marker to it.
 export const TIMELINE: TimelinePhase[] = [
   { phase: 'Announcement', sub: 'Public Reveal', date: 'AUG 04, 2026', note: 'This page · launch trailer drops', state: 'live' },
-  { phase: 'Registration', sub: 'Open Sign-up', date: 'SEP 01, 2026', note: '20 brackets · 500 ETB entry', state: 'upcoming' },
+  { phase: 'Registration', sub: 'Open Sign-up', date: 'SEP 01, 2026', note: '20 brackets · entry fee TBA', state: 'upcoming', justAnnounced: true },
   { phase: 'Bracket Draw', sub: 'Live Broadcast', date: 'TBA', note: 'Seeded by ELO · streamed', state: 'upcoming' },
   { phase: 'Qualifiers', sub: 'BO3 Knockouts', date: 'TBA', note: '20 winners surface', state: 'upcoming' },
   { phase: 'Draft Day', sub: 'Live Broadcast', date: 'TBA', note: 'Host venue · Addis Ababa', state: 'upcoming' },

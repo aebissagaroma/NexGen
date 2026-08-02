@@ -5,6 +5,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { NexGenMark, Countdown } from './primitives';
 import { TIMELINE, SPONSORS_TIERS, NEXGEN_PILLARS, REGISTRATION_OPENS } from '@/data/static';
+import { NotifyBox } from './Announce';
 
 export function ScheduleSection() {
   return (
@@ -23,7 +24,7 @@ export function ScheduleSection() {
           {TIMELINE.map((t, i) => (
             <div key={t.phase} style={{ padding: '28px 18px 24px', borderRight: i < TIMELINE.length - 1 ? '1px solid var(--line)' : 'none', position: 'relative', background: t.state === 'live' ? 'rgba(var(--accent-rgb),0.05)' : 'transparent' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: t.state === 'live' ? 'var(--accent)' : 'var(--line-2)', boxShadow: t.state === 'live' ? '0 0 12px var(--accent)' : 'none' }} />
-              <div className="mono" style={{ fontSize: 9.5, letterSpacing: '.22em', color: t.state === 'live' ? 'var(--accent-glow)' : 'var(--ink-3)' }}>{String(i + 1).padStart(2, '0')} · {t.state === 'live' ? 'NOW' : 'NEXT'}</div>
+              <div className="mono" style={{ fontSize: 9.5, letterSpacing: '.22em', color: t.state === 'live' || t.justAnnounced ? 'var(--accent-glow)' : 'var(--ink-3)' }}>{String(i + 1).padStart(2, '0')} · {t.justAnnounced ? 'JUST ANNOUNCED' : t.state === 'live' ? 'NOW' : 'NEXT'}</div>
               <div className="display-2" style={{ fontSize: 18, fontWeight: 800, marginTop: 10, lineHeight: 1.1 }}>{t.phase}</div>
               <div className="mono" style={{ fontSize: 10, letterSpacing: '.14em', color: 'var(--ink-3)', marginTop: 4 }}>{t.sub.toUpperCase()}</div>
               <div className="mono" style={{ fontSize: 11, letterSpacing: '.10em', marginTop: 18, color: t.state === 'live' ? 'var(--ink)' : 'var(--ink-2)' }}>{t.date}</div>
@@ -31,6 +32,9 @@ export function ScheduleSection() {
             </div>
           ))}
         </div>
+        {/* Sits directly under the strip: this is where a visitor first sees how
+            many phases read TBA, and so where they are most likely to want one. */}
+        <NotifyBox />
         <style>{`@media (max-width:1100px){.timeline-grid{grid-template-columns:repeat(2,1fr)!important}.timeline-grid>div{border-right:1px solid var(--line)!important;border-bottom:1px solid var(--line)}.timeline-grid>div:nth-child(2n){border-right:none!important}}@media (max-width:560px){.timeline-grid{grid-template-columns:1fr!important}}`}</style>
       </div>
     </section>
@@ -229,7 +233,7 @@ export function Footer() {
         <div style={{ marginTop: 48, paddingTop: 22, borderTop: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           <div className="mono" style={{ fontSize: 10.5, letterSpacing: '.14em', color: 'var(--ink-4)' }}>© 2026 NEXGEN PLC · ADDIS ABABA, ETHIOPIA · ALL RIGHTS RESERVED</div>
           <div style={{ display: 'flex', gap: 18 }}>
-            {['TERMS', 'PRIVACY', 'RULEBOOK V1.2', 'PRESS'].map((l) => (<a key={l} href="#" className="mono" style={{ fontSize: 10.5, letterSpacing: '.18em', color: 'var(--ink-3)' }}>{l}</a>))}
+            {['TERMS', 'PRIVACY', 'RULEBOOK', 'PRESS'].map((l) => (<a key={l} href="#" className="mono" style={{ fontSize: 10.5, letterSpacing: '.18em', color: 'var(--ink-3)' }}>{l}</a>))}
           </div>
         </div>
       </div>

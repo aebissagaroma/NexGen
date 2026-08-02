@@ -6,8 +6,8 @@ import { Placeholder } from './primitives';
 interface Step { n: string; kicker: string; title: string; sub: string; blurb: string; meta: { k: string; v: string }[]; state: string; }
 
 const STEPS: Step[] = [
-  { n: '01', kicker: 'PHASE ONE', title: 'QUALIFIERS', sub: 'OPEN NATIONAL BRACKETS', blurb: 'Sign up for any club you want to represent. Each club runs its own knockout bracket — best of three, single elimination — until one player wins the slot.', meta: [{ k: 'FORMAT', v: 'BO3 KO' }, { k: 'ENTRY', v: '500 ETB' }, { k: 'BRACKETS', v: '20' }, { k: 'OPENS', v: 'SEP 01' }], state: 'upcoming' },
-  { n: '02', kicker: 'PHASE TWO', title: 'DRAFT DAY', sub: '20 SLOTS · 1 BROADCAST', blurb: 'On Draft Day all 20 winners are announced on a single live broadcast. Each is paired with their Premier League club for the season — jersey reveal, profile film, and seeding.', meta: [{ k: 'DATE', v: 'TBA' }, { k: 'VENUE', v: 'TBA' }, { k: 'BROADCAST', v: 'EBS · YT' }, { k: 'STATUS', v: 'LOCKED' }], state: 'upcoming' },
+  { n: '01', kicker: 'PHASE ONE', title: 'QUALIFIERS', sub: 'OPEN NATIONAL BRACKETS', blurb: 'Sign up for any club you want to represent. Each club runs its own knockout bracket — best of three, single elimination — until one player wins the slot.', meta: [{ k: 'FORMAT', v: 'BO3 KO' }, { k: 'ENTRY', v: 'TBA' }, { k: 'BRACKETS', v: '20' }, { k: 'OPENS', v: 'SEP 01' }], state: 'upcoming' },
+  { n: '02', kicker: 'PHASE TWO', title: 'DRAFT DAY', sub: '20 SLOTS · 1 BROADCAST', blurb: 'On Draft Day all 20 winners are announced on a single live broadcast. Each is paired with their Premier League club for the season — jersey reveal, profile film, and seeding.', meta: [{ k: 'DATE', v: 'TBA' }, { k: 'VENUE', v: 'TBA' }, { k: 'BROADCAST', v: 'TIKTOK · YT · IG' }, { k: 'STATUS', v: 'LOCKED' }], state: 'upcoming' },
   { n: '03', kicker: 'PHASE THREE', title: 'SEASON', sub: '38 GAMEWEEKS · ROUND ROBIN', blurb: 'All 20 players play each other home and away — exactly 38 fixtures each. League table, top scorer race, GW awards, and a televised final at the host venue.', meta: [{ k: 'FIXTURES', v: '190' }, { k: 'WEEKS', v: '38' }, { k: 'KICKOFF', v: 'TBA' }, { k: 'FINAL', v: 'TBA' }], state: 'upcoming' },
 ];
 
@@ -21,7 +21,7 @@ export function FormatSection({ ps5Mood = true }: { ps5Mood?: boolean }) {
               <div className="marker">FILE/02 · FORMAT</div>
               <h2 className="section-title" style={{ marginTop: 16 }}>THE PATH<br /><span style={{ color: 'var(--ink-3)', fontStyle: 'italic' }}>TO THE TROPHY.</span></h2>
             </div>
-            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>Three phases. Open to anyone in Ethiopia with an FC&nbsp;26 account and a controller. Win your bracket, claim your club, then play the longest competitive FC&nbsp;26 season ever run on the continent.</p>
+            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>Three phases. Open to anyone in Ethiopia — you don&apos;t need to own FC&nbsp;26, a console or a controller. Win your bracket, claim your club, then play the longest competitive FC&nbsp;26 season ever run on the continent.</p>
           </div>
         </div>
 
@@ -54,10 +54,10 @@ export function FormatSection({ ps5Mood = true }: { ps5Mood?: boolean }) {
         </div>
 
         <div data-reveal style={{ marginTop: 56, display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr', gap: 0, border: '1px solid var(--line)' }} className="format-rail">
-          <DetailCell title="ELIGIBILITY" body="Ethiopia residents · 16+ · Own copy of FC 26 (any platform). PSN/Xbox/EA ID required at registration." />
-          <DetailCell title="MATCH RULES" body="6 min halves · Legacy Defending OFF · Custom Tactics ON · Squad rules per Rulebook v1.2." />
+          <DetailCell title="ELIGIBILITY" body="Ethiopia residents · 16+ · No game, console or controller needed. Valid photo ID required at registration to confirm your age." />
+          <DetailCell title="MATCH RULES" body="Match length, defending, tactics and squad restrictions are all published before qualifiers begin. Announced soon." />
           <DetailCell title="ANTI-CHEAT" body="All knockouts streamed. Final 3 rounds played on-site. Replay review on protest." />
-          <DetailCell title="ENTRY FEE" body="500 ETB qualifier entry · subsidised seats for university clubs · zero fee for season play." />
+          <DetailCell title="ENTRY FEE" body="Qualifier entry fee announced soon · subsidised seats for university clubs · zero fee for season play." />
         </div>
       </div>
       <style>{`@media (max-width:980px){.format-grid{grid-template-columns:1fr!important}.format-rail{grid-template-columns:1fr 1fr!important}}@media (max-width:560px){.format-rail{grid-template-columns:1fr!important}}`}</style>
