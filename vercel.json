@@ -1,5 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "buildCommand": "next build"
+  "buildCommand": "next build",
+  "crons": [
+    {
+      "comment": "Daily roll-up of new entries and appeals to OPS_EMAIL. 06:00 UTC = 09:00 EAT. Needs CRON_SECRET set, or the endpoint refuses to run.",
+      "path": "/api/cron/daily-summary",
+      "schedule": "0 6 * * *"
+    }
+  ]
 }
