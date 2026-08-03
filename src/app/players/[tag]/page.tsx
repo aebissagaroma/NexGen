@@ -1,5 +1,5 @@
 'use client';
-// Player profile — registration + standing + matches for a gamertag.
+// Player profile — registration + standing + matches for a player.
 import * as React from 'react';
 import { useParams } from 'next/navigation';
 import { PageHeader, PageTitle } from '@/components/PageHeader';

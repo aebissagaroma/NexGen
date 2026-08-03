@@ -7,7 +7,7 @@ export async function GET(_req: Request, { params }: { params: { tag: string } }
   const player = await queryOne(
     `SELECT r.gamertag, r.full_name, r.club_code, c.name AS club_name, r.city, r.status
      FROM registrations r JOIN clubs c ON c.code = r.club_code
-     WHERE lower(r.gamertag) = lower($1) LIMIT 1`,
+     WHERE ec_tag_canon(r.gamertag) = ec_tag_canon($1) LIMIT 1`,
     [tag],
   );
   if (!player) return NextResponse.json({ error: 'Player not found.' }, { status: 404 });

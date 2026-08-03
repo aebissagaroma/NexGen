@@ -7,9 +7,9 @@
 // To send real email, set SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASS /
 // SMTP_FROM (e.g. a Gmail app password or a Brevo SMTP key) — see .env.example.
 import crypto from 'node:crypto';
-import nodemailer from 'nodemailer';
 import { query, queryOne } from './db';
 import { sessionSecret } from './session';
+import { sendMail } from './mailer';
 
 const OTP_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const MAX_ATTEMPTS = 5;
@@ -28,33 +28,10 @@ export function normalizeEmail(raw: string): string | null {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) ? s : null;
 }
 
-// Lazily-built, reused SMTP transport (undefined in dev / when unconfigured).
-let transport: nodemailer.Transporter | null | undefined;
-function getTransport(): nodemailer.Transporter | null {
-  if (transport !== undefined) return transport;
-  const host = process.env.SMTP_HOST;
-  if (!host) return (transport = null);
-  const port = Number(process.env.SMTP_PORT || 587);
-  transport = nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465, // 465 = implicit TLS; 587 = STARTTLS
-    auth: process.env.SMTP_USER
-      ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
-      : undefined,
-  });
-  return transport;
-}
-
+// Transport lives in lib/mailer.ts so OTP codes and appeal notifications share
+// one connection instead of building a pool each.
 async function sendEmail(to: string, code: string): Promise<void> {
-  const t = getTransport();
-  if (!t) {
-    // DEV: no SMTP configured — just log.
-    console.log(`\n📧 [DEV OTP] to ${to}: ${code}\n`);
-    return;
-  }
-  await t.sendMail({
-    from: process.env.SMTP_FROM || 'ELECTROCUP <no-reply@electrocup.com>',
+  await sendMail({
     to,
     subject: 'Your ELECTROCUP verification code',
     text: `Your ELECTROCUP code is ${code}. It is valid for 5 minutes.`,
