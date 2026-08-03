@@ -1,8 +1,9 @@
 'use client';
 // Nav + Hero, ported from hero.jsx. Register CTAs route to /register.
 import * as React from 'react';
+import { Css } from '@/components/Css';
 import Link from 'next/link';
-import { NexGenMark, Countdown, Placeholder } from './primitives';
+import { NexGenMark, Countdown, Placeholder, RegisterCta } from './primitives';
 import { REGISTRATION_OPENS } from '@/data/static';
 import { AnnouncementBanner } from './Announce';
 
@@ -39,10 +40,10 @@ export function Nav() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span className="tag" style={{ color: 'var(--accent-glow)', borderColor: 'rgba(var(--accent-glow-rgb),0.35)' }}>ANNOUNCING · 2026</span>
-          <Link href="/register" className="btn" style={{ padding: '10px 18px', fontSize: 11 }}>REGISTER →</Link>
+          <RegisterCta className="btn" style={{ padding: '10px 18px', fontSize: 11 }} />
         </div>
       </div>
-      <style>{`.nav-link:hover{color:var(--ink)!important;border-color:var(--accent)!important}@media (max-width:980px){.nav-links{display:none!important}}`}</style>
+      <Css>{`.nav-link:hover{color:var(--ink)!important;border-color:var(--accent)!important}@media (max-width:980px){.nav-links{display:none!important}}`}</Css>
     </nav>
   );
 }
@@ -80,7 +81,7 @@ export function Hero() {
           <Metric kicker="GRAND PRIZE" value="1 CAR" sub="2025 BYD Seagull" accent />
         </div>
       </div>
-      <style>{`@media (max-width:760px){.hero-metrics{grid-template-columns:repeat(2,1fr)!important;row-gap:24px!important}}`}</style>
+      <Css>{`@media (max-width:760px){.hero-metrics{grid-template-columns:repeat(2,1fr)!important;row-gap:24px!important}}`}</Css>
     </section>
   );
 }
@@ -101,7 +102,7 @@ function Metric({ kicker, value, sub, accent }: { kicker: string; value: string;
       <div className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--ink-3)', marginBottom: 8 }}>{kicker}</div>
       <div className="display num" style={{ fontSize: 32, lineHeight: 1, color: accent ? 'var(--accent-glow)' : 'var(--ink)' }}>{value}</div>
       {sub && <div className="mono" style={{ fontSize: 10.5, color: 'var(--ink-3)', marginTop: 6, letterSpacing: '.06em' }}>{sub}</div>}
-      <style>{`.metric-cell:last-child{border-right:none!important}@media (max-width:760px){.metric-cell:nth-child(2n){border-right:none!important}}`}</style>
+      <Css>{`.metric-cell:last-child{border-right:none!important}@media (max-width:760px){.metric-cell:nth-child(2n){border-right:none!important}}`}</Css>
     </div>
   );
 }
@@ -124,7 +125,7 @@ function HeroDefault() {
           Ethiopia&apos;s first national FC&nbsp;26 league. Twenty Premier League clubs. One slot per club. Earn your seat through open qualifiers — then play a 38-gameweek season for the title and a brand-new <strong style={{ color: 'var(--ink)' }}>2025 BYD&nbsp;Seagull&nbsp;405KM</strong>.
         </p>
         <div style={{ display: 'flex', gap: 14, marginTop: 32, flexWrap: 'wrap' }}>
-          <Link href="/register" className="btn">REGISTER NOW →</Link>
+          <RegisterCta className="btn" label="REGISTER NOW →" />
           <a href="#format" className="btn-ghost">HOW IT WORKS</a>
         </div>
       </div>
@@ -132,7 +133,7 @@ function HeroDefault() {
         <CountdownPanel target={REGISTRATION_OPENS} />
         <PrizeTeaser />
       </div>
-      <style>{`@media (max-width:1100px){.hero-grid{grid-template-columns:1fr!important;gap:40px!important}}`}</style>
+      <Css>{`@media (max-width:1100px){.hero-grid{grid-template-columns:1fr!important;gap:40px!important}}`}</Css>
     </div>
   );
 }
@@ -175,7 +176,7 @@ function PrizeTeaser() {
           </div>
         ))}
       </div>
-      <style>{`.prize-teaser:hover{border-color:var(--accent)!important}`}</style>
+      <Css>{`.prize-teaser:hover{border-color:var(--accent)!important}`}</Css>
     </a>
   );
 }

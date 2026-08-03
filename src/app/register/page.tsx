@@ -1,6 +1,7 @@
 'use client';
 // Registration flow: email → OTP → details → confirmation.
 import * as React from 'react';
+import { Css } from '@/components/Css';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { PageHeader, PageTitle } from '@/components/PageHeader';
@@ -259,7 +260,7 @@ function RegisterInner() {
               {/* Only after a rejection: offering an appeal to someone who has not
                   been blocked would just be noise. */}
               {err && <AppealForm defaultEmail={email} />}
-              <style>{`@media (max-width:560px){.reg-grid{grid-template-columns:1fr!important}}`}</style>
+              <Css>{`@media (max-width:560px){.reg-grid{grid-template-columns:1fr!important}}`}</Css>
             </form>
           )}
           {!existing && step === 'done' && (
