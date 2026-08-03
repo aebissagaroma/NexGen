@@ -2,7 +2,7 @@
 // Live bracket viewer — reads real matches from the DB (empty until drawn).
 import * as React from 'react';
 import { PageHeader, PageTitle } from '@/components/PageHeader';
-import { CLUBS } from '@/data/static';
+import { CLUBS, REGISTRATION_OPENS_LABEL } from '@/data/static';
 
 interface Match { id: string; club_code: string; round: string; slot: number; player_a: string | null; player_b: string | null; score_a: number | null; score_b: number | null; winner: string | null; }
 const ROUND_ORDER = ['RD256', 'RD64', 'RD16', 'QF', 'FINAL'];
@@ -39,7 +39,7 @@ export default function BracketPage() {
             <span className="tk1" /><span className="tk2" />
             <span className="mono" style={{ fontSize: 10, letterSpacing: '.26em', color: 'var(--accent-glow)' }}>NOT YET DRAWN</span>
             <div className="display" style={{ fontSize: 'clamp(32px,5vw,56px)', lineHeight: 0.95 }}>{CLUBS.find((c) => c.code === club)?.name}<br /><span style={{ color: 'var(--ink-3)', fontStyle: 'italic' }}>DRAW DATE TBA</span></div>
-            <p style={{ color: 'var(--ink-2)', maxWidth: '46ch', fontSize: 14.5 }}>Seeded by ELO and drawn on the live broadcast. Register now to claim a spot in this bracket.</p>
+            <p style={{ color: 'var(--ink-2)', maxWidth: '46ch', fontSize: 14.5 }}>Drawn at random on the live broadcast. Qualifier registration opens {REGISTRATION_OPENS_LABEL}.</p>
           </div>
         ) : (
           <div style={{ display: 'flex', gap: 24, overflowX: 'auto', paddingBottom: 16 }}>

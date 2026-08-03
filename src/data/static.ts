@@ -48,10 +48,10 @@ export const announcedPhases = (): TimelinePhase[] =>
 export const TIMELINE: TimelinePhase[] = [
   { phase: 'Announcement', sub: 'Public Reveal', date: 'AUG 04, 2026', note: 'This page · launch trailer drops', state: 'live' },
   { phase: 'Registration', sub: 'Open Sign-up', date: 'SEP 01, 2026', note: '20 brackets · entry fee TBA', state: 'upcoming', justAnnounced: true },
-  { phase: 'Bracket Draw', sub: 'Live Broadcast', date: 'TBA', note: 'Seeded by ELO · streamed', state: 'upcoming' },
+  { phase: 'Bracket Draw', sub: 'Live Broadcast', date: 'TBA', note: 'Random draw · streamed', state: 'upcoming' },
   { phase: 'Qualifiers', sub: 'BO3 Knockouts', date: 'TBA', note: '20 winners surface', state: 'upcoming' },
   { phase: 'Draft Day', sub: 'Live Broadcast', date: 'TBA', note: 'Host venue · Addis Ababa', state: 'upcoming' },
-  { phase: 'Gameweek 1', sub: 'Season Kickoff', date: 'TBA', note: '190 fixtures · 38 weeks', state: 'upcoming' },
+  { phase: 'Gameweek 1', sub: 'Season Kickoff', date: 'TBA', note: '380 fixtures · 38 weeks', state: 'upcoming' },
   { phase: 'Cup Final', sub: 'Live Audience', date: 'TBA', note: 'Host venue · Addis Ababa', state: 'upcoming' },
 ];
 
@@ -112,3 +112,17 @@ export const NEXGEN_PILLARS: Pillar[] = [
 // is announced step by step, so this points at sign-ups opening rather than at a
 // phase with no published date. Retarget it when the next phase is announced.
 export const REGISTRATION_OPENS = new Date('2026-09-01T09:00:00+03:00').getTime();
+
+// Display forms of the date above. Kept beside it so the copy can never drift
+// from the timestamp the countdown and the open/closed state both read.
+export const REGISTRATION_OPENS_LABEL = '01 SEP 2026';
+export const REGISTRATION_OPENS_SHORT = 'SEP 01';
+
+/**
+ * Whether sign-ups have opened. Callers must not use this during render without
+ * a mounted guard — see useRegistrationOpen() — because server and client
+ * evaluate it at different instants, and a disagreement aborts hydration.
+ */
+export function registrationHasOpened(now: number = Date.now()): boolean {
+  return now >= REGISTRATION_OPENS;
+}

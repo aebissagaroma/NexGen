@@ -1,6 +1,7 @@
 'use client';
 // Prize section, ported from prize.jsx.
 import * as React from 'react';
+import { Css } from '@/components/Css';
 import { Placeholder } from './primitives';
 import { PRIZE_PARTNER } from '@/data/static';
 
@@ -112,7 +113,7 @@ export function PrizeSection() {
 
         <div data-reveal className="mono" style={{ marginTop: 18, fontSize: 10.5, letterSpacing: '.22em', color: 'var(--ink-3)', textAlign: 'center', textTransform: 'uppercase' }}>subscribe to the dispatch · get every prize reveal first</div>
 
-        <style>{`@media (max-width:1100px){.prize-specs{grid-template-columns:repeat(2,1fr)!important}.prize-specs>div:nth-child(2n){border-right:none!important}.prize-specs>div{border-bottom:1px solid var(--line)}}@media (max-width:760px){.side-prizes{grid-template-columns:repeat(2,1fr)!important}}`}</style>
+        <Css>{`@media (max-width:1100px){.prize-specs{grid-template-columns:repeat(2,1fr)!important}.prize-specs>div:nth-child(2n){border-right:none!important}.prize-specs>div{border-bottom:1px solid var(--line)}}@media (max-width:760px){.side-prizes{grid-template-columns:repeat(2,1fr)!important}}`}</Css>
       </div>
     </section>
   );
