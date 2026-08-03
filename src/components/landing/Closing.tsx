@@ -2,8 +2,9 @@
 // Closing sections (Schedule, Sponsors + inquiry form, About, RegisterCTA, Footer).
 // Ported from closing.jsx; the sponsor CTA is now a working form → /api/sponsors.
 import * as React from 'react';
+import { Css } from '@/components/Css';
 import Link from 'next/link';
-import { NexGenMark, Countdown } from './primitives';
+import { NexGenMark, Countdown, RegisterCta } from './primitives';
 import { TIMELINE, SPONSORS_TIERS, NEXGEN_PILLARS, REGISTRATION_OPENS } from '@/data/static';
 import { NotifyBox } from './Announce';
 
@@ -35,7 +36,7 @@ export function ScheduleSection() {
         {/* Sits directly under the strip: this is where a visitor first sees how
             many phases read TBA, and so where they are most likely to want one. */}
         <NotifyBox />
-        <style>{`@media (max-width:1100px){.timeline-grid{grid-template-columns:repeat(2,1fr)!important}.timeline-grid>div{border-right:1px solid var(--line)!important;border-bottom:1px solid var(--line)}.timeline-grid>div:nth-child(2n){border-right:none!important}}@media (max-width:560px){.timeline-grid{grid-template-columns:1fr!important}}`}</style>
+        <Css>{`@media (max-width:1100px){.timeline-grid{grid-template-columns:repeat(2,1fr)!important}.timeline-grid>div{border-right:1px solid var(--line)!important;border-bottom:1px solid var(--line)}.timeline-grid>div:nth-child(2n){border-right:none!important}}@media (max-width:560px){.timeline-grid{grid-template-columns:1fr!important}}`}</Css>
       </div>
     </section>
   );
@@ -75,7 +76,7 @@ export function SponsorsSection() {
               </div>
             </div>
           ))}
-          <style>{`@media (max-width:760px){.sponsor-row{grid-template-columns:1fr!important;gap:18px!important}}`}</style>
+          <Css>{`@media (max-width:760px){.sponsor-row{grid-template-columns:1fr!important;gap:18px!important}}`}</Css>
         </div>
 
         <SponsorInquiry />
@@ -131,7 +132,7 @@ function SponsorInquiry() {
           <div style={{ gridColumn: '1 / -1' }}><label className="label">Message (optional)</label><textarea name="message" className="field" style={{ height: 96, padding: '12px 14px', resize: 'vertical' }} placeholder="Tell us about your brand and goals" /></div>
           {err && <div className="notice notice-err" style={{ gridColumn: '1 / -1' }}>{err}</div>}
           <div style={{ gridColumn: '1 / -1' }}><button className="btn" disabled={busy}>{busy ? 'SENDING…' : 'REQUEST MEDIA KIT →'}</button></div>
-          <style>{`@media (max-width:640px){.sponsor-form{grid-template-columns:1fr!important}}`}</style>
+          <Css>{`@media (max-width:640px){.sponsor-form{grid-template-columns:1fr!important}}`}</Css>
         </form>
       )}
     </div>
@@ -173,7 +174,7 @@ export function AboutSection() {
             </div>
           </div>
         </div>
-        <style>{`@media (max-width:980px){.about-grid{grid-template-columns:1fr!important;gap:40px!important}}`}</style>
+        <Css>{`@media (max-width:980px){.about-grid{grid-template-columns:1fr!important;gap:40px!important}}`}</Css>
       </div>
     </section>
   );
@@ -188,7 +189,7 @@ export function RegisterCTA() {
         <h2 className="display" style={{ fontSize: 'clamp(64px, 10vw, 144px)', margin: '20px 0 24px', lineHeight: 0.92 }}>EARN <span style={{ fontStyle: 'italic', color: 'var(--ink-3)' }}>YOUR</span> CLUB.<br /><span style={{ background: 'linear-gradient(180deg, var(--ink), var(--chrome-2))', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>DRIVE THE PRIZE.</span></h2>
         <p style={{ color: 'var(--ink-2)', fontSize: 17, lineHeight: 1.6, maxWidth: '52ch', margin: '0 auto' }}>Registration opens 01 September 2026. Verify your email, pick your club, and enter its qualifier bracket. Brackets are drawn live on broadcast — we announce the date once sign-ups close.</p>
         <div style={{ marginTop: 36, display: 'flex', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
-          <Link href="/register" className="btn" style={{ padding: '18px 28px', fontSize: 13 }}>REGISTER NOW →</Link>
+          <RegisterCta className="btn" style={{ padding: '18px 28px', fontSize: 13 }} label="REGISTER NOW →" />
           <a href="#format" className="btn-ghost" style={{ padding: '18px 28px', fontSize: 13 }}>READ THE FORMAT</a>
         </div>
         <div style={{ marginTop: 48, display: 'inline-flex', alignItems: 'center', gap: 14, padding: '12px 18px', border: '1px solid var(--line-2)', borderRadius: 999, background: 'rgba(0,0,0,0.4)' }}>
@@ -202,10 +203,28 @@ export function RegisterCTA() {
 }
 
 export function Footer() {
-  const COLS = [
-    { title: 'TOURNAMENT', links: ['Format', 'Clubs', 'Brackets', 'Schedule', 'Prize'] },
-    { title: 'COMPANY', links: ['About NexGen', 'Press', 'Careers', 'Contact'] },
-    { title: 'FOLLOW', links: ['TikTok @electrocup26', 'Instagram @electrocup26', 'YouTube /nexgenplc', 'Twitch /electrocup'] },
+  // href null = no destination exists yet, so it renders as plain text rather
+  // than a link that goes nowhere. Give these a URL as each one lands.
+  const COLS: { title: string; links: { label: string; href: string | null }[] }[] = [
+    { title: 'TOURNAMENT', links: [
+      { label: 'Format', href: '/#format' },
+      { label: 'Clubs', href: '/#clubs' },
+      { label: 'Brackets', href: '/#bracket' },
+      { label: 'Schedule', href: '/#schedule' },
+      { label: 'Prize', href: '/#prize' },
+    ] },
+    { title: 'COMPANY', links: [
+      { label: 'About NexGen', href: '/#about' },
+      { label: 'Partners', href: '/#partners' },
+      { label: 'Press', href: null },
+      { label: 'Careers', href: null },
+    ] },
+    { title: 'FOLLOW', links: [
+      { label: 'TikTok @electrocup26', href: null },
+      { label: 'Instagram @electrocup26', href: null },
+      { label: 'YouTube /nexgenplc', href: null },
+      { label: 'Twitch /electrocup', href: null },
+    ] },
   ];
   return (
     <footer style={{ background: 'var(--bg)', borderTop: '1px solid var(--line)', padding: '56px 0 36px' }}>
@@ -225,7 +244,13 @@ export function Footer() {
             <div key={col.title}>
               <div className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--ink-3)', marginBottom: 14 }}>{col.title}</div>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {col.links.map((l) => (<li key={l}><a href="#" style={{ color: 'var(--ink-2)', fontSize: 13.5 }}>{l}</a></li>))}
+                {col.links.map((l) => (
+                  <li key={l.label}>
+                    {l.href
+                      ? <Link href={l.href} style={{ color: 'var(--ink-2)', fontSize: 13.5 }}>{l.label}</Link>
+                      : <span style={{ color: 'var(--ink-4)', fontSize: 13.5 }}>{l.label}</span>}
+                  </li>
+                ))}
               </ul>
             </div>
           ))}
@@ -233,11 +258,13 @@ export function Footer() {
         <div style={{ marginTop: 48, paddingTop: 22, borderTop: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           <div className="mono" style={{ fontSize: 10.5, letterSpacing: '.14em', color: 'var(--ink-4)' }}>© 2026 NEXGEN PLC · ADDIS ABABA, ETHIOPIA · ALL RIGHTS RESERVED</div>
           <div style={{ display: 'flex', gap: 18 }}>
-            {['TERMS', 'PRIVACY', 'RULEBOOK', 'PRESS'].map((l) => (<a key={l} href="#" className="mono" style={{ fontSize: 10.5, letterSpacing: '.18em', color: 'var(--ink-3)' }}>{l}</a>))}
+            {[{ label: 'TERMS', href: '/terms' }, { label: 'PRIVACY', href: '/privacy' }, { label: 'RULEBOOK', href: '/rulebook' }].map((l) => (
+              <Link key={l.label} href={l.href} className="mono" style={{ fontSize: 10.5, letterSpacing: '.18em', color: 'var(--ink-3)' }}>{l.label}</Link>
+            ))}
           </div>
         </div>
       </div>
-      <style>{`@media (max-width:880px){.footer-grid{grid-template-columns:1fr 1fr!important;gap:32px!important}}@media (max-width:520px){.footer-grid{grid-template-columns:1fr!important}}`}</style>
+      <Css>{`@media (max-width:880px){.footer-grid{grid-template-columns:1fr 1fr!important;gap:32px!important}}@media (max-width:520px){.footer-grid{grid-template-columns:1fr!important}}`}</Css>
     </footer>
   );
 }

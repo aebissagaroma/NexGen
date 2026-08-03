@@ -1,6 +1,8 @@
 'use client';
 // Shared primitives ported from primitives.jsx (Countdown, marks, ClubCode, etc.)
 import * as React from 'react';
+import Link from 'next/link';
+import { registrationHasOpened, REGISTRATION_OPENS_LABEL } from '@/data/static';
 
 export function NexGenMark({ size = 28 }: { size?: number }) {
   const eGlyph = 'M26 16 H80 L70 32 H42 V44 H70 L60 60 H42 V70 H74 L64 86 H26 Z';
@@ -80,16 +82,80 @@ export function ClubCode({ code, accent }: { code: string; accent?: string }) {
   );
 }
 
+/**
+ * Whether qualifier registration has opened.
+ *
+ * Returns false on the server and on the first client render, then the real
+ * value after mount. Deriving it from the clock during render would let the
+ * server and client disagree across the opening instant, and a hydration
+ * mismatch does not degrade gracefully here — it blanks the page (see
+ * components/Css.tsx).
+ */
+export function useRegistrationOpen(): boolean {
+  const [open, setOpen] = React.useState(false);
+  React.useEffect(() => { setOpen(registrationHasOpened()); }, []);
+  return open;
+}
+
+/**
+ * The one way to link to /register.
+ *
+ * Before sign-ups open this renders the date instead of a link. Every CTA on the
+ * site has to agree with the Clubs section — inviting someone to register on the
+ * same page that tells them registration opens in September, then walking them
+ * into a form that turns them away, is worse than simply stating the date.
+ */
+export function RegisterCta({ className = 'btn', style, label = 'REGISTER →' }: {
+  className?: string; style?: React.CSSProperties; label?: string;
+}) {
+  const open = useRegistrationOpen();
+  if (!open) {
+    return (
+      <span className={className} aria-disabled="true"
+        style={{ ...style, opacity: 0.55, cursor: 'default', pointerEvents: 'none' }}>
+        OPENS {REGISTRATION_OPENS_LABEL}
+      </span>
+    );
+  }
+  return <Link href="/register" className={className} style={style}>{label}</Link>;
+}
+
 // Scroll-reveal — reveals [data-reveal] elements as they enter the viewport.
+//
+// Everything with [data-reveal] starts at opacity: 0 (globals.css), so anything
+// this misses is invisible, not merely un-animated. It previously ran once and
+// observed only the nodes present at that instant, which made it silently fatal:
+// a hydration mismatch replaced the whole DOM, the observer kept watching the
+// discarded nodes, and the entire page stayed blank. The mismatch is fixed (see
+// components/Css.tsx), but a single missed node should degrade to "not animated"
+// rather than "not visible", so this now also picks up nodes added later.
 export function useReveal() {
   React.useEffect(() => {
+    // No IntersectionObserver (old browser, some in-app webviews): show
+    // everything rather than leaving the page invisible.
+    if (typeof IntersectionObserver === 'undefined') {
+      document.querySelectorAll('[data-reveal]').forEach((el) => el.classList.add('in'));
+      return;
+    }
+
     const obs = new IntersectionObserver((entries) => {
       entries.forEach((e) => {
         if (e.isIntersecting) { e.target.classList.add('in'); obs.unobserve(e.target); }
       });
     }, { rootMargin: '-10% 0px -5% 0px', threshold: 0.05 });
-    document.querySelectorAll('[data-reveal]').forEach((el) => obs.observe(el));
-    return () => obs.disconnect();
+
+    const observeAll = () => {
+      document.querySelectorAll('[data-reveal]:not(.in)').forEach((el) => obs.observe(el));
+    };
+    observeAll();
+
+    // Catches [data-reveal] nodes mounted after this effect — a re-render that
+    // swaps nodes (client-side data arriving, a recovered hydration) would
+    // otherwise leave them permanently at opacity: 0.
+    const mo = new MutationObserver(observeAll);
+    mo.observe(document.body, { childList: true, subtree: true });
+
+    return () => { obs.disconnect(); mo.disconnect(); };
   }, []);
 }
 
