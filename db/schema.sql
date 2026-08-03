@@ -87,15 +87,25 @@ CREATE INDEX IF NOT EXISTS idx_reg_created ON registrations (created_at DESC);
 -- Bring an already-deployed database in line with the table definition above.
 -- CREATE TABLE IF NOT EXISTS is a no-op once the table exists, so column changes
 -- have to be spelled out or they never reach production.
+-- `id_hash` is an irreversible HMAC of the document number, used only to stop the
+-- same person entering twice; `id_last4` lets ops tell two entries apart when
+-- someone contacts them. The number itself is never written down.
 ALTER TABLE registrations ADD COLUMN IF NOT EXISTS id_hash  TEXT;
 ALTER TABLE registrations ADD COLUMN IF NOT EXISTS id_last4 TEXT;
--- Photo of the identity document, held in Vercel Blob. Only the URL is stored.
--- `id_doc_type` is 'fayda' when supplied at sign-up, or 'kebele'/'other' when a
--- player without a Fayda uploads an alternative afterwards.
-ALTER TABLE registrations ADD COLUMN IF NOT EXISTS id_doc_url    TEXT;
-ALTER TABLE registrations ADD COLUMN IF NOT EXISTS id_doc_type   TEXT;
--- 'provided' | 'pending' — pending means they asked to submit another document.
-ALTER TABLE registrations ADD COLUMN IF NOT EXISTS id_doc_status TEXT NOT NULL DEFAULT 'pending';
+
+-- Identity documents are NOT stored. Rulebook 3.4 and 13.2 state that no copy or
+-- image of an identity document is retained, and age/residency is verified in
+-- person at a Qualifier Center. An earlier build uploaded Fayda photos to Vercel
+-- Blob; these columns are dropped so the database cannot hold what the rulebook
+-- promises it does not.
+--
+-- DROP COLUMN also destroys any rows captured before this change. That is the
+-- intent: leaving them would keep exactly the data we are undertaking not to
+-- keep. Blobs already written must be deleted separately in the Vercel
+-- dashboard — dropping the column removes the URL, not the file it pointed at.
+ALTER TABLE registrations DROP COLUMN IF EXISTS id_doc_url;
+ALTER TABLE registrations DROP COLUMN IF EXISTS id_doc_type;
+ALTER TABLE registrations DROP COLUMN IF EXISTS id_doc_status;
 -- Players no longer type a gamertag; they pick one the site builds from their
 -- name (src/lib/gamertag.ts). Nullable because entries taken before the change
 -- may have none, and because it is a display handle, not an identity key.
