@@ -26,9 +26,9 @@ export async function GET(req: Request) {
 
   const regs = await query<{
     full_name: string; gamertag: string | null; club_code: string;
-    email: string; id_last4: string | null; id_doc_status: string;
+    email: string; id_last4: string | null;
   }>(
-    `SELECT full_name, gamertag, club_code, email, id_last4, id_doc_status
+    `SELECT full_name, gamertag, club_code, email, id_last4
      FROM registrations
      WHERE created_at > now() - interval '${WINDOW}'
      ORDER BY created_at`,
@@ -54,10 +54,10 @@ export async function GET(req: Request) {
     `SELECT count(*)::int AS n FROM sponsor_inquiries WHERE NOT handled`,
   );
 
-  const totals = await queryOne<{ total: number; missing_doc: number }>(
-    `SELECT count(*)::int AS total,
-            count(*) FILTER (WHERE id_doc_status <> 'provided')::int AS missing_doc
-     FROM registrations`,
+  // No ID-photo column any more — documents are checked in person and not
+  // stored (rulebook 3.4), so there is nothing to chase in this roll-up.
+  const totals = await queryOne<{ total: number }>(
+    `SELECT count(*)::int AS total FROM registrations`,
   );
 
   // Per-club counts give ops the one number they actually act on: which brackets
@@ -78,7 +78,7 @@ export async function GET(req: Request) {
   lines.push(`New entries:   ${regs.length}`);
   lines.push(`New appeals:   ${appeals.length}`);
   if (!split) lines.push(`New inquiries: ${sponsors.length}`);
-  lines.push(`Total so far:  ${totals?.total ?? 0}  (${totals?.missing_doc ?? 0} still without an ID photo)`);
+  lines.push(`Total so far:  ${totals?.total ?? 0}`);
   if (!split && openSponsors?.n) lines.push(`⚠ ${openSponsors.n} partner ${openSponsors.n === 1 ? 'inquiry is' : 'inquiries are'} still unanswered`);
   lines.push('');
 
@@ -87,8 +87,7 @@ export async function GET(req: Request) {
     for (const r of regs) {
       lines.push(
         `  ${r.full_name} · ${r.gamertag || 'no tag'} · ${r.club_code} · ${r.email}` +
-        ` · ID ••••${r.id_last4 || '????'}` +
-        (r.id_doc_status === 'provided' ? '' : ' · NO ID PHOTO'),
+        ` · ID ••••${r.id_last4 || '????'}`,
       );
     }
     lines.push('');
