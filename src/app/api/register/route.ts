@@ -108,7 +108,6 @@ export async function POST(req: Request) {
         `Email:     ${session.email ?? '—'}`,
         `City:      ${city || '—'}`,
         `ID ending: ${idLast4(idCanon)}`,
-        `ID photo:  not uploaded yet`,
         `Entry ID:  ${row!.id}`,
       ].join('\n'),
     );
@@ -149,7 +148,7 @@ export async function GET() {
   if (!session) return NextResponse.json({ registrations: [] });
   const rows = await query(
     `SELECT r.id, r.full_name, r.gamertag, r.club_code, c.name AS club_name,
-            r.city, r.id_last4, r.id_doc_status, r.id_doc_type,
+            r.city, r.id_last4,
             r.payment_status, r.status, r.created_at
      FROM registrations r JOIN clubs c ON c.code = r.club_code
      WHERE r.user_id = $1 OR ec_email_canon(r.email) = ec_email_canon($2)

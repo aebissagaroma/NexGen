@@ -7,12 +7,11 @@ import { useSearchParams } from 'next/navigation';
 import { PageHeader, PageTitle } from '@/components/PageHeader';
 import { CLUBS } from '@/data/static';
 import { AppealForm } from '@/components/AppealForm';
-import { IdUpload } from '@/components/IdUpload';
 
 type Step = 'email' | 'otp' | 'details' | 'done';
 
 // An entry the player already has. One per player, so at most one of these.
-type Existing = { club_name: string; full_name: string; gamertag: string | null; id_last4: string | null; status: string; id_doc_status: string | null; id_doc_type: string | null };
+type Existing = { club_name: string; full_name: string; gamertag: string | null; id_last4: string | null; status: string };
 
 function RegisterInner() {
   const params = useSearchParams();
@@ -269,9 +268,11 @@ function RegisterInner() {
               <p style={{ color: 'var(--ink-2)', fontSize: 15.5, lineHeight: 1.6, maxWidth: '44ch', margin: '18px auto 0' }}>
                 Thanks{confirmName ? `, ${confirmName.split(' ')[0]}` : ''} — your entry is logged. We&apos;ll email you bracket seeding and match details ahead of the live draw, and announce the date once registration closes.
               </p>
-              {/* Upload comes AFTER the entry is saved, so a failed or slow
-                  upload can never cost someone their place. */}
-              <div style={{ textAlign: 'left' }}><IdUpload /></div>
+              {/* No document upload. Age and residency are checked in person at
+                  a Qualifier Center (rulebook 3.4), and nothing is retained. */}
+              <p className="mono" style={{ fontSize: 11, letterSpacing: '.08em', color: 'var(--ink-3)', lineHeight: 1.6, maxWidth: '44ch', margin: '18px auto 0' }}>
+                BRING YOUR PHOTO ID TO YOUR QUALIFIER SESSION · WE CHECK IT THERE AND KEEP NO COPY
+              </p>
               <div style={{ marginTop: 28, display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
                 <Link href="/bracket" className="btn">VIEW BRACKETS →</Link>
                 <Link href="/" className="btn-ghost">BACK HOME</Link>
@@ -299,10 +300,10 @@ function AlreadyEntered({ reg }: { reg: Existing }) {
         Do not submit a second entry — that means immediate disqualification. Need to switch club or fix a
         detail? Reply to your verification email and NexGen ops will sort it.
       </p>
-      {/* Still open for anyone who has not sent a document yet, including players
-          who asked to use a Kebele or other ID instead of a Fayda. */}
+      <p className="mono" style={{ fontSize: 11, letterSpacing: '.08em', color: 'var(--ink-3)', lineHeight: 1.6, maxWidth: '44ch', margin: '14px auto 0' }}>
+        BRING YOUR PHOTO ID TO YOUR QUALIFIER SESSION · WE CHECK IT THERE AND KEEP NO COPY
+      </p>
       <div style={{ textAlign: 'left' }}>
-        <IdUpload initialStatus={reg.id_doc_status} initialType={reg.id_doc_type} />
         <AppealForm />
       </div>
       <div style={{ marginTop: 28, display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>

@@ -26,9 +26,9 @@ export async function GET(req: Request) {
 
   const regs = await query<{
     full_name: string; gamertag: string | null; club_code: string;
-    email: string; id_last4: string | null; id_doc_status: string;
+    email: string; id_last4: string | null;
   }>(
-    `SELECT full_name, gamertag, club_code, email, id_last4, id_doc_status
+    `SELECT full_name, gamertag, club_code, email, id_last4
      FROM registrations
      WHERE created_at > now() - interval '${WINDOW}'
      ORDER BY created_at`,
@@ -39,10 +39,8 @@ export async function GET(req: Request) {
      WHERE created_at > now() - interval '${WINDOW}' ORDER BY created_at`,
   );
 
-  const totals = await queryOne<{ total: number; missing_doc: number }>(
-    `SELECT count(*)::int AS total,
-            count(*) FILTER (WHERE id_doc_status <> 'provided')::int AS missing_doc
-     FROM registrations`,
+  const totals = await queryOne<{ total: number }>(
+    `SELECT count(*)::int AS total FROM registrations`,
   );
 
   // Per-club counts give ops the one number they actually act on: which brackets
@@ -56,15 +54,14 @@ export async function GET(req: Request) {
   lines.push(`ELECTROCUP 26 — last ${WINDOW}`, '');
   lines.push(`New entries:  ${regs.length}`);
   lines.push(`New appeals:  ${appeals.length}`);
-  lines.push(`Total so far: ${totals?.total ?? 0}  (${totals?.missing_doc ?? 0} still without an ID photo)`, '');
+  lines.push(`Total so far: ${totals?.total ?? 0}`, '');
 
   if (regs.length) {
     lines.push('── New entries ──');
     for (const r of regs) {
       lines.push(
         `  ${r.full_name} · ${r.gamertag || 'no tag'} · ${r.club_code} · ${r.email}` +
-        ` · ID ••••${r.id_last4 || '????'}` +
-        (r.id_doc_status === 'provided' ? '' : ' · NO ID PHOTO'),
+        ` · ID ••••${r.id_last4 || '????'}`,
       );
     }
     lines.push('');
