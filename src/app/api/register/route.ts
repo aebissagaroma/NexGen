@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { query, queryOne } from '@/lib/db';
 import { getSession } from '@/lib/session';
 import { str } from '@/lib/validation';
+import { hashPassword } from '@/lib/password';
 import { canonicalId, hashId, idLast4 } from '@/lib/national-id';
 import { notifyOps, notifyEachRegistration } from '@/lib/mailer';
 
@@ -16,6 +17,7 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const fullName = str(body.fullName, { min: 2, max: 120 });
   const clubCode = str(body.clubCode, { min: 2, max: 4 });
+  const password = str(body.password, { min: 8, max: 200 });
   const city = body.city ? str(body.city, { max: 80 }) : null;
   // Chosen from the name-derived options offered by /api/tags/suggest. Not
   // re-derived here on purpose: the player may have picked one, then edited their
@@ -37,6 +39,9 @@ export async function POST(req: Request) {
       { error: 'Enter your ID number as it appears on your ID.' },
       { status: 400 },
     );
+  }
+  if (!password) {
+    return NextResponse.json({ error: 'Choose a password of at least 8 characters — you sign in with it from now on.' }, { status: 400 });
   }
 
   const club = await queryOne(`SELECT code FROM clubs WHERE code = $1`, [clubCode.toUpperCase()]);
@@ -71,6 +76,14 @@ export async function POST(req: Request) {
   if (tagTaken) {
     return NextResponse.json({ error: TAG_TAKEN }, { status: 409 });
   }
+
+  // Set the password before inserting the entry: if the insert loses a race
+  // (409 below), the player still ends up able to sign in — the reverse order
+  // could leave a registered player with no password at all.
+  await query(`UPDATE users SET password_hash = $1 WHERE id = $2`, [
+    await hashPassword(password),
+    session.sub,
+  ]);
 
   try {
     const row = await queryOne<{ id: string }>(

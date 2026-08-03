@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requestOtp, normalizeEmail, OtpDeliveryError } from '@/lib/otp';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
+import { queryOne } from '@/lib/db';
 
 // This endpoint is unauthenticated and sends an email on every call, so it is
 // capped twice: per address (stops hammering one inbox) and per IP (stops a
@@ -40,6 +41,25 @@ export async function POST(req: Request) {
       { error: `Too many code requests. Try again in ${mins} minute${mins === 1 ? '' : 's'}.` },
       { status: 429, headers: { 'Retry-After': String(blocked.retryAfter) } },
     );
+  }
+
+  // Register flow only: if this address already holds an entry, say so BEFORE
+  // spending an email credit on an OTP whose only outcome would be "you're
+  // already in". Sign-in callers (the mobile app, "view my entry") skip this —
+  // they legitimately need a session precisely because they're registered.
+  //
+  // Deliberate tradeoff: this reveals has-an-entry for an address to an
+  // unauthenticated caller. Accepted here — signup forms conventionally do,
+  // the rate limits above throttle bulk probing, and entry details (club,
+  // gamertag, status) still require a verified session.
+  if (body.intent === 'register') {
+    const existing = await queryOne(
+      `SELECT 1 FROM registrations WHERE ec_email_canon(email) = ec_email_canon($1) LIMIT 1`,
+      [email],
+    );
+    if (existing) {
+      return NextResponse.json({ ok: true, email, alreadyRegistered: true, devCode: null });
+    }
   }
 
   try {
