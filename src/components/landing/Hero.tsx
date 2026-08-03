@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Css } from '@/components/Css';
 import Link from 'next/link';
-import { NexGenMark, Countdown, Placeholder, RegisterCta } from './primitives';
+import { NexGenMark, Countdown, Placeholder, RegisterCta, useGrandPrize } from './primitives';
 import { REGISTRATION_OPENS } from '@/data/static';
 import { AnnouncementBanner } from './Announce';
 
@@ -49,6 +49,7 @@ export function Nav() {
 }
 
 export function Hero() {
+  const prize = useGrandPrize();
   return (
     <section id="top" style={{ position: 'relative', minHeight: '100vh', paddingTop: 'calc(var(--rail-h) + 36px)', paddingBottom: 64, overflow: 'hidden', background: 'radial-gradient(1200px 600px at 80% 0%, rgba(var(--accent-rgb),0.18) 0%, transparent 60%),radial-gradient(900px 500px at 10% 100%, rgba(var(--accent-deep-rgb),0.18) 0%, transparent 55%),linear-gradient(180deg, var(--bg) 0%, var(--bg-1) 50%, var(--bg) 100%)' }}>
       <div className="grid-bg" style={{ position: 'absolute', inset: 0, opacity: 0.6, pointerEvents: 'none', maskImage: 'radial-gradient(ellipse at 50% 40%, black 30%, transparent 75%)', WebkitMaskImage: 'radial-gradient(ellipse at 50% 40%, black 30%, transparent 75%)' }} />
@@ -78,7 +79,7 @@ export function Hero() {
           <Metric kicker="EDITION" value="01" sub="Inaugural · FC 26" />
           <Metric kicker="CLUB SLOTS" value="20" sub="All open" />
           <Metric kicker="GAMEWEEKS" value="38" sub="Round-robin season" />
-          <Metric kicker="GRAND PRIZE" value="1 CAR" sub="2025 BYD Seagull" accent />
+          <Metric kicker="GRAND PRIZE" value="1 CAR" sub={prize ? prize.short : "Revealed 01 Sep 2026"} accent />
         </div>
       </div>
       <Css>{`@media (max-width:760px){.hero-metrics{grid-template-columns:repeat(2,1fr)!important;row-gap:24px!important}}`}</Css>
@@ -108,6 +109,7 @@ function Metric({ kicker, value, sub, accent }: { kicker: string; value: string;
 }
 
 function HeroDefault() {
+  const prize = useGrandPrize();
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 56, marginTop: 56, alignItems: 'center' }} className="hero-grid">
       <div data-reveal>
@@ -122,7 +124,7 @@ function HeroDefault() {
           <span style={{ fontFamily: 'var(--f-display)', fontWeight: 700, fontSize: 'clamp(20px, 2.4vw, 30px)', letterSpacing: '-0.01em', color: 'var(--ink-3)', fontStyle: 'italic' }}>DRIVE THE PRIZE.</span>
         </div>
         <p style={{ marginTop: 24, fontSize: 16, lineHeight: 1.6, color: 'var(--ink-2)', maxWidth: '52ch' }}>
-          Ethiopia&apos;s first national FC&nbsp;26 league. Twenty Premier League clubs. One slot per club. Earn your seat through open qualifiers — then play a 38-gameweek season for the title and a brand-new <strong style={{ color: 'var(--ink)' }}>2025 BYD&nbsp;Seagull&nbsp;405KM</strong>.
+          Ethiopia&apos;s first national FC&nbsp;26 league. Twenty Premier League clubs. One slot per club. Earn your seat through open qualifiers — then play a 38-gameweek season for the title and <strong style={{ color: 'var(--ink)' }}>{prize ? prize.name : 'a brand-new 100% electric car'}</strong>.
         </p>
         <div style={{ display: 'flex', gap: 14, marginTop: 32, flexWrap: 'wrap' }}>
           <RegisterCta className="btn" label="REGISTER NOW →" />
@@ -159,6 +161,7 @@ function CountdownPanel({ target }: { target: number }) {
 }
 
 function PrizeTeaser() {
+  const prize = useGrandPrize();
   return (
     <a href="#prize" className="ticks prize-teaser" style={{ position: 'relative', display: 'block', padding: 24, color: 'inherit', background: 'linear-gradient(135deg, rgba(var(--accent-glow-rgb),0.08), rgba(var(--accent-glow-rgb),0.0) 40%),var(--bg-1)', border: '1px solid var(--line-2)', transition: 'border-color .15s ease' }}>
       <span className="tk1" /><span className="tk2" />
@@ -166,13 +169,15 @@ function PrizeTeaser() {
         <span className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--accent-glow)' }}>GRAND PRIZE / 01</span>
         <span className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--ink-3)' }}>PRIZE_VALUE_LOCKED</span>
       </div>
-      <div className="display-2" style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.05 }}>2025 BYD <span style={{ fontStyle: 'italic', color: 'var(--accent-glow)' }}>SEAGULL</span> 405KM</div>
+      <div className="display-2" style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.05 }}>{prize ? prize.name : <>AN <span style={{ fontStyle: 'italic', color: 'var(--accent-glow)' }}>ELECTRIC</span> CAR</>}</div>
       <div style={{ marginTop: 16 }}><Placeholder label="[ VEHICLE PHOTO PLATE ]" aspect="16 / 6" /></div>
       <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-        {[{ k: 'RANGE', v: '405 KM' }, { k: 'TYPE', v: '100% EV' }, { k: 'MODEL', v: '2025 MY' }].map((c) => (
+        {(prize ? prize.teaserSpecs : [{ k: 'RANGE', v: null }, { k: 'TYPE', v: '100% EV' }, { k: 'MODEL', v: null }]).map((c) => (
           <div key={c.k}>
             <div className="mono" style={{ fontSize: 9, letterSpacing: '.22em', color: 'var(--ink-3)' }}>{c.k}</div>
-            <div className="display-2" style={{ fontSize: 17, fontWeight: 700, marginTop: 2 }}>{c.v}</div>
+            {c.v
+              ? <div className="display-2" style={{ fontSize: 17, fontWeight: 700, marginTop: 2 }}>{c.v}</div>
+              : <div aria-label="Sealed" style={{ marginTop: 6, height: 14, background: '#000', border: '1px solid var(--line-2)' }} />}
           </div>
         ))}
       </div>

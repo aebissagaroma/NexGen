@@ -73,6 +73,21 @@ export const SPONSORS_TIERS: SponsorTier[] = [
   { tier: 'Broadcast', key: 'Broadcast', code: 'T04', seats: 4, focus: 'Distribution', note: 'Linear and streaming distribution partners.' },
 ];
 
+// What the site says about the grand prize BEFORE the car is named. Everything
+// here is true and none of it identifies the vehicle, so the page is never coy
+// about what is being given away — only about which car it is.
+//
+// The make and model deliberately do NOT live in this file. Everything in
+// src/data is imported by client components and therefore shipped to the
+// browser, where anyone can read it out of the JS bundle. The real details are
+// server-side in src/lib/grand-prize.ts and released by /api/prize on the day.
+export const GRAND_PRIZE_SEALED = {
+  headline: 'AN ELECTRIC CAR.',
+  teaser: 'a brand-new 100% electric car',
+  plate: '[ SEALED UNTIL 01 SEP 2026 ]',
+  note: 'MAKE AND MODEL REVEALED WHEN REGISTRATION OPENS',
+};
+
 // The partner delivering the grand-prize vehicle. Credited on the Prize section
 // rather than occupying a tier seat: the seats are sellable inventory and this
 // placement is not, so it costs nothing to give it prominence — and the prize
