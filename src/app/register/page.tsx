@@ -42,12 +42,49 @@ function RegisterInner() {
   // so check before asking them to sit through the OTP again.
   React.useEffect(() => { void loadExisting(); }, []);
 
+  // Set when the register-intent request reports this address already holds an
+  // entry — decided BEFORE any code is emailed, so returning players don't cost
+  // a send just to be told they're in. Cleared by "use a different email".
+  const [knownRegistered, setKnownRegistered] = React.useState(false);
+
   async function requestOtp(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setErr(null);
+    const res = await fetch('/api/auth/otp/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, intent: 'register' }) });
+    const data = await res.json(); setBusy(false);
+    if (!res.ok) { setErr(data.error); return; }
+    if (data.alreadyRegistered) { setEmail(data.email); setKnownRegistered(true); return; }
+    setEmail(data.email); setDevCode(data.devCode); setStep('otp');
+  }
+
+  // Sub-flow inside the already-registered notice: password sign-in (free —
+  // no email sent), with an OTP-backed reset as the forgot-password path.
+  const [authMode, setAuthMode] = React.useState<'password' | 'reset'>('password');
+  const [pw, setPw] = React.useState('');
+
+  async function signIn(e: React.FormEvent) {
+    e.preventDefault(); setBusy(true); setErr(null);
+    const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: pw }) });
+    const data = await res.json(); setBusy(false);
+    if (!res.ok) { setErr(data.error); return; }
+    await loadExisting(); // sets `existing` → renders the entry card
+  }
+
+  // Forgot password: the one returning-player path that still costs an email.
+  async function forgotPassword() {
+    setBusy(true); setErr(null);
     const res = await fetch('/api/auth/otp/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
     const data = await res.json(); setBusy(false);
     if (!res.ok) { setErr(data.error); return; }
-    setEmail(data.email); setDevCode(data.devCode); setStep('otp');
+    setDevCode(data.devCode); setAuthMode('reset');
+  }
+
+  async function resetPassword(e: React.FormEvent) {
+    e.preventDefault(); setBusy(true); setErr(null);
+    const fd = new FormData(e.target as HTMLFormElement);
+    const res = await fetch('/api/auth/password/reset', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, code: fd.get('code'), newPassword: fd.get('newPassword') }) });
+    const data = await res.json(); setBusy(false);
+    if (!res.ok) { setErr(data.error); return; }
+    await loadExisting();
   }
   async function verifyOtp(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setErr(null);
@@ -84,9 +121,11 @@ function RegisterInner() {
   }
 
   async function submitDetails(e: React.FormEvent) {
-    e.preventDefault(); setBusy(true); setErr(null);
+    e.preventDefault(); setErr(null);
     const fd = new FormData(e.target as HTMLFormElement);
-    const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fullName: fd.get('fullName'), idNumber: fd.get('idNumber'), clubCode: fd.get('clubCode'), city: fd.get('city'), gamertag: tag }) });
+    if (fd.get('password') !== fd.get('passwordConfirm')) { setErr('Passwords do not match.'); return; }
+    setBusy(true);
+    const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fullName: fd.get('fullName'), idNumber: fd.get('idNumber'), clubCode: fd.get('clubCode'), city: fd.get('city'), gamertag: tag, password: fd.get('password') }) });
     const data = await res.json();
     if (!res.ok) {
       // 409 = they already hold an entry (a duplicate submit, or an alias of an
@@ -109,7 +148,35 @@ function RegisterInner() {
 
         <div className="form-card" style={{ marginTop: 28 }}>
           {existing && <AlreadyEntered reg={existing} />}
-          {!existing && step === 'email' && (
+          {!existing && knownRegistered && authMode === 'password' && (
+            <form onSubmit={signIn} style={{ display: 'grid', gap: 18 }}>
+              <div className="notice notice-ok">
+                <strong>{email}</strong> already has an entry — one entry per player.
+                Sign in with your password to view your registration, or use a different email if you&apos;re a different player.
+              </div>
+              <div><label className="label">Password</label><input className="field" type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="••••••••" required autoFocus /></div>
+              {err && <div className="notice notice-err">{err}</div>}
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <button className="btn" disabled={busy}>{busy ? 'SIGNING IN…' : 'SIGN IN →'}</button>
+                <button type="button" className="btn-ghost" onClick={forgotPassword} disabled={busy}>FORGOT PASSWORD?</button>
+                <button type="button" className="btn-ghost" onClick={() => { setKnownRegistered(false); setEmail(''); setPw(''); setErr(null); }}>USE A DIFFERENT EMAIL</button>
+              </div>
+              <p className="mono" style={{ fontSize: 10.5, letterSpacing: '.06em', color: 'var(--ink-4)' }}>Forgot password emails you a 6-digit code to set a new one.</p>
+            </form>
+          )}
+          {!existing && knownRegistered && authMode === 'reset' && (
+            <form onSubmit={resetPassword} style={{ display: 'grid', gap: 18 }}>
+              {devCode && <div className="notice notice-ok">Dev mode — your code is <strong>{devCode}</strong> (no email sent locally).</div>}
+              <div><label className="label">6-digit code sent to {email}</label><input className="field" name="code" inputMode="numeric" maxLength={6} placeholder="••••••" required autoFocus style={{ letterSpacing: '.4em', fontFamily: 'var(--f-mono)' }} /></div>
+              <div><label className="label">New password (min 8 characters)</label><input className="field" name="newPassword" type="password" minLength={8} placeholder="••••••••" required /></div>
+              {err && <div className="notice notice-err">{err}</div>}
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button className="btn" disabled={busy}>{busy ? 'SETTING…' : 'SET PASSWORD & SIGN IN →'}</button>
+                <button type="button" className="btn-ghost" onClick={() => { setAuthMode('password'); setErr(null); }}>BACK</button>
+              </div>
+            </form>
+          )}
+          {!existing && !knownRegistered && step === 'email' && (
             <form onSubmit={requestOtp} style={{ display: 'grid', gap: 18 }}>
               <div><label className="label">Email address</label><input className="field" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required /></div>
               {err && <div className="notice notice-err">{err}</div>}
@@ -140,7 +207,10 @@ function RegisterInner() {
                   </select>
                 </div>
                 <div><label className="label">City (optional)</label><input className="field" name="city" placeholder="Addis Ababa" /></div>
+                <div><label className="label">Create password (min 8 characters)</label><input className="field" name="password" type="password" minLength={8} required placeholder="••••••••" /></div>
+                <div><label className="label">Confirm password</label><input className="field" name="passwordConfirm" type="password" minLength={8} required placeholder="••••••••" /></div>
               </div>
+              <p className="mono" style={{ fontSize: 10.5, letterSpacing: '.06em', color: 'var(--ink-4)' }}>You&apos;ll sign in with your email and this password — no more codes.</p>
               <div>
                 <label className="label">Pick your gamertag</label>
                 <p className="mono" style={{ fontSize: 10.5, letterSpacing: '.06em', color: 'var(--ink-4)', margin: '0 0 10px' }}>

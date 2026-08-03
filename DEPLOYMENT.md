@@ -167,9 +167,18 @@ Then set the same vars in Vercel (Production) and redeploy.
 
 ## 8. Auth & registration model (reference)
 
-- **Players:** passwordless **email OTP**. `POST /api/auth/otp/request` emails a
-  code; `POST /api/auth/otp/verify` checks it, upserts the user, and issues a
-  session. Web uses an httpOnly cookie; the verify response **also returns a
+- **Players — register (once):** `POST /api/auth/otp/request` emails a code
+  (one-time email verification); `POST /api/auth/otp/verify` checks it and
+  issues a session; `POST /api/register` takes the entry details **plus a
+  password** (scrypt-hashed, `src/lib/password.ts`).
+- **Players — sign in (every time after):** `POST /api/auth/login` with
+  email + password. **No OTP email is spent on sign-ins.** With
+  `intent: 'register'`, the OTP request endpoint short-circuits for an address
+  that already holds an entry instead of sending a code.
+- **Forgot password:** `POST /api/auth/otp/request` (sends a code) →
+  `POST /api/auth/password/reset` `{ email, code, newPassword }` — also the
+  path for any account that pre-dates passwords.
+- Web uses httpOnly cookies; login/verify/reset responses **also return a
   `token`** in the body so the native app can persist the session.
 - **Admin:** single env credential (`ADMIN_EMAIL`/`ADMIN_PASSWORD`) via
   `POST /api/admin/login`.

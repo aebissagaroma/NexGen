@@ -105,8 +105,10 @@ electrocup/
 
 | Method | Route                                   | Auth   | Purpose                              |
 |--------|-----------------------------------------|--------|--------------------------------------|
-| POST   | `/api/auth/otp/request`                 | —      | Send (dev: return) a 6-digit code    |
-| POST   | `/api/auth/otp/verify`                  | —      | Verify code, create session          |
+| POST   | `/api/auth/otp/request`                 | —      | Send (dev: return) a 6-digit code; `intent:'register'` short-circuits for registered emails |
+| POST   | `/api/auth/otp/verify`                  | —      | Verify code, create session (signup + reset only) |
+| POST   | `/api/auth/login`                       | —      | Email + password sign-in (no OTP email) |
+| POST   | `/api/auth/password/reset`              | —      | Set new password with an emailed code |
 | GET    | `/api/auth/me`                          | user   | Current player session               |
 | POST   | `/api/auth/logout`                      | —      | Clear player session                 |
 | POST   | `/api/register`                         | user   | Create a qualifier registration      |
