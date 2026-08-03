@@ -120,6 +120,33 @@ export function RegisterCta({ className = 'btn', style, label = 'REGISTER →' }
   return <Link href="/register" className={className} style={style}>{label}</Link>;
 }
 
+export interface PrizeDetails {
+  headline: string; name: string; teaser: string; plate: string; watermark: string; short: string;
+  specs: { k: string; v: string }[];
+  teaserSpecs: { k: string; v: string }[];
+}
+
+/**
+ * The grand-prize vehicle, or null while it is still sealed.
+ *
+ * Always null on the server and on first paint, so the sealed copy is what gets
+ * rendered and hydrated — no mismatch, and no identifying text in the HTML. The
+ * details arrive from /api/prize, which withholds them until the reveal date.
+ * A failed request simply leaves the prize sealed, which is the safe direction.
+ */
+export function useGrandPrize(): PrizeDetails | null {
+  const [prize, setPrize] = React.useState<PrizeDetails | null>(null);
+  React.useEffect(() => {
+    let live = true;
+    fetch('/api/prize')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (live && d?.revealed && d.prize) setPrize(d.prize); })
+      .catch(() => {});
+    return () => { live = false; };
+  }, []);
+  return prize;
+}
+
 // Scroll-reveal — reveals [data-reveal] elements as they enter the viewport.
 //
 // Everything with [data-reveal] starts at opacity: 0 (globals.css), so anything

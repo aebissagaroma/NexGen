@@ -2,8 +2,12 @@
 // Prize section, ported from prize.jsx.
 import * as React from 'react';
 import { Css } from '@/components/Css';
-import { Placeholder } from './primitives';
-import { PRIZE_PARTNER } from '@/data/static';
+import { Placeholder, useGrandPrize } from './primitives';
+import { PRIZE_PARTNER, GRAND_PRIZE_SEALED } from '@/data/static';
+
+// Spec labels shown while the vehicle is sealed. Labels only — the values are
+// the identifying part and stay server-side until the reveal.
+const SEALED_SPEC_KEYS = ['MAKE', 'MODEL', 'YEAR', 'RANGE', 'POWERTRAIN'];
 
 const SEALED = [
   { rank: '02', title: 'RUNNER-UP', reveal: 'REVEAL · TBA' },
@@ -13,6 +17,8 @@ const SEALED = [
 ];
 
 export function PrizeSection() {
+  // null until the reveal date — see useGrandPrize / api/prize.
+  const prize = useGrandPrize();
   return (
     <section id="prize" className="section" style={{ background: 'var(--bg-1)', backgroundImage: 'radial-gradient(1000px 500px at 20% 100%, rgba(var(--accent-rgb),0.10), transparent 65%),radial-gradient(800px 400px at 90% 0%, rgba(var(--accent-glow-rgb),0.06), transparent 60%)', overflow: 'hidden' }}>
       <div className="wrap">
@@ -20,9 +26,9 @@ export function PrizeSection() {
           <div className="section-head-row">
             <div>
               <div className="marker">FILE/05 · GRAND PRIZE</div>
-              <h2 className="section-title" style={{ marginTop: 16 }}>THE WINNER<br /><span style={{ background: 'linear-gradient(180deg, var(--ink) 0%, var(--chrome-2) 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>DRIVES HOME</span><br /><span style={{ fontStyle: 'italic', color: 'var(--accent-glow)' }}>A SEAGULL.</span></h2>
+              <h2 className="section-title" style={{ marginTop: 16 }}>THE WINNER<br /><span style={{ background: 'linear-gradient(180deg, var(--ink) 0%, var(--chrome-2) 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>DRIVES HOME</span><br /><span style={{ fontStyle: 'italic', color: 'var(--accent-glow)' }}>{(prize ?? GRAND_PRIZE_SEALED).headline}</span></h2>
             </div>
-            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>The grand prize for ELECTROCUP 26 is a brand-new <strong style={{ color: 'var(--ink)' }}>2025 BYD&nbsp;Seagull&nbsp;405KM</strong> — a 100% electric hatchback delivered at the Cup Final by <strong style={{ color: 'var(--accent-glow)' }}>{PRIZE_PARTNER.name}</strong>. Insurance, registration and the keys go to one player.</p>
+            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>The grand prize for ELECTROCUP 26 is <strong style={{ color: 'var(--ink)' }}>{(prize ?? GRAND_PRIZE_SEALED).teaser}</strong>, delivered at the Cup Final by <strong style={{ color: 'var(--accent-glow)' }}>{PRIZE_PARTNER.name}</strong>. Insurance, registration and the keys go to one player.{prize ? '' : ' The make and model are announced when registration opens.'}</p>
           </div>
         </div>
 
@@ -37,17 +43,31 @@ export function PrizeSection() {
             <span className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--accent-glow)' }}>SUPPLIED BY {PRIZE_PARTNER.name.toUpperCase()}</span>
           </div>
           <div style={{ position: 'relative', background: 'radial-gradient(circle at 50% 65%, rgba(var(--accent-glow-rgb),0.18), transparent 65%),linear-gradient(180deg, var(--bg-1) 0%, var(--bg) 80%)', padding: 8 }}>
-            <Placeholder label="[ 2025 BYD SEAGULL 405KM ]" aspect="16 / 7" />
-            <div className="display num" aria-hidden style={{ position: 'absolute', left: 0, right: 0, bottom: -10, textAlign: 'center', fontSize: 'clamp(120px, 20vw, 280px)', lineHeight: 1, color: 'transparent', WebkitTextStroke: '1px rgba(255,255,255,0.06)', fontWeight: 900, pointerEvents: 'none', fontStyle: 'italic', letterSpacing: '-0.02em' }}>SEAGULL</div>
+            <Placeholder label={(prize ?? GRAND_PRIZE_SEALED).plate} aspect="16 / 7" />
+            {prize && (
+              <div className="display num" aria-hidden style={{ position: 'absolute', left: 0, right: 0, bottom: -10, textAlign: 'center', fontSize: 'clamp(120px, 20vw, 280px)', lineHeight: 1, color: 'transparent', WebkitTextStroke: '1px rgba(255,255,255,0.06)', fontWeight: 900, pointerEvents: 'none', fontStyle: 'italic', letterSpacing: '-0.02em' }}>{prize.watermark}</div>
+            )}
           </div>
+          {/* Sealed: the spec strip becomes redacted bars, matching the sealed
+              side-prize cards below. The shape of the information is visible;
+              the vehicle's identity is not. */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', borderTop: '1px solid var(--line)' }} className="prize-specs">
-            {[{ k: 'MAKE', v: 'BYD' }, { k: 'MODEL', v: 'SEAGULL 405KM' }, { k: 'YEAR', v: '2025' }, { k: 'RANGE', v: '405 KM' }, { k: 'POWERTRAIN', v: '100% EV' }].map((s, i) => (
+            {(prize ? prize.specs : SEALED_SPEC_KEYS.map((k) => ({ k, v: null }))).map((s, i) => (
               <div key={s.k} style={{ padding: '22px 22px', borderRight: i < 4 ? '1px solid var(--line)' : 'none' }}>
                 <div className="mono" style={{ fontSize: 9.5, letterSpacing: '.22em', color: 'var(--ink-3)' }}>{s.k}</div>
-                <div className="display-2" style={{ fontSize: 22, fontWeight: 700, marginTop: 6 }}>{s.v}</div>
+                {s.v
+                  ? <div className="display-2" style={{ fontSize: 22, fontWeight: 700, marginTop: 6 }}>{s.v}</div>
+                  : <div aria-label="Sealed until registration opens" style={{ marginTop: 10, height: 20, background: '#000', border: '1px solid var(--line-2)', position: 'relative', overflow: 'hidden' }}>
+                      <div style={{ position: 'absolute', inset: 0, background: 'repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0 5px, transparent 5px 10px)' }} />
+                    </div>}
               </div>
             ))}
           </div>
+          {!prize && (
+            <div className="mono" style={{ padding: '14px 22px', borderTop: '1px solid var(--line)', fontSize: 10, letterSpacing: '.2em', color: 'var(--accent-glow)', textAlign: 'center' }}>
+              {GRAND_PRIZE_SEALED.note}
+            </div>
+          )}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 22px', borderTop: '1px solid var(--line)', gap: 16, flexWrap: 'wrap', background: 'var(--bg-1)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <span className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--ink-3)' }}>INCLUDED ·</span>
