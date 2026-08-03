@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { Css } from '@/components/Css';
 import { Placeholder } from './primitives';
+import { PRIZE_PARTNER } from '@/data/static';
 
 const SEALED = [
   { rank: '02', title: 'RUNNER-UP', reveal: 'REVEAL · TBA' },
@@ -21,7 +22,7 @@ export function PrizeSection() {
               <div className="marker">FILE/05 · GRAND PRIZE</div>
               <h2 className="section-title" style={{ marginTop: 16 }}>THE WINNER<br /><span style={{ background: 'linear-gradient(180deg, var(--ink) 0%, var(--chrome-2) 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>DRIVES HOME</span><br /><span style={{ fontStyle: 'italic', color: 'var(--accent-glow)' }}>A SEAGULL.</span></h2>
             </div>
-            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>The grand prize for ELECTROCUP 26 is a brand-new <strong style={{ color: 'var(--ink)' }}>2025 BYD&nbsp;Seagull&nbsp;405KM</strong> — a 100% electric hatchback delivered at the Cup Final. Insurance, registration and the keys go to one player.</p>
+            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>The grand prize for ELECTROCUP 26 is a brand-new <strong style={{ color: 'var(--ink)' }}>2025 BYD&nbsp;Seagull&nbsp;405KM</strong> — a 100% electric hatchback delivered at the Cup Final by <strong style={{ color: 'var(--accent-glow)' }}>{PRIZE_PARTNER.name}</strong>. Insurance, registration and the keys go to one player.</p>
           </div>
         </div>
 
@@ -33,7 +34,7 @@ export function PrizeSection() {
               <span style={{ width: 1, height: 12, background: 'var(--line-strong)' }} />
               <span className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--ink-3)' }}>DELIVERED AT THE CUP FINAL · HOST VENUE</span>
             </div>
-            <span className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--ink-3)' }}>EC26 / VEH / 001</span>
+            <span className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--accent-glow)' }}>SUPPLIED BY {PRIZE_PARTNER.name.toUpperCase()}</span>
           </div>
           <div style={{ position: 'relative', background: 'radial-gradient(circle at 50% 65%, rgba(var(--accent-glow-rgb),0.18), transparent 65%),linear-gradient(180deg, var(--bg-1) 0%, var(--bg) 80%)', padding: 8 }}>
             <Placeholder label="[ 2025 BYD SEAGULL 405KM ]" aspect="16 / 7" />
@@ -52,7 +53,29 @@ export function PrizeSection() {
               <span className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--ink-3)' }}>INCLUDED ·</span>
               <span className="mono" style={{ fontSize: 11, letterSpacing: '.10em', color: 'var(--ink-2)' }}>REGISTRATION · 1Y INSURANCE · CHARGER · DELIVERY</span>
             </div>
-            <div className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--accent-glow)' }}>PARTNER · KAIROS ADDIS</div>
+          </div>
+
+          {/* Vehicle partner band. Sits directly under the car — the single most
+              looked-at object on the page — and costs no sellable inventory. */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            gap: 20, flexWrap: 'wrap', padding: '22px 22px', borderTop: '1px solid var(--line-2)',
+            background: 'linear-gradient(90deg, rgba(var(--accent-glow-rgb),0.12), transparent 75%)',
+          }}>
+            <div>
+              <div className="mono" style={{ fontSize: 9.5, letterSpacing: '.24em', color: 'var(--ink-3)' }}>
+                {PRIZE_PARTNER.role.toUpperCase()}
+              </div>
+              <div className="display-2" style={{ fontSize: 26, fontWeight: 800, marginTop: 6, color: 'var(--accent-glow)', letterSpacing: '-0.01em' }}>
+                {PRIZE_PARTNER.name.toUpperCase()}
+              </div>
+              <div className="mono" style={{ fontSize: 10.5, letterSpacing: '.12em', color: 'var(--ink-3)', marginTop: 6 }}>
+                {PRIZE_PARTNER.blurb}
+              </div>
+            </div>
+            <div className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--ink-3)', textAlign: 'right' }}>
+              EC26 / VEH / 001
+            </div>
           </div>
         </div>
 

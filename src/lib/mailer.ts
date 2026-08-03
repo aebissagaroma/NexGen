@@ -29,9 +29,27 @@ export function mailFrom(): string {
   return process.env.SMTP_FROM || 'ELECTROCUP <no-reply@electrocup.com>';
 }
 
-/** Where staff notifications go. Falls back to the from-address. */
+/** Where player-side notifications go — entries and appeals. */
 export function opsAddress(): string {
   return process.env.OPS_EMAIL || process.env.SMTP_FROM || '';
+}
+
+/**
+ * Where partner/sponsorship inquiries go. Different people handle commercial
+ * leads and player operations, and a sponsorship offer buried in a stream of
+ * registration mail is one that gets answered late.
+ *
+ * Falls back to the ops address, so leaving SPONSOR_EMAIL unset keeps the old
+ * single-inbox behaviour rather than silently dropping inquiries.
+ */
+export function sponsorAddress(): string {
+  return process.env.SPONSOR_EMAIL || opsAddress();
+}
+
+/** True when partner mail is genuinely going somewhere else. */
+export function sponsorInboxIsSeparate(): boolean {
+  const s = sponsorAddress().trim().toLowerCase();
+  return Boolean(s) && s !== opsAddress().trim().toLowerCase();
 }
 
 /**
@@ -78,9 +96,13 @@ const OPS_TIMEOUT_MS = 8000;
  * Returns true only if the message was handed to the transport in time.
  */
 export async function notifyOps(subject: string, text: string): Promise<boolean> {
-  const to = opsAddress();
+  return notifyAddress(opsAddress(), subject, text);
+}
+
+/** As notifyOps, but to a named inbox — used for the partner address. */
+export async function notifyAddress(to: string, subject: string, text: string): Promise<boolean> {
   if (!to) {
-    console.warn('[mailer] no OPS_EMAIL or SMTP_FROM set — staff notification skipped:', subject);
+    console.warn('[mailer] no staff address configured (OPS_EMAIL / SMTP_FROM) — notification skipped:', subject);
     return false;
   }
   let timer: ReturnType<typeof setTimeout> | undefined;

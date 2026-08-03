@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query, queryOne } from '@/lib/db';
-import { notifyOps } from '@/lib/mailer';
+import { notifyOps, notifyAddress, sponsorAddress, sponsorInboxIsSeparate } from '@/lib/mailer';
 
 // GET /api/cron/daily-summary — one roll-up email of the last 24 hours.
 //
@@ -39,6 +39,23 @@ export async function GET(req: Request) {
      WHERE created_at > now() - interval '${WINDOW}' ORDER BY created_at`,
   );
 
+  const sponsors = await query<{
+    company: string; contact_name: string; email: string;
+    phone: string | null; tier: string | null;
+  }>(
+    `SELECT company, contact_name, email, phone, tier FROM sponsor_inquiries
+     WHERE created_at > now() - interval '${WINDOW}' ORDER BY created_at`,
+  );
+
+  // Unanswered inquiries are counted across all time, not just the window: a
+  // lead that came in four days ago and is still untouched is exactly the thing
+  // this email exists to stop, and it would fall out of a 24-hour view.
+  const openSponsors = await queryOne<{ n: number }>(
+    `SELECT count(*)::int AS n FROM sponsor_inquiries WHERE NOT handled`,
+  );
+
+  // No ID-photo column any more — documents are checked in person and not
+  // stored (rulebook 3.4), so there is nothing to chase in this roll-up.
   const totals = await queryOne<{ total: number }>(
     `SELECT count(*)::int AS total FROM registrations`,
   );
@@ -50,11 +67,20 @@ export async function GET(req: Request) {
      GROUP BY club_code ORDER BY n DESC, club_code`,
   );
 
+  // Two audiences. When SPONSOR_EMAIL names a separate inbox, partner leads go
+  // only to that inbox and the player-ops roll-up does not mention them —
+  // otherwise the same lead lands twice and each side assumes the other replied.
+  // With SPONSOR_EMAIL unset the two collapse into one email, as before.
+  const split = sponsorInboxIsSeparate();
+
   const lines: string[] = [];
   lines.push(`ELECTROCUP 26 — last ${WINDOW}`, '');
-  lines.push(`New entries:  ${regs.length}`);
-  lines.push(`New appeals:  ${appeals.length}`);
-  lines.push(`Total so far: ${totals?.total ?? 0}`, '');
+  lines.push(`New entries:   ${regs.length}`);
+  lines.push(`New appeals:   ${appeals.length}`);
+  if (!split) lines.push(`New inquiries: ${sponsors.length}`);
+  lines.push(`Total so far:  ${totals?.total ?? 0}`);
+  if (!split && openSponsors?.n) lines.push(`⚠ ${openSponsors.n} partner ${openSponsors.n === 1 ? 'inquiry is' : 'inquiries are'} still unanswered`);
+  lines.push('');
 
   if (regs.length) {
     lines.push('── New entries ──');
@@ -73,19 +99,61 @@ export async function GET(req: Request) {
     lines.push('');
   }
 
+  if (!split && sponsors.length) {
+    lines.push('── New partner inquiries (reply to these) ──');
+    for (const s of sponsors) {
+      lines.push(`  ${s.tier || 'no tier'} · ${s.company} · ${s.contact_name} <${s.email}>${s.phone ? ' · ' + s.phone : ''}`);
+    }
+    lines.push('');
+  }
+
   if (byClub.length) {
     lines.push('── Entries per club ──');
     lines.push('  ' + byClub.map((c) => `${c.club_code}:${c.n}`).join('  '));
   }
 
-  const sent = await notifyOps(
-    `ELECTROCUP daily — ${regs.length} new ${regs.length === 1 ? 'entry' : 'entries'}`,
-    lines.join('\n'),
-  );
+  // Partner inquiries go in the subject when they share the email: it is the one
+  // item here that is time-critical, and it should be visible without opening it.
+  const subject = `ELECTROCUP daily — ${regs.length} new ${regs.length === 1 ? 'entry' : 'entries'}`
+    + (!split && sponsors.length ? `, ${sponsors.length} partner ${sponsors.length === 1 ? 'inquiry' : 'inquiries'}` : '');
+  const sent = await notifyOps(subject, lines.join('\n'));
+
+  // The partnerships roll-up. Sent even on a day with no new inquiries, as long
+  // as something is still unanswered — a lead going stale is precisely the thing
+  // a daily reminder should keep in front of someone.
+  let sponsorSent: boolean | null = null;
+  if (split && (sponsors.length || openSponsors?.n)) {
+    const sl: string[] = [];
+    sl.push(`ELECTROCUP 26 — partnerships, last ${WINDOW}`, '');
+    sl.push(`New inquiries:      ${sponsors.length}`);
+    sl.push(`Awaiting a reply:   ${openSponsors?.n ?? 0}`, '');
+
+    if (sponsors.length) {
+      sl.push('── New inquiries ──');
+      for (const s of sponsors) {
+        sl.push(`  ${s.tier || 'no tier'} · ${s.company} · ${s.contact_name} <${s.email}>${s.phone ? ' · ' + s.phone : ''}`);
+      }
+      sl.push('');
+    }
+    if (openSponsors?.n) {
+      sl.push(`⚠ ${openSponsors.n} ${openSponsors.n === 1 ? 'inquiry has' : 'inquiries have'} not been marked handled.`);
+      sl.push('  Staff dashboard → PARTNER INQUIRIES.');
+    }
+
+    sponsorSent = await notifyAddress(
+      sponsorAddress(),
+      sponsors.length
+        ? `ELECTROCUP partnerships — ${sponsors.length} new ${sponsors.length === 1 ? 'inquiry' : 'inquiries'}`
+        : `ELECTROCUP partnerships — ${openSponsors!.n} awaiting a reply`,
+      sl.join('\n'),
+    );
+  }
 
   // Report what happened rather than a bare ok: this runs unattended, and the
   // cron dashboard is the only place a silent mail failure would ever show up.
   return NextResponse.json({
     ok: true, emailed: sent, entries: regs.length, appeals: appeals.length,
+    sponsors: sponsors.length, openSponsors: openSponsors?.n ?? 0,
+    sponsorInboxSeparate: split, sponsorEmailed: sponsorSent,
   });
 }

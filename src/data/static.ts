@@ -55,28 +55,49 @@ export const TIMELINE: TimelinePhase[] = [
   { phase: 'Cup Final', sub: 'Live Audience', date: 'TBA', note: 'Host venue · Addis Ababa', state: 'upcoming' },
 ];
 
-export interface SponsorItem { name: string; sub: string; open: boolean; }
-export interface SponsorTier { tier: string; code: string; seats: number; note: string; items: SponsorItem[]; }
+// Partner tiers.
+//
+// `seats` is deliberately NOT published. Advertising twelve empty seats tells
+// every brand that visits that nobody has committed yet, which is the weakest
+// possible position to negotiate from — and reads worse the longer it stays up.
+// The number is kept here because the staff dashboard uses it to weigh demand
+// against inventory (e.g. "3 inquiries for 1 Title seat").
+//
+// `key` must match the values in the tier dropdown on the inquiry form, since
+// that is what gets stored on the inquiry and counted per tier.
+export interface SponsorTier { tier: string; key: string; code: string; seats: number; note: string; focus: string; }
 export const SPONSORS_TIERS: SponsorTier[] = [
-  { tier: 'Title Partner', code: 'T01', seats: 1, note: "Single naming-rights seat. Co-branded as 'NexGen × ___ presents ELECTROCUP 26'.", items: [{ name: 'TITLE SLOT OPEN', sub: 'Naming Rights · 1 Seat', open: true }] },
-  { tier: 'Platinum', code: 'T02', seats: 3, note: 'Vehicle, telecom or banking category exclusivity.', items: [
-    { name: 'PLATINUM SEAT 01', sub: 'Category Exclusive', open: true },
-    { name: 'PLATINUM SEAT 02', sub: 'Category Exclusive', open: true },
-    { name: 'PLATINUM SEAT 03', sub: 'Category Exclusive', open: true },
-  ] },
-  { tier: 'Gold', code: 'T03', seats: 4, note: 'Beverage, retail, hospitality, energy.', items: [
-    { name: 'GOLD SEAT 01', sub: 'Open', open: true },
-    { name: 'GOLD SEAT 02', sub: 'Open', open: true },
-    { name: 'GOLD SEAT 03', sub: 'Open', open: true },
-    { name: 'GOLD SEAT 04', sub: 'Open', open: true },
-  ] },
-  { tier: 'Broadcast', code: 'T04', seats: 4, note: 'Linear and streaming distribution partners.', items: [
-    { name: 'BROADCAST SEAT 01', sub: 'Open', open: true },
-    { name: 'BROADCAST SEAT 02', sub: 'Open', open: true },
-    { name: 'BROADCAST SEAT 03', sub: 'Open', open: true },
-    { name: 'BROADCAST SEAT 04', sub: 'Open', open: true },
-  ] },
+  { tier: 'Title Partner', key: 'Title', code: 'T01', seats: 1, focus: 'Naming rights', note: "Sole naming-rights position. Co-branded as 'NexGen × ___ presents ELECTROCUP 26'." },
+  { tier: 'Platinum', key: 'Platinum', code: 'T02', seats: 3, focus: 'Category exclusive', note: 'Vehicle, telecom or banking category exclusivity.' },
+  { tier: 'Gold', key: 'Gold', code: 'T03', seats: 4, focus: 'Brand integration', note: 'Beverage, retail, hospitality, energy.' },
+  { tier: 'Broadcast', key: 'Broadcast', code: 'T04', seats: 4, focus: 'Distribution', note: 'Linear and streaming distribution partners.' },
 ];
+
+// The partner delivering the grand-prize vehicle. Credited on the Prize section
+// rather than occupying a tier seat: the seats are sellable inventory and this
+// placement is not, so it costs nothing to give it prominence — and the prize
+// car is the most-looked-at object on the page.
+export const PRIZE_PARTNER = {
+  name: 'Kairos Addis Auto',
+  role: 'Official Vehicle Partner',
+  blurb: 'Electric mobility for Addis Ababa.',
+};
+
+// Related parties. Their inquiries stay in the list but are excluded from the
+// demand-by-tier counts, so the panel keeps answering the only question it is
+// there to answer: what is the outside market actually offering. An internal
+// arrangement counted as market demand would flatter the numbers you price off.
+// Matched case-insensitively against the company name.
+export const INTERNAL_COMPANIES: string[] = ['kairos addis auto', 'kairos addis'];
+
+// The date partner selection closes, e.g. '30 SEPTEMBER 2026'.
+//
+// Set this and the partners section states a deadline, which is the whole point
+// of the expression-of-interest framing: proposals arrive inside one window and
+// get compared against each other, instead of arriving one at a time and each
+// being answered on its own. Leave it null and the copy stays deliberately
+// open-ended — consistent with every other phase being announced step by step.
+export const PARTNER_SELECTION_CLOSES: string | null = null;
 
 export interface Pillar { code: string; name: string; blurb: string; }
 export const NEXGEN_PILLARS: Pillar[] = [

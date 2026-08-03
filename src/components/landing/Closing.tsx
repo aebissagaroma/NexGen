@@ -5,7 +5,7 @@ import * as React from 'react';
 import { Css } from '@/components/Css';
 import Link from 'next/link';
 import { NexGenMark, Countdown, RegisterCta } from './primitives';
-import { TIMELINE, SPONSORS_TIERS, NEXGEN_PILLARS, REGISTRATION_OPENS } from '@/data/static';
+import { TIMELINE, SPONSORS_TIERS, NEXGEN_PILLARS, REGISTRATION_OPENS, PARTNER_SELECTION_CLOSES } from '@/data/static';
 import { NotifyBox } from './Announce';
 
 export function ScheduleSection() {
@@ -62,17 +62,13 @@ export function SponsorsSection() {
               <div>
                 <div className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--accent-glow)' }}>{tier.code}</div>
                 <div className="display-2" style={{ fontSize: 22, fontWeight: 800, marginTop: 8 }}>{tier.tier.toUpperCase()}</div>
-                <div className="mono" style={{ fontSize: 10, letterSpacing: '.14em', color: 'var(--ink-3)', marginTop: 4 }}>{tier.seats} SEAT{tier.seats > 1 ? 'S' : ''} · ALL OPEN</div>
-                <p style={{ margin: '10px 0 0', color: 'var(--ink-3)', fontSize: 12, lineHeight: 1.5, maxWidth: '32ch' }}>{tier.note}</p>
+                {/* Seat counts stay off the page on purpose — see SPONSORS_TIERS. */}
+                <div className="mono" style={{ fontSize: 10, letterSpacing: '.14em', color: 'var(--ink-3)', marginTop: 4 }}>{tier.focus.toUpperCase()}</div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-                {tier.items.map((it, i) => (
-                  <div key={i} className="stripe ticks" style={{ position: 'relative', padding: '18px 18px', border: '1px dashed var(--line-2)', background: 'var(--bg-1)', minHeight: 76, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4 }}>
-                    <span className="tk1" /><span className="tk2" />
-                    <div style={{ fontFamily: 'var(--f-mono)', fontWeight: 600, fontSize: 11, letterSpacing: '.22em', color: 'var(--accent-glow)' }}>{it.name}</div>
-                    <div className="mono" style={{ fontSize: 10, letterSpacing: '.14em', color: 'var(--ink-3)' }}>{it.sub.toUpperCase()} · OPEN</div>
-                  </div>
-                ))}
+              <div className="stripe ticks" style={{ position: 'relative', padding: '20px 22px', border: '1px dashed var(--line-2)', background: 'var(--bg-1)', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6, minHeight: 76 }}>
+                <span className="tk1" /><span className="tk2" />
+                <p style={{ margin: 0, color: 'var(--ink-2)', fontSize: 13, lineHeight: 1.55, maxWidth: '52ch' }}>{tier.note}</p>
+                <div className="mono" style={{ fontSize: 10, letterSpacing: '.16em', color: 'var(--accent-glow)' }}>ACCEPTING PROPOSALS</div>
               </div>
             </div>
           ))}
@@ -112,11 +108,21 @@ function SponsorInquiry() {
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', marginBottom: 24 }}>
         <div>
           <div className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--accent-glow)', marginBottom: 8 }}>FOUNDING PARTNERS / 2026</div>
-          <div className="display-2" style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.1 }}><span style={{ color: 'var(--accent-glow)' }}>12 SEATS</span> AVAILABLE · <span style={{ color: 'var(--ink-3)', fontStyle: 'italic' }}>BE THE FIRST.</span></div>
+          {/* No seat count and no "be the first": both told every visiting brand
+              that nobody had committed yet. Selection framing instead. */}
+          <div className="display-2" style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.1 }}><span style={{ color: 'var(--accent-glow)' }}>REGISTER</span> YOUR INTEREST · <span style={{ color: 'var(--ink-3)', fontStyle: 'italic' }}>BY INVITATION.</span></div>
+          <p style={{ margin: '12px 0 0', color: 'var(--ink-3)', fontSize: 13, lineHeight: 1.6, maxWidth: '58ch' }}>
+            Partner positions are allocated by selection, not first come. Proposals are
+            reviewed together{PARTNER_SELECTION_CLOSES ? <> after <strong style={{ color: 'var(--ink-2)' }}>{PARTNER_SELECTION_CLOSES}</strong></> : ' in rounds'}, and the
+            partnerships team responds to every submission.
+          </p>
         </div>
       </div>
       {sent ? (
-        <div className="notice notice-ok">Thank you — we&apos;ve logged your interest. The partnerships team will reach out with the media kit.</div>
+        <div className="notice notice-ok">
+          Thank you — your interest is registered and the partnerships team will be in touch with the media kit
+          {PARTNER_SELECTION_CLOSES ? <>. Proposals are reviewed together after <strong>{PARTNER_SELECTION_CLOSES}</strong>.</> : '.'}
+        </div>
       ) : (
         <form onSubmit={onSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }} className="sponsor-form">
           <div><label className="label">Company</label><input name="company" required className="field" placeholder="Company name" /></div>
@@ -124,14 +130,15 @@ function SponsorInquiry() {
           <div><label className="label">Email</label><input name="email" type="email" required className="field" placeholder="you@company.com" /></div>
           <div><label className="label">Phone (optional)</label><input name="phone" className="field" placeholder="+251…" /></div>
           <div><label className="label">Tier of interest</label>
+            {/* Values must match SponsorTier.key — the dashboard counts demand by these. */}
             <select name="tier" className="field" defaultValue="">
               <option value="">Any / not sure</option>
-              <option>Title</option><option>Platinum</option><option>Gold</option><option>Broadcast</option>
+              {SPONSORS_TIERS.map((t) => <option key={t.key}>{t.key}</option>)}
             </select>
           </div>
           <div style={{ gridColumn: '1 / -1' }}><label className="label">Message (optional)</label><textarea name="message" className="field" style={{ height: 96, padding: '12px 14px', resize: 'vertical' }} placeholder="Tell us about your brand and goals" /></div>
           {err && <div className="notice notice-err" style={{ gridColumn: '1 / -1' }}>{err}</div>}
-          <div style={{ gridColumn: '1 / -1' }}><button className="btn" disabled={busy}>{busy ? 'SENDING…' : 'REQUEST MEDIA KIT →'}</button></div>
+          <div style={{ gridColumn: '1 / -1' }}><button className="btn" disabled={busy}>{busy ? 'SENDING…' : 'REGISTER INTEREST →'}</button></div>
           <Css>{`@media (max-width:640px){.sponsor-form{grid-template-columns:1fr!important}}`}</Css>
         </form>
       )}
