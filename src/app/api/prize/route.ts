@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import { GRAND_PRIZE_DETAILS, grandPrizeRevealed, GRAND_PRIZE_REVEALED_AT } from '@/lib/grand-prize';
+import {
+  GRAND_PRIZE_DETAILS, grandPrizeRevealed, grandPrizeOverdue, GRAND_PRIZE_REVEALED_AT,
+} from '@/lib/grand-prize';
 
 // GET /api/prize — the grand-prize vehicle, once it is allowed to be known.
 //
@@ -14,6 +16,14 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   if (!grandPrizeRevealed()) {
+    // Staying sealed past the date is safe but silent, and silence is how a
+    // launch-day beat gets missed. Say so where ops will actually see it.
+    if (grandPrizeOverdue()) {
+      console.error(
+        '[prize] Reveal date has passed but GRAND_PRIZE_DETAILS is not set — ' +
+        'the grand prize is still showing as sealed. Set it in src/lib/grand-prize.ts.',
+      );
+    }
     return NextResponse.json(
       { revealed: false, revealedAt: GRAND_PRIZE_REVEALED_AT },
       // Never cache the sealed answer past the reveal instant.
