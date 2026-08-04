@@ -22,13 +22,13 @@ export const CLUBS: StaticClub[] = [
   { code: 'WOL', name: 'Wolverhampton', city: 'Wolverhampton' },
   { code: 'NFO', name: 'Nottingham Forest', city: 'Nottingham' },
   { code: 'BOU', name: 'AFC Bournemouth', city: 'Bournemouth' },
-  { code: 'LEI', name: 'Leicester City', city: 'Leicester' },
-  { code: 'IPS', name: 'Ipswich Town', city: 'Ipswich' },
-  { code: 'SOU', name: 'Southampton', city: 'Southampton' },
+  { code: 'LEE', name: 'Leeds United', city: 'Leeds' },
+  { code: 'BUR', name: 'Burnley', city: 'Burnley' },
+  { code: 'SUN', name: 'Sunderland', city: 'Sunderland' },
 ];
 
 export interface TimelinePhase {
-  phase: string; sub: string; date: string; note: string; state: 'live' | 'upcoming';
+  phase: string; sub: string; date: string; note: string; state: 'done' | 'live' | 'upcoming';
   /**
    * Set to true when this phase's date is first published. It drives the banner
    * at the top of the page and the highlight in the schedule strip — no other
@@ -46,8 +46,8 @@ export const announcedPhases = (): TimelinePhase[] =>
 // placeholder to fill in. When a phase is announced, set its `date` and move the
 // `state: 'live'` marker to it.
 export const TIMELINE: TimelinePhase[] = [
-  { phase: 'Announcement', sub: 'Public Reveal', date: 'AUG 04, 2026', note: 'This page · launch trailer drops', state: 'live' },
-  { phase: 'Registration', sub: 'Open Sign-up', date: 'SEP 01, 2026', note: '20 brackets · entry fee TBA', state: 'upcoming', justAnnounced: true },
+  { phase: 'Announcement', sub: 'Public Reveal', date: 'AUG 04, 2026', note: 'Done · this page is live', state: 'done' },
+  { phase: 'Registration', sub: 'Open Sign-up', date: 'OPEN — CLOSES 01 SEP 2026', note: '20 brackets · free to register', state: 'live' },
   { phase: 'Bracket Draw', sub: 'Live Broadcast', date: 'TBA', note: 'Random draw · streamed', state: 'upcoming' },
   { phase: 'Qualifiers', sub: 'BO3 Knockouts', date: 'TBA', note: '20 winners surface', state: 'upcoming' },
   { phase: 'Draft Day', sub: 'Live Broadcast', date: 'TBA', note: 'Host venue · Addis Ababa', state: 'upcoming' },
@@ -65,11 +65,14 @@ export const TIMELINE: TimelinePhase[] = [
 //
 // `key` must match the values in the tier dropdown on the inquiry form, since
 // that is what gets stored on the inquiry and counted per tier.
-export interface SponsorTier { tier: string; key: string; code: string; seats: number; note: string; focus: string; }
+export interface SponsorTier { tier: string; key: string; code: string; seats: number; note: string; focus: string;
+  /** Set once the position is taken — the tier then reads as filled, not open. */
+  filled?: string;
+}
 export const SPONSORS_TIERS: SponsorTier[] = [
-  { tier: 'Title Partner', key: 'Title', code: 'T01', seats: 1, focus: 'Naming rights', note: "Sole naming-rights position. Co-branded as 'NexGen × ___ presents ELECTROCUP 26'." },
-  { tier: 'Platinum', key: 'Platinum', code: 'T02', seats: 3, focus: 'Category exclusive', note: 'Vehicle, telecom or banking category exclusivity.' },
-  { tier: 'Gold', key: 'Gold', code: 'T03', seats: 4, focus: 'Brand integration', note: 'Beverage, retail, hospitality, energy.' },
+  { tier: 'Lead Partner', key: 'Lead', code: 'T01', seats: 1, focus: 'Official Vehicle Partner', filled: 'Kairos Addis Auto', note: 'Lead partner position with billing across broadcast, venue and site, and the grand prize vehicle. The competition name remains ELECTROCUP 26.' },
+  { tier: 'Platinum', key: 'Platinum', code: 'T02', seats: 3, focus: 'Category exclusive', note: 'Telecom or banking category exclusivity.' },
+  { tier: 'Gold', key: 'Gold', code: 'T03', seats: 4, focus: 'Brand integration', note: 'Retail, hospitality, logistics, technology.' },
   { tier: 'Broadcast', key: 'Broadcast', code: 'T04', seats: 4, focus: 'Distribution', note: 'Linear and streaming distribution partners.' },
 ];
 
@@ -84,8 +87,9 @@ export const SPONSORS_TIERS: SponsorTier[] = [
 export const GRAND_PRIZE_SEALED = {
   headline: 'AN ELECTRIC CAR.',
   teaser: 'a brand-new 100% electric car',
-  plate: '[ SEALED UNTIL 01 SEP 2026 ]',
-  note: 'MAKE AND MODEL REVEALED WHEN REGISTRATION OPENS',
+  plate: '[ SEALED · REVEAL ON BROADCAST ]',
+  note: 'MAKE AND MODEL ANNOUNCED BEFORE QUALIFIERS BEGIN',
+  status: 'SEALED · REVEAL ON BROADCAST',
 };
 
 // The partner delivering the grand-prize vehicle. Credited on the Prize section
@@ -105,6 +109,12 @@ export const PRIZE_PARTNER = {
 // Matched case-insensitively against the company name.
 export const INTERNAL_COMPANIES: string[] = ['kairos addis auto', 'kairos addis'];
 
+// Categories the game licence terms do not allow as partners. Shown under the
+// tier grid so a brand in one of them does not spend time on a proposal that
+// cannot be accepted.
+export const EXCLUDED_PARTNER_CATEGORIES =
+  'Some categories cannot be accepted under our game licence terms, including alcohol, betting and gambling, energy drinks, tobacco and cryptocurrency.';
+
 // The date partner selection closes, e.g. '30 SEPTEMBER 2026'.
 //
 // Set this and the partners section states a deadline, which is the whole point
@@ -122,22 +132,22 @@ export const NEXGEN_PILLARS: Pillar[] = [
   { code: '04', name: 'Stadium', blurb: 'Live-audience finals at flagship venues across Ethiopia.' },
 ];
 
-// Countdown target — the next date the tournament has actually committed to.
-// Fixed value so the countdown ticks consistently. Everything after registration
-// is announced step by step, so this points at sign-ups opening rather than at a
-// phase with no published date. Retarget it when the next phase is announced.
-export const REGISTRATION_OPENS = new Date('2026-09-01T09:00:00+03:00').getTime();
+// Countdown target. Registration is OPEN, so this is the date it CLOSES — the
+// same instant that previously marked sign-ups opening. The countdown counts
+// down to the deadline rather than to a launch.
+export const REGISTRATION_CLOSES = new Date('2026-09-01T09:00:00+03:00').getTime();
 
 // Display forms of the date above. Kept beside it so the copy can never drift
 // from the timestamp the countdown and the open/closed state both read.
-export const REGISTRATION_OPENS_LABEL = '01 SEP 2026';
-export const REGISTRATION_OPENS_SHORT = 'SEP 01';
+export const REGISTRATION_CLOSES_LABEL = '01 SEP 2026';
+export const REGISTRATION_CLOSES_TIME = '01 SEP 2026 · 09:00 EAT';
 
 /**
- * Whether sign-ups have opened. Callers must not use this during render without
- * a mounted guard — see useRegistrationOpen() — because server and client
- * evaluate it at different instants, and a disagreement aborts hydration.
+ * Whether sign-ups are still open. Callers must not use this during render
+ * without a mounted guard — see useRegistrationOpen() — because server and
+ * client evaluate it at different instants, and a disagreement aborts
+ * hydration.
  */
-export function registrationHasOpened(now: number = Date.now()): boolean {
-  return now >= REGISTRATION_OPENS;
+export function registrationIsOpen(now: number = Date.now()): boolean {
+  return now < REGISTRATION_CLOSES;
 }

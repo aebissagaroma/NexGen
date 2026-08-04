@@ -93,6 +93,17 @@ CREATE INDEX IF NOT EXISTS idx_reg_created ON registrations (created_at DESC);
 ALTER TABLE registrations ADD COLUMN IF NOT EXISTS id_hash  TEXT;
 ALTER TABLE registrations ADD COLUMN IF NOT EXISTS id_last4 TEXT;
 
+-- Registration now collects a phone number and date of birth instead of an ID
+-- number. Age is the reason for date_of_birth: entry is 16+, and 16- and
+-- 17-year-olds need a guardian consent form before they can play, so the site
+-- has to know which entrants those are at sign-up rather than at the venue.
+ALTER TABLE registrations ADD COLUMN IF NOT EXISTS phone         TEXT;
+ALTER TABLE registrations ADD COLUMN IF NOT EXISTS date_of_birth DATE;
+-- When they ticked acceptance of the rulebook and privacy notice. A timestamp
+-- rather than a boolean: if either document is revised, this is what says which
+-- version a given entrant actually agreed to.
+ALTER TABLE registrations ADD COLUMN IF NOT EXISTS accepted_terms_at TIMESTAMPTZ;
+
 -- Identity documents are NOT stored. Rulebook 3.4 and 13.2 state that no copy or
 -- image of an identity document is retained, and age/residency is verified in
 -- person at a Qualifier Center. An earlier build uploaded Fayda photos to Vercel

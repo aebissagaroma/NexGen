@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Css } from '@/components/Css';
 import Link from 'next/link';
 import { NexGenMark, Countdown, Placeholder, RegisterCta, useGrandPrize } from './primitives';
-import { REGISTRATION_OPENS } from '@/data/static';
+import { REGISTRATION_CLOSES, REGISTRATION_CLOSES_TIME, GRAND_PRIZE_SEALED } from '@/data/static';
 import { AnnouncementBanner } from './Announce';
 
 const NAV_LINKS = [
@@ -39,7 +39,7 @@ export function Nav() {
           ))}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span className="tag" style={{ color: 'var(--accent-glow)', borderColor: 'rgba(var(--accent-glow-rgb),0.35)' }}>ANNOUNCING · 2026</span>
+          <span className="tag" style={{ color: 'var(--accent-glow)', borderColor: 'rgba(var(--accent-glow-rgb),0.35)' }}>ANNOUNCING · 2026 · REGISTRATION OPEN</span>
           <RegisterCta className="btn" style={{ padding: '10px 18px', fontSize: 11 }} />
         </div>
       </div>
@@ -79,7 +79,7 @@ export function Hero() {
           <Metric kicker="EDITION" value="01" sub="Inaugural · FC 26" />
           <Metric kicker="CLUB SLOTS" value="20" sub="All open" />
           <Metric kicker="GAMEWEEKS" value="38" sub="Round-robin season" />
-          <Metric kicker="GRAND PRIZE" value="1 CAR" sub={prize ? prize.short : "Revealed 01 Sep 2026"} accent />
+          <Metric kicker="GRAND PRIZE" value="1 CAR" sub={prize ? prize.short : "Sealed · reveal on broadcast"} accent />
         </div>
       </div>
       <Css>{`@media (max-width:760px){.hero-metrics{grid-template-columns:repeat(2,1fr)!important;row-gap:24px!important}}`}</Css>
@@ -124,7 +124,7 @@ function HeroDefault() {
           <span style={{ fontFamily: 'var(--f-display)', fontWeight: 700, fontSize: 'clamp(20px, 2.4vw, 30px)', letterSpacing: '-0.01em', color: 'var(--ink-3)', fontStyle: 'italic' }}>DRIVE THE PRIZE.</span>
         </div>
         <p style={{ marginTop: 24, fontSize: 16, lineHeight: 1.6, color: 'var(--ink-2)', maxWidth: '52ch' }}>
-          Ethiopia&apos;s first national FC&nbsp;26 league. Twenty Premier League clubs. One slot per club. Earn your seat through open qualifiers — then play a 38-gameweek season for the title and <strong style={{ color: 'var(--ink)' }}>{prize ? prize.name : 'a brand-new 100% electric car'}</strong>.
+          Ethiopia&apos;s first national FC&nbsp;26 league. Twenty Premier League clubs. One slot per club. Earn your seat through open qualifiers — then play a full 38-gameweek season for the title and <strong style={{ color: 'var(--ink)' }}>{prize ? prize.name : 'a brand-new 100% electric car'}</strong>.
         </p>
         <div style={{ display: 'flex', gap: 14, marginTop: 32, flexWrap: 'wrap' }}>
           <RegisterCta className="btn" label="REGISTER NOW →" />
@@ -132,7 +132,7 @@ function HeroDefault() {
         </div>
       </div>
       <div data-reveal style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        <CountdownPanel target={REGISTRATION_OPENS} />
+        <CountdownPanel target={REGISTRATION_CLOSES} />
         <PrizeTeaser />
       </div>
       <Css>{`@media (max-width:1100px){.hero-grid{grid-template-columns:1fr!important;gap:40px!important}}`}</Css>
@@ -146,14 +146,14 @@ function CountdownPanel({ target }: { target: number }) {
       <span className="tk1" /><span className="tk2" />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
         <div>
-          <div className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--ink-3)' }}>COUNTDOWN TO</div>
-          <div className="display-2" style={{ fontSize: 22, marginTop: 4, fontWeight: 800, letterSpacing: '.02em' }}>REGISTRATION</div>
+          <div className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--ink-3)' }}>REGISTRATION</div>
+          <div className="display-2" style={{ fontSize: 22, marginTop: 4, fontWeight: 800, letterSpacing: '.02em' }}>CLOSES IN</div>
         </div>
-        <span className="tag" style={{ color: 'var(--accent-glow)', borderColor: 'rgba(var(--accent-glow-rgb),0.35)' }}>SIGN-UP OPENS</span>
+        <span className="tag" style={{ color: 'var(--accent-glow)', borderColor: 'rgba(var(--accent-glow-rgb),0.35)' }}>SIGN-UP CLOSING</span>
       </div>
       <Countdown target={target} />
       <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px dashed var(--line-2)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-        <span className="mono" style={{ fontSize: 11, letterSpacing: '.14em', color: 'var(--ink-3)' }}>01 SEP 2026 · 09:00 EAT</span>
+        <span className="mono" style={{ fontSize: 11, letterSpacing: '.14em', color: 'var(--ink-3)' }}>CLOSES {REGISTRATION_CLOSES_TIME}</span>
         <span className="mono" style={{ fontSize: 11, letterSpacing: '.14em', color: 'var(--ink-3)' }}>20 CLUB BRACKETS · ETHIOPIA</span>
       </div>
     </div>
@@ -167,17 +167,20 @@ function PrizeTeaser() {
       <span className="tk1" /><span className="tk2" />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
         <span className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--accent-glow)' }}>GRAND PRIZE / 01</span>
-        <span className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--ink-3)' }}>PRIZE_VALUE_LOCKED</span>
       </div>
       <div className="display-2" style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.05 }}>{prize ? prize.name : <>AN <span style={{ fontStyle: 'italic', color: 'var(--accent-glow)' }}>ELECTRIC</span> CAR</>}</div>
-      <div style={{ marginTop: 16 }}><Placeholder label="[ VEHICLE PHOTO PLATE ]" aspect="16 / 6" /></div>
-      <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-        {(prize ? prize.teaserSpecs : [{ k: 'RANGE', v: null }, { k: 'TYPE', v: '100% EV' }, { k: 'MODEL', v: null }]).map((c) => (
+      <div style={{ marginTop: 16 }}><Placeholder label={(prize ?? GRAND_PRIZE_SEALED).plate} aspect="16 / 6" /></div>
+      {/* Sealed: only the two facts that are actually known. A field with a
+          redacted value still tells a reader a number is being withheld;
+          omitting it says nothing at all, which is what "sealed" should mean. */}
+      <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: prize ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)', gap: 10 }}>
+        {(prize ? prize.teaserSpecs : [
+          { k: 'TYPE', v: '100% EV' },
+          { k: 'STATUS', v: GRAND_PRIZE_SEALED.status },
+        ]).map((c) => (
           <div key={c.k}>
             <div className="mono" style={{ fontSize: 9, letterSpacing: '.22em', color: 'var(--ink-3)' }}>{c.k}</div>
-            {c.v
-              ? <div className="display-2" style={{ fontSize: 17, fontWeight: 700, marginTop: 2 }}>{c.v}</div>
-              : <div aria-label="Sealed" style={{ marginTop: 6, height: 14, background: '#000', border: '1px solid var(--line-2)' }} />}
+            <div className="display-2" style={{ fontSize: prize ? 17 : 13, fontWeight: 700, marginTop: 2, lineHeight: 1.2 }}>{c.v}</div>
           </div>
         ))}
       </div>

@@ -2,7 +2,7 @@
 // Shared primitives ported from primitives.jsx (Countdown, marks, ClubCode, etc.)
 import * as React from 'react';
 import Link from 'next/link';
-import { registrationHasOpened, REGISTRATION_OPENS_LABEL } from '@/data/static';
+import { registrationIsOpen } from '@/data/static';
 
 export function NexGenMark({ size = 28 }: { size?: number }) {
   const eGlyph = 'M26 16 H80 L70 32 H42 V44 H70 L60 60 H42 V70 H74 L64 86 H26 Z';
@@ -83,29 +83,29 @@ export function ClubCode({ code, accent }: { code: string; accent?: string }) {
 }
 
 /**
- * Whether qualifier registration has opened.
+ * Whether qualifier registration is still open.
  *
- * Returns false on the server and on the first client render, then the real
- * value after mount. Deriving it from the clock during render would let the
- * server and client disagree across the opening instant, and a hydration
- * mismatch does not degrade gracefully here — it blanks the page (see
- * components/Css.tsx).
+ * Defaults to OPEN on the server and on the first client render, then takes the
+ * real value after mount. The default matches the current state, so the page is
+ * never briefly wrong; the mount guard exists because deriving this from the
+ * clock during render would let server and client disagree across the closing
+ * instant, and a hydration mismatch does not degrade gracefully here — it blanks
+ * the page (see components/Css.tsx).
  */
 export function useRegistrationOpen(): boolean {
-  const [open, setOpen] = React.useState(false);
-  React.useEffect(() => { setOpen(registrationHasOpened()); }, []);
+  const [open, setOpen] = React.useState(true);
+  React.useEffect(() => { setOpen(registrationIsOpen()); }, []);
   return open;
 }
 
 /**
  * The one way to link to /register.
  *
- * Before sign-ups open this renders the date instead of a link. Every CTA on the
- * site has to agree with the Clubs section — inviting someone to register on the
- * same page that tells them registration opens in September, then walking them
- * into a form that turns them away, is worse than simply stating the date.
+ * Once sign-ups close this stops being a link rather than walking someone into a
+ * form that would only turn them away. Every CTA on the site reads from here, so
+ * they cannot drift out of step with the Clubs section.
  */
-export function RegisterCta({ className = 'btn', style, label = 'REGISTER →' }: {
+export function RegisterCta({ className = 'btn', style, label = 'REGISTER NOW →' }: {
   className?: string; style?: React.CSSProperties; label?: string;
 }) {
   const open = useRegistrationOpen();
@@ -113,7 +113,7 @@ export function RegisterCta({ className = 'btn', style, label = 'REGISTER →' }
     return (
       <span className={className} aria-disabled="true"
         style={{ ...style, opacity: 0.55, cursor: 'default', pointerEvents: 'none' }}>
-        OPENS {REGISTRATION_OPENS_LABEL}
+        REGISTRATION CLOSED
       </span>
     );
   }

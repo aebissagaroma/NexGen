@@ -26,9 +26,9 @@ export async function GET(req: Request) {
 
   const regs = await query<{
     full_name: string; gamertag: string | null; club_code: string;
-    email: string; id_last4: string | null;
+    email: string; phone: string | null;
   }>(
-    `SELECT full_name, gamertag, club_code, email, id_last4
+    `SELECT full_name, gamertag, club_code, email, phone
      FROM registrations
      WHERE created_at > now() - interval '${WINDOW}'
      ORDER BY created_at`,
@@ -87,7 +87,7 @@ export async function GET(req: Request) {
     for (const r of regs) {
       lines.push(
         `  ${r.full_name} · ${r.gamertag || 'no tag'} · ${r.club_code} · ${r.email}` +
-        ` · ID ••••${r.id_last4 || '????'}`,
+        ` · ${r.phone || 'no phone'}`,
       );
     }
     lines.push('');

@@ -7,12 +7,12 @@ export async function GET() {
 
   const rows = await query<{
     full_name: string; email: string; gamertag: string | null; club_code: string;
-    id_last4: string | null; city: string | null; payment_status: string;
+    phone: string | null; city: string | null; payment_status: string;
     status: string; created_at: string;
   }>(
-    // id_last4 only — the ID number itself is never stored, so it cannot be
+    // No identity document or number is collected at all — see rulebook 3.4.
     // exported. That is deliberate: this file gets emailed around.
-    `SELECT full_name, email, gamertag, club_code, id_last4, city,
+    `SELECT full_name, email, gamertag, club_code, phone, city,
             payment_status, status, created_at
      FROM registrations ORDER BY created_at DESC`,
   );
@@ -30,7 +30,7 @@ export async function GET() {
   const csv = [
     headers.join(','),
     ...rows.map((r) =>
-      [r.full_name, r.email, r.gamertag, r.club_code, r.id_last4, r.city, r.payment_status, r.status, r.created_at]
+      [r.full_name, r.email, r.gamertag, r.club_code, r.phone, r.city, r.payment_status, r.status, r.created_at]
         .map(esc)
         .join(','),
     ),

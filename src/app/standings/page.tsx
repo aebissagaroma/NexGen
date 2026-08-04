@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { PageHeader, PageTitle } from '@/components/PageHeader';
+import { PageFooter } from '@/components/SiteNotices';
 
 interface Row { club_code: string; club_name: string; player_tag: string; played: number; won: number; drawn: number; lost: number; gf: number; ga: number; gd: number; points: number; }
 
@@ -46,6 +47,7 @@ export default function StandingsPage() {
           </div>
         )}
       </div>
+      <PageFooter />
     </>
   );
 }

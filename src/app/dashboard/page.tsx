@@ -3,9 +3,10 @@
 // with inline status controls and CSV export. Auth via /api/admin/login (env creds).
 import * as React from 'react';
 import { PageHeader, PageTitle } from '@/components/PageHeader';
+import { PageFooter } from '@/components/SiteNotices';
 import { CLUBS, SPONSORS_TIERS, INTERNAL_COMPANIES } from '@/data/static';
 
-interface Reg { id: string; full_name: string; email: string; gamertag: string | null; club_code: string; club_name: string; id_last4: string | null; city: string | null; payment_status: string; status: string; created_at: string; }
+interface Reg { id: string; full_name: string; email: string; gamertag: string | null; club_code: string; club_name: string; phone: string | null; city: string | null; payment_status: string; status: string; created_at: string; }
 interface Sponsor { id: string; company: string; contact_name: string; email: string; phone: string | null; tier: string | null; message: string | null; handled: boolean; created_at: string; }
 
 type Tab = 'entries' | 'partners';
@@ -110,7 +111,7 @@ export default function DashboardPage() {
 
         <div style={{ overflowX: 'auto', border: '1px solid var(--line-2)', borderRadius: 4 }}>
           <table className="data-table">
-            <thead><tr><th>Name</th><th>Gamertag</th><th>Club</th><th>Email</th><th>ID ending</th><th>Payment</th><th>Status</th><th>When</th></tr></thead>
+            <thead><tr><th>Name</th><th>Gamertag</th><th>Club</th><th>Email</th><th>Phone</th><th>Payment</th><th>Status</th><th>When</th></tr></thead>
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id}>
@@ -118,7 +119,7 @@ export default function DashboardPage() {
                   <td>{r.gamertag || '—'}</td>
                   <td className="mono" style={{ color: 'var(--ink-3)' }}>{r.club_code}</td>
                   <td className="mono">{r.email}</td>
-                  <td className="mono">{r.id_last4 ? `••••${r.id_last4}` : '—'}</td>
+                  <td className="mono">{r.phone || '—'}</td>
                   <td>
                     <select className="field" style={{ height: 32, fontSize: 12, maxWidth: 120 }} value={r.payment_status} onChange={(e) => update(r.id, { paymentStatus: e.target.value })}>
                       <option value="unpaid">Unpaid</option><option value="paid">Paid</option><option value="waived">Waived</option>
@@ -139,6 +140,7 @@ export default function DashboardPage() {
         </>
         )}
       </div>
+      <PageFooter />
     </>
   );
 }
