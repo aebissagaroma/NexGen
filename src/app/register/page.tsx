@@ -314,8 +314,8 @@ function RegisterInner() {
               </div>
               {err && <div className="notice notice-err">{err}</div>}
               <p className="mono" style={{ fontSize: 10.5, letterSpacing: '.06em', color: 'var(--ink-3)', lineHeight: 1.6, margin: 0 }}>
-                No payment is taken at this stage. The qualifier session fee is payable online in advance of
-                your scheduled session; the amount and accepted payment methods will be published before
+                No payment is taken at this stage. The qualifier session fee is payable in advance of your
+                scheduled session; the amount and accepted payment methods will be published before
                 registration closes.
               </p>
               <button className="btn" disabled={busy}>{busy ? 'SUBMITTING…' : 'SUBMIT ENTRY →'}</button>
