@@ -303,8 +303,10 @@ function RegisterInner() {
                 <input type="checkbox" name="acceptedTerms" required style={{ marginTop: 3, accentColor: 'var(--accent)' }} />
                 <span>
                   I have read and accept the{' '}
-                  <Link href="/rulebook" target="_blank" style={{ color: 'var(--accent-glow)' }}>rulebook</Link> and{' '}
-                  <Link href="/privacy" target="_blank" style={{ color: 'var(--accent-glow)' }}>privacy policy</Link>.
+                  <Link href="/rulebook" target="_blank" style={{ color: 'var(--accent-glow)' }}>competition rules</Link>{' '}
+                  and the{' '}
+                  <Link href="/privacy" target="_blank" style={{ color: 'var(--accent-glow)' }}>privacy notice</Link>{' '}
+                  as published on this site.
                 </span>
               </label>
               <div className="notice" style={{ borderColor: 'rgba(var(--accent-glow-rgb),0.35)', background: 'rgba(var(--accent-rgb),0.06)' }}>
