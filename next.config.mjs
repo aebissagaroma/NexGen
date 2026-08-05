@@ -8,7 +8,9 @@ const isDev = process.env.NODE_ENV === 'development';
 // - dev adds 'unsafe-eval' (react-refresh) and ws: (HMR socket).
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
+  // challenges.cloudflare.com is allowed so the Turnstile widget can load if
+  // it is switched on; it is inert until the keys are set.
+  `script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com${isDev ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   "img-src 'self' data: blob:",
@@ -16,6 +18,7 @@ const csp = [
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
+  "frame-src https://challenges.cloudflare.com",
   "frame-ancestors 'none'",
 ].join('; ');
 
@@ -31,6 +34,9 @@ const securityHeaders = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Next 14 needs this opt-in for src/instrumentation.ts, which fails the
+  // server fast when required secrets are missing.
+  experimental: { instrumentationHook: true },
   reactStrictMode: true,
   // The landing page uses many browser-only APIs and is fully client-rendered.
   // No special config needed. Add image domains here if you host prize/club art.
