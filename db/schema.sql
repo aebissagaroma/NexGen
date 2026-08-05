@@ -93,6 +93,17 @@ CREATE INDEX IF NOT EXISTS idx_reg_created ON registrations (created_at DESC);
 ALTER TABLE registrations ADD COLUMN IF NOT EXISTS id_hash  TEXT;
 ALTER TABLE registrations ADD COLUMN IF NOT EXISTS id_last4 TEXT;
 
+-- Registration now collects a phone number and date of birth instead of an ID
+-- number. Age is the reason for date_of_birth: entry is 16+, and 16- and
+-- 17-year-olds need a guardian consent form before they can play, so the site
+-- has to know which entrants those are at sign-up rather than at the venue.
+ALTER TABLE registrations ADD COLUMN IF NOT EXISTS phone         TEXT;
+ALTER TABLE registrations ADD COLUMN IF NOT EXISTS date_of_birth DATE;
+-- When they ticked acceptance of the rulebook and privacy notice. A timestamp
+-- rather than a boolean: if either document is revised, this is what says which
+-- version a given entrant actually agreed to.
+ALTER TABLE registrations ADD COLUMN IF NOT EXISTS accepted_terms_at TIMESTAMPTZ;
+
 -- Identity documents are NOT stored. Rulebook 3.4 and 13.2 state that no copy or
 -- image of an identity document is retained, and age/residency is verified in
 -- person at a Qualifier Center. An earlier build uploaded Fayda photos to Vercel
@@ -135,6 +146,26 @@ CREATE OR REPLACE FUNCTION ec_email_canon(raw TEXT) RETURNS TEXT AS $fn$
   END
 $fn$ LANGUAGE sql IMMUTABLE;
 
+-- Phone numbers, reduced to a comparable form so the same line cannot enter
+-- twice written differently: '0911 234 567', '+251911234567', '251-911-234-567'
+-- and '(0911) 234567' all become '911234567'.
+--
+-- Ethiopian mobile numbers are 9 digits after the country code, so once digits
+-- are isolated a leading '251' or '0' is dropped. Anything else keeps all its
+-- digits, which leaves foreign numbers comparable to themselves without
+-- pretending to normalise a dialling plan we do not know.
+CREATE OR REPLACE FUNCTION ec_phone_canon(raw TEXT) RETURNS TEXT AS $fn$
+  SELECT CASE
+    WHEN length(regexp_replace(coalesce(raw, ''), '\D', '', 'g')) = 12
+     AND left(regexp_replace(coalesce(raw, ''), '\D', '', 'g'), 3) = '251'
+      THEN right(regexp_replace(raw, '\D', '', 'g'), 9)
+    WHEN length(regexp_replace(coalesce(raw, ''), '\D', '', 'g')) = 10
+     AND left(regexp_replace(coalesce(raw, ''), '\D', '', 'g'), 1) = '0'
+      THEN right(regexp_replace(raw, '\D', '', 'g'), 9)
+    ELSE regexp_replace(coalesce(raw, ''), '\D', '', 'g')
+  END
+$fn$ LANGUAGE sql IMMUTABLE;
+
 -- 'Ripper 07' / 'ripper07' / ' RIPPER07 ' → 'ripper07'.
 CREATE OR REPLACE FUNCTION ec_tag_canon(raw TEXT) RETURNS TEXT AS $fn$
   SELECT lower(regexp_replace(btrim(raw), '\s+', '', 'g'))
@@ -153,12 +184,26 @@ END $do$;
 -- Identity document. This is what now stops one person entering twice — the
 -- tournament supplies the hardware, so a gamertag no longer identifies anyone.
 -- Partial, because entries taken before this change have no id_hash and many
--- NULLs must stay legal.
+-- NULLs must stay legal. Retained but dormant: ID numbers are no longer
+-- collected, so every new row leaves id_hash NULL. Kept so historic rows stay
+-- protected and so ID-based dedup can be switched back on without a migration.
 DO $do$ BEGIN
   CREATE UNIQUE INDEX IF NOT EXISTS uniq_reg_idnum
     ON registrations (id_hash) WHERE id_hash IS NOT NULL;
 EXCEPTION WHEN unique_violation THEN
   RAISE WARNING 'uniq_reg_idnum NOT created — duplicate ID numbers exist. Run: npm run db:duplicates';
+END $do$;
+
+-- One entry per phone number. With the ID number no longer collected (rulebook
+-- 3.4), this and the email index are what stand behind "one entry per player" —
+-- the rule the site states publicly and 9.7 punishes with immediate
+-- disqualification. Partial so rows taken before phone was collected stay legal.
+DO $do$ BEGIN
+  CREATE UNIQUE INDEX IF NOT EXISTS uniq_reg_phone
+    ON registrations (ec_phone_canon(phone))
+    WHERE phone IS NOT NULL AND btrim(phone) <> '';
+EXCEPTION WHEN unique_violation THEN
+  RAISE WARNING 'uniq_reg_phone NOT created — duplicate phone numbers exist. Run: npm run db:duplicates';
 END $do$;
 
 -- Gamertag stays unique, but as a DISPLAY handle rather than an identity check:

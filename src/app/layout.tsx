@@ -1,9 +1,28 @@
 import type { Metadata } from 'next';
 import './globals.css';
 
+// One description, reused for Open Graph and Twitter so a share card can never
+// drift from the page. It names no vehicle make or model — the prize is sealed
+// until it is announced on broadcast (src/lib/grand-prize.ts).
+const DESCRIPTION =
+  "NexGen PLC presents ELECTROCUP 26 — Ethiopia's first national FC 26 league. " +
+  '20 clubs. 38 gameweeks. One champion. One electric car.';
+
 export const metadata: Metadata = {
   title: 'ELECTROCUP 26 — NexGen PLC',
-  description: "NexGen PLC presents ELECTROCUP 26 — Ethiopia's first national FC 26 Premier League. 20 clubs. 38 gameweeks. One champion. One car.",
+  description: DESCRIPTION,
+  openGraph: {
+    title: 'ELECTROCUP 26',
+    description: DESCRIPTION,
+    siteName: 'ELECTROCUP 26',
+    locale: 'en_ET',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'ELECTROCUP 26',
+    description: DESCRIPTION,
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

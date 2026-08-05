@@ -9,7 +9,6 @@
 // The only way out of here is /api/prize, which withholds these fields until
 // the reveal date. See data/static.ts for the sealed copy the page shows in the
 // meantime.
-import { REGISTRATION_OPENS } from '@/data/static';
 
 export interface GrandPrizeDetails {
   /** Closes the headline: "THE WINNER DRIVES HOME …" */
@@ -30,18 +29,19 @@ export interface GrandPrizeDetails {
   teaserSpecs: { k: string; v: string }[];
 }
 
-/**
- * When the vehicle is named publicly. Tied to sign-ups opening, so the reveal is
- * a reason to be there on the day. Point it at its own timestamp to decouple.
- */
-export const GRAND_PRIZE_REVEALED_AT = REGISTRATION_OPENS;
+// The reveal is no longer on a timer. It was tied to sign-ups opening, and
+// sign-ups are now open — leaving it that way would have published the vehicle
+// the moment registration went live, which is exactly what the reveal is meant
+// to hold back. The car is announced on broadcast before qualifiers begin, which
+// is an editorial moment rather than a timestamp, so the reveal now happens when
+// and only when GRAND_PRIZE_DETAILS below is filled in.
 
 /**
  * The vehicle, or null while it is undecided.
  *
  * NOT SET: the prize is no longer the BYD Seagull and the replacement has not
- * been confirmed. Fill this in and the reveal happens on the date above; leave
- * it null and the prize simply stays sealed.
+ * been confirmed. Filling this in IS the reveal — the vehicle appears on the
+ * site as soon as this ships. Leave it null and the prize stays sealed.
  *
  * Template — every field below is shown somewhere on the page, so all of them
  * need real values:
@@ -69,17 +69,10 @@ export const GRAND_PRIZE_DETAILS: GrandPrizeDetails | null = null;
 /**
  * Whether the vehicle may be named publicly.
  *
- * Fails closed on BOTH conditions. A dated reveal fires whether or not the data
- * behind it is still correct, so a stale entry here would announce the wrong car
- * on launch morning with nobody having to act. Requiring the details to be
- * present as well makes the failure mode "still sealed" — visible and
- * recoverable — instead of "confidently wrong".
+ * Fails closed: no details, no reveal. Setting the vehicle below is a deliberate
+ * act, so the car cannot be announced by a clock running out while nobody is
+ * watching.
  */
-export function grandPrizeRevealed(now: number = Date.now()): boolean {
-  return GRAND_PRIZE_DETAILS !== null && now >= GRAND_PRIZE_REVEALED_AT;
-}
-
-/** The date has passed but there is still nothing to announce. */
-export function grandPrizeOverdue(now: number = Date.now()): boolean {
-  return GRAND_PRIZE_DETAILS === null && now >= GRAND_PRIZE_REVEALED_AT;
+export function grandPrizeRevealed(): boolean {
+  return GRAND_PRIZE_DETAILS !== null;
 }

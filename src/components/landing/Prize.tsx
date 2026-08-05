@@ -28,7 +28,7 @@ export function PrizeSection() {
               <div className="marker">FILE/05 · GRAND PRIZE</div>
               <h2 className="section-title" style={{ marginTop: 16 }}>THE WINNER<br /><span style={{ background: 'linear-gradient(180deg, var(--ink) 0%, var(--chrome-2) 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>DRIVES HOME</span><br /><span style={{ fontStyle: 'italic', color: 'var(--accent-glow)' }}>{(prize ?? GRAND_PRIZE_SEALED).headline}</span></h2>
             </div>
-            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>The grand prize for ELECTROCUP 26 is <strong style={{ color: 'var(--ink)' }}>{(prize ?? GRAND_PRIZE_SEALED).teaser}</strong>, delivered at the Cup Final by <strong style={{ color: 'var(--accent-glow)' }}>{PRIZE_PARTNER.name}</strong>. Insurance, registration and the keys go to one player.{prize ? '' : ' The make and model are announced when registration opens.'}</p>
+            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>The grand prize for ELECTROCUP 26 is <strong style={{ color: 'var(--ink)' }}>{(prize ?? GRAND_PRIZE_SEALED).teaser}</strong>, delivered at the Cup Final by <strong style={{ color: 'var(--accent-glow)' }}>{PRIZE_PARTNER.name}</strong>. Insurance, registration and the keys go to one player.{prize ? '' : ' The make and model are announced before qualifiers begin.'}</p>
           </div>
         </div>
 
@@ -40,7 +40,7 @@ export function PrizeSection() {
               <span style={{ width: 1, height: 12, background: 'var(--line-strong)' }} />
               <span className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--ink-3)' }}>DELIVERED AT THE CUP FINAL · HOST VENUE</span>
             </div>
-            <span className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--accent-glow)' }}>SUPPLIED BY {PRIZE_PARTNER.name.toUpperCase()}</span>
+            <span className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--accent-glow)' }}>{PRIZE_PARTNER.role.toUpperCase()} · {PRIZE_PARTNER.name.toUpperCase()}</span>
           </div>
           <div style={{ position: 'relative', background: 'radial-gradient(circle at 50% 65%, rgba(var(--accent-glow-rgb),0.18), transparent 65%),linear-gradient(180deg, var(--bg-1) 0%, var(--bg) 80%)', padding: 8 }}>
             <Placeholder label={(prize ?? GRAND_PRIZE_SEALED).plate} aspect="16 / 7" />
@@ -57,7 +57,7 @@ export function PrizeSection() {
                 <div className="mono" style={{ fontSize: 9.5, letterSpacing: '.22em', color: 'var(--ink-3)' }}>{s.k}</div>
                 {s.v
                   ? <div className="display-2" style={{ fontSize: 22, fontWeight: 700, marginTop: 6 }}>{s.v}</div>
-                  : <div aria-label="Sealed until registration opens" style={{ marginTop: 10, height: 20, background: '#000', border: '1px solid var(--line-2)', position: 'relative', overflow: 'hidden' }}>
+                  : <div aria-label="Sealed until announced" style={{ marginTop: 10, height: 20, background: '#000', border: '1px solid var(--line-2)', position: 'relative', overflow: 'hidden' }}>
                       <div style={{ position: 'absolute', inset: 0, background: 'repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0 5px, transparent 5px 10px)' }} />
                     </div>}
               </div>

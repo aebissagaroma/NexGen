@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { useParams } from 'next/navigation';
 import { PageHeader, PageTitle } from '@/components/PageHeader';
+import { PageFooter } from '@/components/SiteNotices';
 
 export default function PlayerPage() {
   const params = useParams<{ tag: string }>();
@@ -53,6 +54,7 @@ export default function PlayerPage() {
           </>
         )}
       </div>
+      <PageFooter />
     </>
   );
 }

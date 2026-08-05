@@ -2,7 +2,7 @@
 // Shared primitives ported from primitives.jsx (Countdown, marks, ClubCode, etc.)
 import * as React from 'react';
 import Link from 'next/link';
-import { registrationHasOpened, REGISTRATION_OPENS_LABEL } from '@/data/static';
+import { registrationPhase, REGISTRATION_OPENS_TIME, type RegistrationPhase } from '@/data/static';
 
 export function NexGenMark({ size = 28 }: { size?: number }) {
   const eGlyph = 'M26 16 H80 L70 32 H42 V44 H70 L60 60 H42 V70 H74 L64 86 H26 Z';
@@ -82,44 +82,6 @@ export function ClubCode({ code, accent }: { code: string; accent?: string }) {
   );
 }
 
-/**
- * Whether qualifier registration has opened.
- *
- * Returns false on the server and on the first client render, then the real
- * value after mount. Deriving it from the clock during render would let the
- * server and client disagree across the opening instant, and a hydration
- * mismatch does not degrade gracefully here — it blanks the page (see
- * components/Css.tsx).
- */
-export function useRegistrationOpen(): boolean {
-  const [open, setOpen] = React.useState(false);
-  React.useEffect(() => { setOpen(registrationHasOpened()); }, []);
-  return open;
-}
-
-/**
- * The one way to link to /register.
- *
- * Before sign-ups open this renders the date instead of a link. Every CTA on the
- * site has to agree with the Clubs section — inviting someone to register on the
- * same page that tells them registration opens in September, then walking them
- * into a form that turns them away, is worse than simply stating the date.
- */
-export function RegisterCta({ className = 'btn', style, label = 'REGISTER →' }: {
-  className?: string; style?: React.CSSProperties; label?: string;
-}) {
-  const open = useRegistrationOpen();
-  if (!open) {
-    return (
-      <span className={className} aria-disabled="true"
-        style={{ ...style, opacity: 0.55, cursor: 'default', pointerEvents: 'none' }}>
-        OPENS {REGISTRATION_OPENS_LABEL}
-      </span>
-    );
-  }
-  return <Link href="/register" className={className} style={style}>{label}</Link>;
-}
-
 export interface PrizeDetails {
   headline: string; name: string; teaser: string; plate: string; watermark: string; short: string;
   specs: { k: string; v: string }[];
@@ -131,7 +93,7 @@ export interface PrizeDetails {
  *
  * Always null on the server and on first paint, so the sealed copy is what gets
  * rendered and hydrated — no mismatch, and no identifying text in the HTML. The
- * details arrive from /api/prize, which withholds them until the reveal date.
+ * details arrive from /api/prize, which withholds them until the vehicle is set.
  * A failed request simply leaves the prize sealed, which is the safe direction.
  */
 export function useGrandPrize(): PrizeDetails | null {
@@ -145,6 +107,56 @@ export function useGrandPrize(): PrizeDetails | null {
     return () => { live = false; };
   }, []);
   return prize;
+}
+
+/**
+ * Where we are in the registration window: before it opens, open, or closed.
+ *
+ * Returns 'before' on the server and on the first client render, then the real
+ * phase after mount. 'before' is the current state, so the page is not briefly
+ * wrong; the mount guard exists because deriving this from the clock during
+ * render would let server and client disagree across either boundary, and a
+ * hydration mismatch does not degrade gracefully here — it blanks the page (see
+ * components/Css.tsx).
+ */
+export function useRegistrationPhase(): RegistrationPhase {
+  const [phase, setPhase] = React.useState<RegistrationPhase>('before');
+  React.useEffect(() => {
+    setPhase(registrationPhase());
+    // Re-check on a timer so a visitor sitting on the page when sign-ups open
+    // sees it happen, rather than a dead button until they reload.
+    const t = setInterval(() => setPhase(registrationPhase()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  return phase;
+}
+
+/** Convenience for the many callers that only care whether entry is possible. */
+export function useRegistrationOpen(): boolean {
+  return useRegistrationPhase() === 'open';
+}
+
+/**
+ * The one way to link to /register.
+ *
+ * Outside the window this is not a link: before opening it shows when sign-ups
+ * start, and after closing it says so, rather than walking someone into a form
+ * that would turn them away. Every CTA on the site reads from here, so they
+ * cannot drift out of step with each other.
+ */
+export function RegisterCta({ className = 'btn', style, label = 'REGISTER NOW →' }: {
+  className?: string; style?: React.CSSProperties; label?: string;
+}) {
+  const phase = useRegistrationPhase();
+  if (phase !== 'open') {
+    return (
+      <span className={className} aria-disabled="true"
+        style={{ ...style, opacity: 0.55, cursor: 'default', pointerEvents: 'none' }}>
+        {phase === 'before' ? `OPENS ${REGISTRATION_OPENS_TIME}` : 'REGISTRATION CLOSED'}
+      </span>
+    );
+  }
+  return <Link href="/register" className={className} style={style}>{label}</Link>;
 }
 
 // Scroll-reveal — reveals [data-reveal] elements as they enter the viewport.

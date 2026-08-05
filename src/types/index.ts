@@ -14,17 +14,16 @@ export interface Club {
 export interface RegistrationInput {
   fullName: string;
   email: string;        // taken from the verified session in practice
+  phone: string;
   clubCode: string;
-  /**
-   * Raw identity document number. Accepted by the API, used to derive the hash
-   * and last-4, then discarded — it is never persisted. See lib/national-id.ts.
-   */
-  idNumber: string;
+  /** yyyy-mm-dd. Drives the 16+ gate and the 16–17 guardian-consent flag. */
+  dateOfBirth: string;
+  /** Rulebook and privacy policy acceptance. Stored as a timestamp, not a flag. */
+  acceptedTerms: boolean;
+  gamertag: string;
   city?: string;
-  // TODO(dev): dateOfBirth?: string;      // eligibility: 16+
-  // TODO(dev): jerseyName?: string;       // broadcast lower-third
-  // TODO(dev): emergencyContact?: string;
-  // TODO(dev): agreesToRules: boolean;    // rulebook acceptance
+  // No identity document is collected. Photo ID is checked in person at the
+  // Qualifier Center and nothing is retained — rulebook 3.4 and 13.2.
 }
 
 export interface Registration extends RegistrationInput {

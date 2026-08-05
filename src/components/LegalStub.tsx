@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { PageHeader, PageTitle } from '@/components/PageHeader';
+import { PageFooter } from '@/components/SiteNotices';
 
 // Shared shell for the legal/reference pages that are not written yet.
 //
@@ -27,6 +28,7 @@ export function LegalStub({ file, title, blurb }: { file: string; title: string;
           </div>
         </div>
       </div>
+      <PageFooter />
     </>
   );
 }

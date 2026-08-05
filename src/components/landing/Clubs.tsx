@@ -4,20 +4,19 @@
 import * as React from 'react';
 import { Css } from '@/components/Css';
 import Link from 'next/link';
-import { ClubCode, useRegistrationOpen } from './primitives';
-import { CLUBS as STATIC_CLUBS, REGISTRATION_OPENS_LABEL, REGISTRATION_OPENS_SHORT } from '@/data/static';
+import { ClubCode, useRegistrationPhase } from './primitives';
+import { CLUBS as STATIC_CLUBS, REGISTRATION_OPENS_LABEL, REGISTRATION_OPENS_SHORT, REGISTRATION_OPENS_TIME, REGISTRATION_CLOSES_LABEL } from '@/data/static';
 
 interface ClubRow { code: string; name: string; city: string; regs?: number; }
 
 export function ClubsSection() {
   const [clubs, setClubs] = React.useState<ClubRow[]>(STATIC_CLUBS);
-  const open = useRegistrationOpen();
+  const phase = useRegistrationPhase();
+  const open = phase === 'open';
   React.useEffect(() => {
     fetch('/api/clubs').then((r) => r.json()).then((d) => { if (d.clubs?.length) setClubs(d.clubs); }).catch(() => {});
   }, []);
-  // Entry counts only mean anything once sign-ups are open. Before then the
-  // honest number is zero, whatever test rows happen to be in the database.
-  const totalRegs = open ? clubs.reduce((s, c) => s + (c.regs ?? 0), 0) : 0;
+  const totalRegs = clubs.reduce((s, c) => s + (c.regs ?? 0), 0);
 
   return (
     <section id="clubs" className="section" style={{ background: 'var(--bg-1)' }}>
@@ -30,7 +29,7 @@ export function ClubsSection() {
             </div>
             <div style={{ alignSelf: 'flex-end', textAlign: 'right' }}>
               <div className="display num" style={{ fontSize: 56, lineHeight: 1, color: 'var(--accent-glow)' }}>20/20</div>
-              <div className="mono" style={{ fontSize: 11, letterSpacing: '.18em', color: 'var(--ink-3)', marginTop: 6 }}>CLUB SLOTS · {totalRegs} {totalRegs === 1 ? 'ENTRY' : 'ENTRIES'} · {open ? 'REGISTRATION OPEN' : `OPENS ${REGISTRATION_OPENS_LABEL}`}</div>
+              <div className="mono" style={{ fontSize: 11, letterSpacing: '.18em', color: 'var(--ink-3)', marginTop: 6 }}>CLUB SLOTS · {totalRegs} {totalRegs === 1 ? 'ENTRY' : 'ENTRIES'} · {open ? 'REGISTRATION OPEN' : phase === 'before' ? `OPENS ${REGISTRATION_OPENS_LABEL}` : `CLOSED ${REGISTRATION_CLOSES_LABEL}`}</div>
             </div>
           </div>
         </div>
@@ -42,16 +41,18 @@ export function ClubsSection() {
             <span className="mono" style={{ fontSize: 11, letterSpacing: '.10em', color: 'var(--ink-2)' }}>
               {open
                 ? 'QUALIFIER REGISTRATION IS OPEN · PICK A CLUB TO ENTER ITS BRACKET'
-                : `QUALIFIER REGISTRATION OPENS ${REGISTRATION_OPENS_LABEL}`}
+                : phase === 'before'
+                  ? `QUALIFIER REGISTRATION OPENS ${REGISTRATION_OPENS_TIME}`
+                  : `QUALIFIER REGISTRATION CLOSED ${REGISTRATION_CLOSES_LABEL}`}
             </span>
           </div>
           {open
             ? <Link href="/register" className="mono" style={{ fontSize: 11, letterSpacing: '.18em', color: 'var(--ink)', textTransform: 'uppercase', borderBottom: '1px solid var(--accent)', paddingBottom: 2 }}>REGISTER →</Link>
-            : <span className="mono" style={{ fontSize: 11, letterSpacing: '.18em', color: 'var(--ink-3)' }}>NOT YET OPEN</span>}
+            : <span className="mono" style={{ fontSize: 11, letterSpacing: '.18em', color: 'var(--ink-3)' }}>{phase === 'before' ? 'NOT YET OPEN' : 'REGISTRATION CLOSED'}</span>}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'var(--line)', border: '1px solid var(--line)' }} className="clubs-grid">
-          {clubs.map((c, i) => <ClubCell key={c.code} club={c} idx={i} open={open} />)}
+          {clubs.map((c, i) => <ClubCell key={c.code} club={c} idx={i} open={open} phase={phase} />)}
         </div>
       </div>
       <Css>{`@media (max-width:1100px){.clubs-grid{grid-template-columns:repeat(3,1fr)!important}}@media (max-width:760px){.clubs-grid{grid-template-columns:repeat(2,1fr)!important}}@media (max-width:460px){.clubs-grid{grid-template-columns:1fr!important}}`}</Css>
@@ -59,10 +60,10 @@ export function ClubsSection() {
   );
 }
 
-function ClubCell({ club, idx, open }: { club: ClubRow; idx: number; open: boolean }) {
+function ClubCell({ club, idx, open, phase }: { club: ClubRow; idx: number; open: boolean; phase: 'before' | 'open' | 'closed' }) {
   const [hovered, setHovered] = React.useState(false);
   // Counts stay hidden until sign-ups open, matching the section total.
-  const regs = open ? club.regs ?? 0 : 0;
+  const regs = club.regs ?? 0;
 
   const body = (
     <>
@@ -70,7 +71,7 @@ function ClubCell({ club, idx, open }: { club: ClubRow; idx: number; open: boole
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
         <ClubCode code={club.code} />
         <span className="mono" style={{ fontSize: 9.5, letterSpacing: '.22em', color: open ? 'var(--accent-glow)' : 'var(--ink-3)', fontWeight: 600 }}>
-          {open ? 'OPEN' : `OPENS ${REGISTRATION_OPENS_SHORT}`}
+          {open ? 'OPEN' : phase === 'before' ? `OPENS ${REGISTRATION_OPENS_SHORT}` : 'CLOSED'}
         </span>
       </div>
       <div className="display-2" style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.05, color: 'var(--ink)', minHeight: 44 }}>{club.name}</div>
@@ -80,7 +81,7 @@ function ClubCell({ club, idx, open }: { club: ClubRow; idx: number; open: boole
           {regs > 0 ? `${regs} ENTRANT${regs > 1 ? 'S' : ''}` : 'AWAITING ENTRANTS'}
         </span>
         <span className="mono" style={{ fontSize: 10, letterSpacing: '.18em', color: hovered && open ? 'var(--accent-glow)' : 'var(--ink-3)', transition: 'color .15s ease' }}>
-          {open ? 'ENTER →' : `OPENS ${REGISTRATION_OPENS_SHORT}`}
+          {open ? 'ENTER →' : phase === 'before' ? `OPENS ${REGISTRATION_OPENS_SHORT}` : 'CLOSED'}
         </span>
       </div>
     </>
@@ -92,9 +93,9 @@ function ClubCell({ club, idx, open }: { club: ClubRow; idx: number; open: boole
     display: 'block', color: 'inherit',
   };
 
-  // Before sign-ups open there is nothing to enter, so this is a plain card
-  // rather than a link — clicking through to a register page that would only
-  // turn them away is worse than showing the date.
+  // Once sign-ups close there is nothing to enter, so this becomes a plain card
+  // rather than a link — walking someone into a form that would turn them away
+  // is worse than saying so on the card.
   if (!open) {
     return <div data-reveal style={{ ...style, cursor: 'default' }}>{body}</div>;
   }

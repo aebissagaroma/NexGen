@@ -5,13 +5,25 @@ import { Css } from '@/components/Css';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { PageHeader, PageTitle } from '@/components/PageHeader';
+import { PageFooter } from '@/components/SiteNotices';
 import { CLUBS } from '@/data/static';
 import { AppealForm } from '@/components/AppealForm';
+import { parseDob, checkAge, GUARDIAN_NOTICE, MIN_AGE } from '@/lib/age';
+import { useRegistrationPhase } from '@/components/landing/primitives';
+import { REGISTRATION_OPENS_TIME, REGISTRATION_CLOSES_LABEL } from '@/data/static';
 
 type Step = 'email' | 'otp' | 'details' | 'done';
 
+// Latest date of birth that still clears the age gate. Stops the picker
+// offering dates that the server would only reject.
+const MAX_DOB = (() => {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - MIN_AGE);
+  return d.toISOString().slice(0, 10);
+})();
+
 // An entry the player already has. One per player, so at most one of these.
-type Existing = { club_name: string; full_name: string; gamertag: string | null; id_last4: string | null; status: string };
+type Existing = { club_name: string; full_name: string; gamertag: string | null; status: string };
 
 function RegisterInner() {
   const params = useSearchParams();
@@ -26,6 +38,15 @@ function RegisterInner() {
   const [tags, setTags] = React.useState<string[]>([]);
   const [tag, setTag] = React.useState('');
   const [tagsBusy, setTagsBusy] = React.useState(false);
+  const phase = useRegistrationPhase();
+  const [dob, setDob] = React.useState('');
+  // 16 or 17 — may enter, but needs a guardian consent form before playing.
+  const minor = React.useMemo(() => {
+    const d = parseDob(dob);
+    if (!d) return false;
+    const a = checkAge(d);
+    return a.ok && a.needsGuardianConsent;
+  }, [dob]);
 
   // A verified player gets one entry, so there is no point rendering the details
   // form to someone who already has one — the API would only reject it.
@@ -125,7 +146,7 @@ function RegisterInner() {
     const fd = new FormData(e.target as HTMLFormElement);
     if (fd.get('password') !== fd.get('passwordConfirm')) { setErr('Passwords do not match.'); return; }
     setBusy(true);
-    const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fullName: fd.get('fullName'), idNumber: fd.get('idNumber'), clubCode: fd.get('clubCode'), city: fd.get('city'), gamertag: tag, password: fd.get('password') }) });
+    const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fullName: fd.get('fullName'), phone: fd.get('phone'), dateOfBirth: fd.get('dateOfBirth'), clubCode: fd.get('clubCode'), city: fd.get('city'), gamertag: tag, password: fd.get('password'), acceptedTerms: fd.get('acceptedTerms') === 'on' }) });
     const data = await res.json();
     if (!res.ok) {
       // 409 = they already hold an entry (a duplicate submit, or an alias of an
@@ -144,6 +165,29 @@ function RegisterInner() {
       <div className="page-wrap" style={{ maxWidth: 720 }}>
         <PageTitle file="ENTER · QUALIFIER" title={<>REGISTER<br /><span style={{ color: 'var(--accent-glow)' }}>YOUR RUN.</span></>} sub="Verify your email, then enter the club bracket you want to represent. One entry per player — you represent a single club." />
 
+        {/* Outside the window there is nothing to fill in. Rendering the form
+            anyway would let someone complete every field and only then be told
+            by the API that sign-ups have not started. */}
+        {phase !== 'open' && !existing && (
+          <div className="form-card" style={{ marginTop: 28, textAlign: 'center', padding: '36px 24px' }}>
+            <div className="mono" style={{ fontSize: 10.5, letterSpacing: '.22em', color: 'var(--accent-glow)' }}>
+              {phase === 'before' ? 'NOT YET OPEN' : 'REGISTRATION CLOSED'}
+            </div>
+            <div className="display" style={{ fontSize: 'clamp(28px,5vw,48px)', lineHeight: 0.98, marginTop: 12 }}>
+              {phase === 'before' ? <>SIGN-UP OPENS<br /><span style={{ color: 'var(--accent-glow)' }}>{REGISTRATION_OPENS_TIME}</span></> : <>ENTRIES ARE<br /><span style={{ color: 'var(--accent-glow)' }}>CLOSED</span></>}
+            </div>
+            <p style={{ color: 'var(--ink-2)', fontSize: 15, lineHeight: 1.6, maxWidth: '44ch', margin: '18px auto 0' }}>
+              {phase === 'before'
+                ? 'Come back when sign-ups open and you can pick your club and enter its qualifier bracket. Registration is free.'
+                : `Registration closed on ${REGISTRATION_CLOSES_LABEL}. Brackets are drawn live on broadcast — follow the announcements for what comes next.`}
+            </p>
+            <div style={{ marginTop: 28, display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Link href="/" className="btn-ghost">BACK HOME</Link>
+            </div>
+          </div>
+        )}
+
+        {(phase === 'open' || existing) && <>
         {!existing && <Steps step={step} />}
 
         <div className="form-card" style={{ marginTop: 28 }}>
@@ -199,13 +243,14 @@ function RegisterInner() {
             <form onSubmit={submitDetails} style={{ display: 'grid', gap: 18 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }} className="reg-grid">
                 <div><label className="label">Full name</label><input className="field" name="fullName" required placeholder="Your legal name, as on your ID" onBlur={(e) => loadTags(e.target.value)} /></div>
-                <div><label className="label">ID number</label><input className="field" name="idNumber" required placeholder="Fayda, Kebele ID or passport" autoComplete="off" spellCheck={false} /></div>
+                <div><label className="label">Phone number</label><input className="field" name="phone" type="tel" required placeholder="+251…" autoComplete="tel" /></div>
                 <div><label className="label">Club to represent</label>
                   <select className="field" name="clubCode" defaultValue={preClub} required>
                     <option value="" disabled>Select a club…</option>
                     {CLUBS.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
                   </select>
                 </div>
+                <div><label className="label">Date of birth</label><input className="field" name="dateOfBirth" type="date" required max={MAX_DOB} value={dob} onChange={(e) => setDob(e.target.value)} /></div>
                 <div><label className="label">City (optional)</label><input className="field" name="city" placeholder="Addis Ababa" /></div>
                 <div><label className="label">Create password (min 8 characters)</label><input className="field" name="password" type="password" minLength={8} required placeholder="••••••••" /></div>
                 <div><label className="label">Confirm password</label><input className="field" name="passwordConfirm" type="password" minLength={8} required placeholder="••••••••" /></div>
@@ -243,18 +288,38 @@ function RegisterInner() {
                 </div>
               </div>
               <p className="mono" style={{ fontSize: 10.5, letterSpacing: '.06em', color: 'var(--ink-4)', lineHeight: 1.6, margin: 0 }}>
-                Your ID confirms your age and keeps entries to one per player. We store only a scrambled
-                version of the number and its last 4 digits — never the number itself. Bring the same ID to
-                your Qualifier Center. No console or game needed.
+                Bring your photo ID to your Qualifier Center — we check it there to confirm your age and
+                keep no copy. No console or game needed.
               </p>
-              {/* TODO(dev): add remaining fields per src/types RegistrationInput
-                  (date of birth, jersey name, rules acceptance) once confirmed. */}
+              {/* Shown as soon as the date of birth says 16 or 17, not on submit:
+                  needing a guardian's signature is something to find out while
+                  filling the form in, not after committing to an entry. */}
+              {minor && (
+                <div className="notice" style={{ borderColor: 'rgba(var(--accent-glow-rgb),0.35)' }}>
+                  {GUARDIAN_NOTICE}
+                </div>
+              )}
+              <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer', fontSize: 13.5, lineHeight: 1.6, color: 'var(--ink-2)' }}>
+                <input type="checkbox" name="acceptedTerms" required style={{ marginTop: 3, accentColor: 'var(--accent)' }} />
+                <span>
+                  I have read and accept the{' '}
+                  <Link href="/rulebook" target="_blank" style={{ color: 'var(--accent-glow)' }}>competition rules</Link>{' '}
+                  and the{' '}
+                  <Link href="/privacy" target="_blank" style={{ color: 'var(--accent-glow)' }}>privacy notice</Link>{' '}
+                  as published on this site.
+                </span>
+              </label>
               <div className="notice" style={{ borderColor: 'rgba(var(--accent-glow-rgb),0.35)', background: 'rgba(var(--accent-rgb),0.06)' }}>
-                <strong>One entry per player.</strong> Submitting a second entry — under another email, ID or
+                <strong>One entry per player.</strong> Submitting a second entry — under another email, phone or
                 name — means <strong>immediate disqualification</strong>. Blocked by mistake? There is an appeal
                 below.
               </div>
               {err && <div className="notice notice-err">{err}</div>}
+              <p className="mono" style={{ fontSize: 10.5, letterSpacing: '.06em', color: 'var(--ink-3)', lineHeight: 1.6, margin: 0 }}>
+                No payment is taken at this stage. The qualifier session fee is payable in advance of your
+                scheduled session; the amount and accepted payment methods will be published before
+                registration closes.
+              </p>
               <button className="btn" disabled={busy}>{busy ? 'SUBMITTING…' : 'SUBMIT ENTRY →'}</button>
               {/* Only after a rejection: offering an appeal to someone who has not
                   been blocked would just be noise. */}
@@ -280,7 +345,9 @@ function RegisterInner() {
             </div>
           )}
         </div>
+        </>}
       </div>
+      <PageFooter />
     </>
   );
 }
@@ -291,7 +358,7 @@ function AlreadyEntered({ reg }: { reg: Existing }) {
     <div style={{ textAlign: 'center', padding: '20px 0' }}>
       <div className="display" style={{ fontSize: 'clamp(30px,5vw,52px)', color: 'var(--accent-glow)', lineHeight: 0.95 }}>ALREADY IN.</div>
       <p style={{ color: 'var(--ink-2)', fontSize: 15.5, lineHeight: 1.6, maxWidth: '44ch', margin: '18px auto 0' }}>
-        You are entered as <strong style={{ color: 'var(--ink)' }}>{reg.gamertag || reg.full_name}</strong> representing <strong style={{ color: 'var(--ink)' }}>{reg.club_name}</strong>{reg.id_last4 ? <>, on the ID ending <strong style={{ color: 'var(--ink)' }}>{reg.id_last4}</strong></> : null}. It is one entry per player, so there is nothing more to submit.
+        You are entered as <strong style={{ color: 'var(--ink)' }}>{reg.gamertag || reg.full_name}</strong> representing <strong style={{ color: 'var(--ink)' }}>{reg.club_name}</strong>. It is one entry per player, so there is nothing more to submit.
       </p>
       <div className="mono" style={{ fontSize: 10.5, letterSpacing: '.14em', color: 'var(--ink-4)', marginTop: 16 }}>
         STATUS · {String(reg.status).toUpperCase()}

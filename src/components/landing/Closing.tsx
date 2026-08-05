@@ -4,9 +4,10 @@
 import * as React from 'react';
 import { Css } from '@/components/Css';
 import Link from 'next/link';
-import { NexGenMark, Countdown, RegisterCta } from './primitives';
-import { TIMELINE, SPONSORS_TIERS, NEXGEN_PILLARS, REGISTRATION_OPENS, PARTNER_SELECTION_CLOSES } from '@/data/static';
+import { NexGenMark, Countdown, RegisterCta, useRegistrationPhase } from './primitives';
+import { TIMELINE, SPONSORS_TIERS, NEXGEN_PILLARS, REGISTRATION_OPENS, REGISTRATION_CLOSES, PARTNER_SELECTION_CLOSES, EXCLUDED_PARTNER_CATEGORIES } from '@/data/static';
 import { NotifyBox } from './Announce';
+import { SiteNotices } from '@/components/SiteNotices';
 
 export function ScheduleSection() {
   return (
@@ -18,14 +19,17 @@ export function ScheduleSection() {
               <div className="marker">FILE/06 · CALENDAR</div>
               <h2 className="section-title" style={{ marginTop: 16 }}>NINE MONTHS.<br /><span style={{ fontStyle: 'italic', color: 'var(--ink-3)' }}>ONE</span> CHAMPION.</h2>
             </div>
-            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>Registration opens 01 September 2026. Each phase after that — the bracket draw, qualifiers, Draft Day and the season — is announced as it approaches, so check back or register to be told first.</p>
+            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>Registration opens 05 August 2026 at 20:00 EAT and closes 01 September 2026. Each phase after that — the bracket draw, qualifiers, Draft Day and the season — is announced as it approaches, so check back or register to be told first.</p>
           </div>
         </div>
         <div data-reveal style={{ display: 'grid', gridTemplateColumns: `repeat(${TIMELINE.length}, 1fr)`, gap: 0, border: '1px solid var(--line)', background: 'var(--bg-1)', position: 'relative' }} className="timeline-grid">
           {TIMELINE.map((t, i) => (
-            <div key={t.phase} style={{ padding: '28px 18px 24px', borderRight: i < TIMELINE.length - 1 ? '1px solid var(--line)' : 'none', position: 'relative', background: t.state === 'live' ? 'rgba(var(--accent-rgb),0.05)' : 'transparent' }}>
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: t.state === 'live' ? 'var(--accent)' : 'var(--line-2)', boxShadow: t.state === 'live' ? '0 0 12px var(--accent)' : 'none' }} />
-              <div className="mono" style={{ fontSize: 9.5, letterSpacing: '.22em', color: t.state === 'live' || t.justAnnounced ? 'var(--accent-glow)' : 'var(--ink-3)' }}>{String(i + 1).padStart(2, '0')} · {t.justAnnounced ? 'JUST ANNOUNCED' : t.state === 'live' ? 'NOW' : 'NEXT'}</div>
+            // A finished phase is dimmed with a solid rule; the live one glows;
+            // upcoming ones sit between. Without this, 'DONE' and 'NEXT' rows
+            // looked identical and the strip read as if nothing had happened yet.
+            <div key={t.phase} style={{ padding: '28px 18px 24px', borderRight: i < TIMELINE.length - 1 ? '1px solid var(--line)' : 'none', position: 'relative', background: t.state === 'live' ? 'rgba(var(--accent-rgb),0.05)' : 'transparent', opacity: t.state === 'done' ? 0.55 : 1 }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: t.state === 'live' ? 'var(--accent)' : t.state === 'done' ? 'var(--ink-4)' : 'var(--line-2)', boxShadow: t.state === 'live' ? '0 0 12px var(--accent)' : 'none' }} />
+              <div className="mono" style={{ fontSize: 9.5, letterSpacing: '.22em', color: t.state === 'live' || t.justAnnounced ? 'var(--accent-glow)' : 'var(--ink-3)' }}>{String(i + 1).padStart(2, '0')} · {t.state === 'done' ? 'DONE' : t.justAnnounced ? 'JUST ANNOUNCED' : t.state === 'live' ? 'NOW' : 'NEXT'}</div>
               <div className="display-2" style={{ fontSize: 18, fontWeight: 800, marginTop: 10, lineHeight: 1.1 }}>{t.phase}</div>
               <div className="mono" style={{ fontSize: 10, letterSpacing: '.14em', color: 'var(--ink-3)', marginTop: 4 }}>{t.sub.toUpperCase()}</div>
               <div className="mono" style={{ fontSize: 11, letterSpacing: '.10em', marginTop: 18, color: t.state === 'live' ? 'var(--ink)' : 'var(--ink-2)' }}>{t.date}</div>
@@ -52,7 +56,7 @@ export function SponsorsSection() {
               <div className="marker">FILE/07 · PARTNERS</div>
               <h2 className="section-title" style={{ marginTop: 16 }}>BUILT WITH<br /><span style={{ fontStyle: 'italic', color: 'var(--ink-3)' }}>BRANDS</span> THAT MOVE<br />ETHIOPIA.</h2>
             </div>
-            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>ELECTROCUP 26 is delivered with a tiered partner system covering vehicle, banking, telecom, hospitality and broadcast. Reach an audience of 18–34 across Ethiopia for nine months of consistent programming.</p>
+            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>ELECTROCUP 26 is delivered with a tiered partner system covering banking, telecom, hospitality, retail and broadcast. Reach an audience of 18–34 across Ethiopia for nine months of consistent programming.</p>
           </div>
         </div>
 
@@ -65,15 +69,26 @@ export function SponsorsSection() {
                 {/* Seat counts stay off the page on purpose — see SPONSORS_TIERS. */}
                 <div className="mono" style={{ fontSize: 10, letterSpacing: '.14em', color: 'var(--ink-3)', marginTop: 4 }}>{tier.focus.toUpperCase()}</div>
               </div>
-              <div className="stripe ticks" style={{ position: 'relative', padding: '20px 22px', border: '1px dashed var(--line-2)', background: 'var(--bg-1)', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6, minHeight: 76 }}>
+              {/* A filled tier is drawn solid and dimmed; an open one keeps the
+                  dashed outline. The difference has to read at a glance, or
+                  "FILLED" is just more text on an identical-looking row. */}
+              <div className="stripe ticks" style={{ position: 'relative', padding: '20px 22px', border: tier.filled ? '1px solid var(--line-2)' : '1px dashed var(--line-2)', background: tier.filled ? 'var(--bg)' : 'var(--bg-1)', opacity: tier.filled ? 0.72 : 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6, minHeight: 76 }}>
                 <span className="tk1" /><span className="tk2" />
                 <p style={{ margin: 0, color: 'var(--ink-2)', fontSize: 13, lineHeight: 1.55, maxWidth: '52ch' }}>{tier.note}</p>
-                <div className="mono" style={{ fontSize: 10, letterSpacing: '.16em', color: 'var(--accent-glow)' }}>ACCEPTING PROPOSALS</div>
+                {tier.filled
+                  ? <div className="mono" style={{ fontSize: 10, letterSpacing: '.16em', color: 'var(--ink-3)' }}>
+                      FILLED · {tier.filled.toUpperCase()}
+                    </div>
+                  : <div className="mono" style={{ fontSize: 10, letterSpacing: '.16em', color: 'var(--accent-glow)' }}>ACCEPTING PROPOSALS</div>}
               </div>
             </div>
           ))}
           <Css>{`@media (max-width:760px){.sponsor-row{grid-template-columns:1fr!important;gap:18px!important}}`}</Css>
         </div>
+
+        <p data-reveal className="mono" style={{ marginTop: 14, fontSize: 10.5, letterSpacing: '.08em', lineHeight: 1.6, color: 'var(--ink-4)', maxWidth: '78ch' }}>
+          {EXCLUDED_PARTNER_CATEGORIES}
+        </p>
 
         <SponsorInquiry />
       </div>
@@ -133,7 +148,7 @@ function SponsorInquiry() {
             {/* Values must match SponsorTier.key — the dashboard counts demand by these. */}
             <select name="tier" className="field" defaultValue="">
               <option value="">Any / not sure</option>
-              {SPONSORS_TIERS.map((t) => <option key={t.key}>{t.key}</option>)}
+              {SPONSORS_TIERS.filter((t) => !t.filled).map((t) => <option key={t.key}>{t.key}</option>)}
             </select>
           </div>
           <div style={{ gridColumn: '1 / -1' }}><label className="label">Message (optional)</label><textarea name="message" className="field" style={{ height: 96, padding: '12px 14px', resize: 'vertical' }} placeholder="Tell us about your brand and goals" /></div>
@@ -188,21 +203,22 @@ export function AboutSection() {
 }
 
 export function RegisterCTA() {
+  const footerPhase = useRegistrationPhase();
   return (
     <section id="register" className="section" style={{ background: 'var(--bg-1)', backgroundImage: 'radial-gradient(900px 500px at 50% 0%, rgba(var(--accent-rgb),0.18), transparent 60%)', paddingBlock: 'clamp(80px, 10vw, 140px)', position: 'relative', overflow: 'hidden' }}>
       <div className="grid-bg" style={{ position: 'absolute', inset: 0, opacity: 0.45, pointerEvents: 'none', maskImage: 'radial-gradient(ellipse at 50% 50%, black 10%, transparent 75%)', WebkitMaskImage: 'radial-gradient(ellipse at 50% 50%, black 10%, transparent 75%)' }} />
       <div className="wrap" style={{ position: 'relative', textAlign: 'center' }} data-reveal>
         <div className="marker" style={{ justifyContent: 'center' }}>FILE/09 · ENTER</div>
         <h2 className="display" style={{ fontSize: 'clamp(64px, 10vw, 144px)', margin: '20px 0 24px', lineHeight: 0.92 }}>EARN <span style={{ fontStyle: 'italic', color: 'var(--ink-3)' }}>YOUR</span> CLUB.<br /><span style={{ background: 'linear-gradient(180deg, var(--ink), var(--chrome-2))', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>DRIVE THE PRIZE.</span></h2>
-        <p style={{ color: 'var(--ink-2)', fontSize: 17, lineHeight: 1.6, maxWidth: '52ch', margin: '0 auto' }}>Registration opens 01 September 2026. Verify your email, pick your club, and enter its qualifier bracket. Brackets are drawn live on broadcast — we announce the date once sign-ups close.</p>
+        <p style={{ color: 'var(--ink-2)', fontSize: 17, lineHeight: 1.6, maxWidth: '52ch', margin: '0 auto' }}>Registration opens 05 August 2026 at 20:00 EAT and closes 01 September. Verify your email, pick your club, and enter its qualifier bracket. Brackets are drawn live on broadcast — we announce the date once sign-ups close.</p>
         <div style={{ marginTop: 36, display: 'flex', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
           <RegisterCta className="btn" style={{ padding: '18px 28px', fontSize: 13 }} label="REGISTER NOW →" />
           <a href="#format" className="btn-ghost" style={{ padding: '18px 28px', fontSize: 13 }}>READ THE FORMAT</a>
         </div>
         <div style={{ marginTop: 48, display: 'inline-flex', alignItems: 'center', gap: 14, padding: '12px 18px', border: '1px solid var(--line-2)', borderRadius: 999, background: 'rgba(0,0,0,0.4)' }}>
           <span className="tag tag-live" style={{ border: 0, padding: 0, background: 'transparent' }} />
-          <span className="mono" style={{ fontSize: 10.5, letterSpacing: '.18em', color: 'var(--ink-2)' }}>REGISTRATION OPENS IN</span>
-          <Countdown target={REGISTRATION_OPENS} compact />
+          <span className="mono" style={{ fontSize: 10.5, letterSpacing: '.18em', color: 'var(--ink-2)' }}>{footerPhase === 'before' ? 'REGISTRATION OPENS IN' : 'REGISTRATION CLOSES IN'}</span>
+          <Countdown target={footerPhase === 'before' ? REGISTRATION_OPENS : REGISTRATION_CLOSES} compact />
         </div>
       </div>
     </section>
@@ -262,7 +278,10 @@ export function Footer() {
             </div>
           ))}
         </div>
-        <div style={{ marginTop: 48, paddingTop: 22, borderTop: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ marginTop: 48, paddingTop: 22, borderTop: '1px solid var(--line)' }}>
+          <SiteNotices />
+        </div>
+        <div style={{ marginTop: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           <div className="mono" style={{ fontSize: 10.5, letterSpacing: '.14em', color: 'var(--ink-4)' }}>© 2026 NEXGEN PLC · ADDIS ABABA, ETHIOPIA · ALL RIGHTS RESERVED</div>
           <div style={{ display: 'flex', gap: 18 }}>
             {[{ label: 'TERMS', href: '/terms' }, { label: 'PRIVACY', href: '/privacy' }, { label: 'RULEBOOK', href: '/rulebook' }].map((l) => (
