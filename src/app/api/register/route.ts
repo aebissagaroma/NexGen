@@ -5,6 +5,7 @@ import { str } from '@/lib/validation';
 import { hashPassword } from '@/lib/password';
 import { notifyOps, notifyEachRegistration, sendMail } from '@/lib/mailer';
 import { parseDob, checkAge, MIN_AGE, GUARDIAN_NOTICE } from '@/lib/age';
+import { registrationPhase, REGISTRATION_OPENS_TIME, REGISTRATION_CLOSES_LABEL } from '@/data/static';
 
 // POST /api/register — create a qualifier registration for the logged-in player.
 // Requires a verified email session (see /api/auth/otp/verify).
@@ -12,6 +13,21 @@ export async function POST(req: Request) {
   const session = getSession('user');
   if (!session) {
     return NextResponse.json({ error: 'Verify your email first.' }, { status: 401 });
+  }
+
+  // The window is enforced here, not only by the disabled buttons: those are a
+  // courtesy, and a hand-made POST would otherwise take an entry before sign-ups
+  // open or after they close.
+  const phase = registrationPhase();
+  if (phase !== 'open') {
+    return NextResponse.json(
+      {
+        error: phase === 'before'
+          ? `Registration opens ${REGISTRATION_OPENS_TIME}.`
+          : `Registration closed on ${REGISTRATION_CLOSES_LABEL}.`,
+      },
+      { status: 403 },
+    );
   }
 
   const body = await req.json().catch(() => ({}));

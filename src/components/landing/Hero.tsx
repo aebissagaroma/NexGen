@@ -3,8 +3,8 @@
 import * as React from 'react';
 import { Css } from '@/components/Css';
 import Link from 'next/link';
-import { NexGenMark, Countdown, Placeholder, RegisterCta, useGrandPrize } from './primitives';
-import { REGISTRATION_CLOSES, REGISTRATION_CLOSES_TIME, GRAND_PRIZE_SEALED } from '@/data/static';
+import { NexGenMark, Countdown, Placeholder, RegisterCta, useGrandPrize, useRegistrationPhase } from './primitives';
+import { REGISTRATION_OPENS, REGISTRATION_OPENS_TIME, REGISTRATION_OPENS_LABEL, REGISTRATION_CLOSES, REGISTRATION_CLOSES_TIME, GRAND_PRIZE_SEALED } from '@/data/static';
 import { AnnouncementBanner } from './Announce';
 
 const NAV_LINKS = [
@@ -14,6 +14,7 @@ const NAV_LINKS = [
 ];
 
 export function Nav() {
+  const navPhase = useRegistrationPhase();
   const [scrolled, setScrolled] = React.useState(false);
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 32);
@@ -39,7 +40,7 @@ export function Nav() {
           ))}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span className="tag" style={{ color: 'var(--accent-glow)', borderColor: 'rgba(var(--accent-glow-rgb),0.35)' }}>ANNOUNCING · 2026 · REGISTRATION OPEN</span>
+          <span className="tag" style={{ color: 'var(--accent-glow)', borderColor: 'rgba(var(--accent-glow-rgb),0.35)' }}>ANNOUNCING · 2026 · {navPhase === 'open' ? 'REGISTRATION OPEN' : navPhase === 'before' ? `OPENS ${REGISTRATION_OPENS_LABEL}` : 'REGISTRATION CLOSED'}</span>
           <RegisterCta className="btn" style={{ padding: '10px 18px', fontSize: 11 }} />
         </div>
       </div>
@@ -132,7 +133,7 @@ function HeroDefault() {
         </div>
       </div>
       <div data-reveal style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        <CountdownPanel target={REGISTRATION_CLOSES} />
+        <CountdownPanel />
         <PrizeTeaser />
       </div>
       <Css>{`@media (max-width:1100px){.hero-grid{grid-template-columns:1fr!important;gap:40px!important}}`}</Css>
@@ -140,20 +141,32 @@ function HeroDefault() {
   );
 }
 
-function CountdownPanel({ target }: { target: number }) {
+function CountdownPanel() {
+  // One panel, two jobs. Before sign-ups open it counts down to the start;
+  // from the moment they open it counts down to the deadline, so the timer is
+  // never showing a moment that has already passed.
+  const phase = useRegistrationPhase();
+  const before = phase === 'before';
+  const target = before ? REGISTRATION_OPENS : REGISTRATION_CLOSES;
   return (
     <div className="ticks" style={{ position: 'relative', padding: 24, background: 'linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.005))', border: '1px solid var(--line-2)' }}>
       <span className="tk1" /><span className="tk2" />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
         <div>
           <div className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--ink-3)' }}>REGISTRATION</div>
-          <div className="display-2" style={{ fontSize: 22, marginTop: 4, fontWeight: 800, letterSpacing: '.02em' }}>CLOSES IN</div>
+          <div className="display-2" style={{ fontSize: 22, marginTop: 4, fontWeight: 800, letterSpacing: '.02em' }}>
+            {phase === 'closed' ? 'CLOSED' : before ? 'OPENS IN' : 'CLOSES IN'}
+          </div>
         </div>
-        <span className="tag" style={{ color: 'var(--accent-glow)', borderColor: 'rgba(var(--accent-glow-rgb),0.35)' }}>SIGN-UP CLOSING</span>
+        <span className="tag" style={{ color: 'var(--accent-glow)', borderColor: 'rgba(var(--accent-glow-rgb),0.35)' }}>
+          {before ? 'SIGN-UP OPENING' : phase === 'open' ? 'SIGN-UP CLOSING' : 'SIGN-UP CLOSED'}
+        </span>
       </div>
       <Countdown target={target} />
       <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px dashed var(--line-2)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-        <span className="mono" style={{ fontSize: 11, letterSpacing: '.14em', color: 'var(--ink-3)' }}>CLOSES {REGISTRATION_CLOSES_TIME}</span>
+        <span className="mono" style={{ fontSize: 11, letterSpacing: '.14em', color: 'var(--ink-3)' }}>
+          {before ? `OPENS ${REGISTRATION_OPENS_TIME}` : `CLOSES ${REGISTRATION_CLOSES_TIME}`}
+        </span>
         <span className="mono" style={{ fontSize: 11, letterSpacing: '.14em', color: 'var(--ink-3)' }}>20 CLUB BRACKETS · ETHIOPIA</span>
       </div>
     </div>

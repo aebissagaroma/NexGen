@@ -4,8 +4,8 @@
 import * as React from 'react';
 import { Css } from '@/components/Css';
 import Link from 'next/link';
-import { NexGenMark, Countdown, RegisterCta } from './primitives';
-import { TIMELINE, SPONSORS_TIERS, NEXGEN_PILLARS, REGISTRATION_CLOSES, PARTNER_SELECTION_CLOSES, EXCLUDED_PARTNER_CATEGORIES } from '@/data/static';
+import { NexGenMark, Countdown, RegisterCta, useRegistrationPhase } from './primitives';
+import { TIMELINE, SPONSORS_TIERS, NEXGEN_PILLARS, REGISTRATION_OPENS, REGISTRATION_CLOSES, PARTNER_SELECTION_CLOSES, EXCLUDED_PARTNER_CATEGORIES } from '@/data/static';
 import { NotifyBox } from './Announce';
 import { SiteNotices } from '@/components/SiteNotices';
 
@@ -19,7 +19,7 @@ export function ScheduleSection() {
               <div className="marker">FILE/06 · CALENDAR</div>
               <h2 className="section-title" style={{ marginTop: 16 }}>NINE MONTHS.<br /><span style={{ fontStyle: 'italic', color: 'var(--ink-3)' }}>ONE</span> CHAMPION.</h2>
             </div>
-            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>Registration is open now and closes 01 September 2026. Each phase after that — the bracket draw, qualifiers, Draft Day and the season — is announced as it approaches, so check back or register to be told first.</p>
+            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>Registration opens 05 August 2026 at 20:00 EAT and closes 01 September 2026. Each phase after that — the bracket draw, qualifiers, Draft Day and the season — is announced as it approaches, so check back or register to be told first.</p>
           </div>
         </div>
         <div data-reveal style={{ display: 'grid', gridTemplateColumns: `repeat(${TIMELINE.length}, 1fr)`, gap: 0, border: '1px solid var(--line)', background: 'var(--bg-1)', position: 'relative' }} className="timeline-grid">
@@ -200,21 +200,22 @@ export function AboutSection() {
 }
 
 export function RegisterCTA() {
+  const footerPhase = useRegistrationPhase();
   return (
     <section id="register" className="section" style={{ background: 'var(--bg-1)', backgroundImage: 'radial-gradient(900px 500px at 50% 0%, rgba(var(--accent-rgb),0.18), transparent 60%)', paddingBlock: 'clamp(80px, 10vw, 140px)', position: 'relative', overflow: 'hidden' }}>
       <div className="grid-bg" style={{ position: 'absolute', inset: 0, opacity: 0.45, pointerEvents: 'none', maskImage: 'radial-gradient(ellipse at 50% 50%, black 10%, transparent 75%)', WebkitMaskImage: 'radial-gradient(ellipse at 50% 50%, black 10%, transparent 75%)' }} />
       <div className="wrap" style={{ position: 'relative', textAlign: 'center' }} data-reveal>
         <div className="marker" style={{ justifyContent: 'center' }}>FILE/09 · ENTER</div>
         <h2 className="display" style={{ fontSize: 'clamp(64px, 10vw, 144px)', margin: '20px 0 24px', lineHeight: 0.92 }}>EARN <span style={{ fontStyle: 'italic', color: 'var(--ink-3)' }}>YOUR</span> CLUB.<br /><span style={{ background: 'linear-gradient(180deg, var(--ink), var(--chrome-2))', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>DRIVE THE PRIZE.</span></h2>
-        <p style={{ color: 'var(--ink-2)', fontSize: 17, lineHeight: 1.6, maxWidth: '52ch', margin: '0 auto' }}>Registration opens 01 September 2026. Verify your email, pick your club, and enter its qualifier bracket. Brackets are drawn live on broadcast — we announce the date once sign-ups close.</p>
+        <p style={{ color: 'var(--ink-2)', fontSize: 17, lineHeight: 1.6, maxWidth: '52ch', margin: '0 auto' }}>Registration opens 05 August 2026 at 20:00 EAT and closes 01 September. Verify your email, pick your club, and enter its qualifier bracket. Brackets are drawn live on broadcast — we announce the date once sign-ups close.</p>
         <div style={{ marginTop: 36, display: 'flex', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
           <RegisterCta className="btn" style={{ padding: '18px 28px', fontSize: 13 }} label="REGISTER NOW →" />
           <a href="#format" className="btn-ghost" style={{ padding: '18px 28px', fontSize: 13 }}>READ THE FORMAT</a>
         </div>
         <div style={{ marginTop: 48, display: 'inline-flex', alignItems: 'center', gap: 14, padding: '12px 18px', border: '1px solid var(--line-2)', borderRadius: 999, background: 'rgba(0,0,0,0.4)' }}>
           <span className="tag tag-live" style={{ border: 0, padding: 0, background: 'transparent' }} />
-          <span className="mono" style={{ fontSize: 10.5, letterSpacing: '.18em', color: 'var(--ink-2)' }}>REGISTRATION CLOSES IN</span>
-          <Countdown target={REGISTRATION_CLOSES} compact />
+          <span className="mono" style={{ fontSize: 10.5, letterSpacing: '.18em', color: 'var(--ink-2)' }}>{footerPhase === 'before' ? 'REGISTRATION OPENS IN' : 'REGISTRATION CLOSES IN'}</span>
+          <Countdown target={footerPhase === 'before' ? REGISTRATION_OPENS : REGISTRATION_CLOSES} compact />
         </div>
       </div>
     </section>

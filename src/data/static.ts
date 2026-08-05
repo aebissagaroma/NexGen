@@ -47,7 +47,7 @@ export const announcedPhases = (): TimelinePhase[] =>
 // `state: 'live'` marker to it.
 export const TIMELINE: TimelinePhase[] = [
   { phase: 'Announcement', sub: 'Public Reveal', date: 'AUG 04, 2026', note: 'Done · this page is live', state: 'done' },
-  { phase: 'Registration', sub: 'Open Sign-up', date: 'OPEN — CLOSES 01 SEP 2026', note: '20 brackets · free to register', state: 'live' },
+  { phase: 'Registration', sub: 'Open Sign-up', date: 'OPENS 05 AUG 2026 · 20:00', note: '20 brackets · free to register · closes 01 SEP', state: 'upcoming', justAnnounced: true },
   { phase: 'Bracket Draw', sub: 'Live Broadcast', date: 'TBA', note: 'Random draw · streamed', state: 'upcoming' },
   { phase: 'Qualifiers', sub: 'BO3 Knockouts', date: 'TBA', note: '20 winners surface', state: 'upcoming' },
   { phase: 'Draft Day', sub: 'Live Broadcast', date: 'TBA', note: 'Host venue · Addis Ababa', state: 'upcoming' },
@@ -132,22 +132,34 @@ export const NEXGEN_PILLARS: Pillar[] = [
   { code: '04', name: 'Stadium', blurb: 'Live-audience finals at flagship venues across Ethiopia.' },
 ];
 
-// Countdown target. Registration is OPEN, so this is the date it CLOSES — the
-// same instant that previously marked sign-ups opening. The countdown counts
-// down to the deadline rather than to a launch.
+// Registration has a window: it opens, then it closes. Both ends live here so
+// the countdown, every CTA and every status label read the same two instants and
+// cannot drift apart.
+export const REGISTRATION_OPENS = new Date('2026-08-05T20:00:00+03:00').getTime();
 export const REGISTRATION_CLOSES = new Date('2026-09-01T09:00:00+03:00').getTime();
 
-// Display forms of the date above. Kept beside it so the copy can never drift
-// from the timestamp the countdown and the open/closed state both read.
+// Display forms of the timestamps above, kept beside them for the same reason.
+export const REGISTRATION_OPENS_LABEL = '05 AUG 2026';
+export const REGISTRATION_OPENS_SHORT = 'AUG 05';
+export const REGISTRATION_OPENS_TIME = '05 AUG 2026 · 20:00 EAT';
 export const REGISTRATION_CLOSES_LABEL = '01 SEP 2026';
 export const REGISTRATION_CLOSES_TIME = '01 SEP 2026 · 09:00 EAT';
 
 /**
- * Whether sign-ups are still open. Callers must not use this during render
- * without a mounted guard — see useRegistrationOpen() — because server and
- * client evaluate it at different instants, and a disagreement aborts
- * hydration.
+ * Where we are in the registration window.
+ *
+ * Callers must not derive this during render without a mounted guard — see
+ * useRegistrationPhase() — because server and client evaluate it at different
+ * instants, and a disagreement across either boundary aborts hydration.
  */
+export type RegistrationPhase = 'before' | 'open' | 'closed';
+
+export function registrationPhase(now: number = Date.now()): RegistrationPhase {
+  if (now < REGISTRATION_OPENS) return 'before';
+  if (now < REGISTRATION_CLOSES) return 'open';
+  return 'closed';
+}
+
 export function registrationIsOpen(now: number = Date.now()): boolean {
-  return now < REGISTRATION_CLOSES;
+  return registrationPhase(now) === 'open';
 }
