@@ -60,3 +60,23 @@ export function clientIp(req: Request): string {
   if (xff) return xff.split(',')[0].trim();
   return req.headers.get('x-real-ip') || 'unknown';
 }
+
+/**
+ * Read a counter without incrementing it.
+ *
+ * Used to ask "how many attempts from this IP have already been rejected"
+ * without that question itself counting as an attempt.
+ */
+export async function peekCount(key: string, windowSec: number): Promise<number> {
+  try {
+    const row = await query<{ count: number }>(
+      `SELECT count FROM rate_limits
+        WHERE key = $1
+          AND window_start > now() - make_interval(secs => $2::double precision)`,
+      [key, windowSec],
+    );
+    return row[0]?.count ?? 0;
+  } catch {
+    return 0;
+  }
+}
