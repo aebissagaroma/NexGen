@@ -184,9 +184,8 @@ END $do$;
 -- Identity document. This is what now stops one person entering twice — the
 -- tournament supplies the hardware, so a gamertag no longer identifies anyone.
 -- Partial, because entries taken before this change have no id_hash and many
--- NULLs must stay legal. Retained but dormant: ID numbers are no longer
--- collected, so every new row leaves id_hash NULL. Kept so historic rows stay
--- protected and so ID-based dedup can be switched back on without a migration.
+-- NULLs must stay legal: entries taken while ID numbers were not collected have
+-- no hash, and a NULL must not collide with another NULL.
 DO $do$ BEGIN
   CREATE UNIQUE INDEX IF NOT EXISTS uniq_reg_idnum
     ON registrations (id_hash) WHERE id_hash IS NOT NULL;
@@ -194,17 +193,11 @@ EXCEPTION WHEN unique_violation THEN
   RAISE WARNING 'uniq_reg_idnum NOT created — duplicate ID numbers exist. Run: npm run db:duplicates';
 END $do$;
 
--- One entry per phone number. With the ID number no longer collected (rulebook
--- 3.4), this and the email index are what stand behind "one entry per player" —
--- the rule the site states publicly and 9.7 punishes with immediate
--- disqualification. Partial so rows taken before phone was collected stay legal.
-DO $do$ BEGIN
-  CREATE UNIQUE INDEX IF NOT EXISTS uniq_reg_phone
-    ON registrations (ec_phone_canon(phone))
-    WHERE phone IS NOT NULL AND btrim(phone) <> '';
-EXCEPTION WHEN unique_violation THEN
-  RAISE WARNING 'uniq_reg_phone NOT created — duplicate phone numbers exist. Run: npm run db:duplicates';
-END $do$;
+-- Phone is contact information, NOT an identity key. It was briefly unique while
+-- no ID number was collected; that is dropped because identity is now keyed on
+-- the ID hash above, and because a shared household phone would otherwise lock
+-- out a sibling with an entirely legitimate separate entry.
+DROP INDEX IF EXISTS uniq_reg_phone;
 
 -- Gamertag stays unique, but as a DISPLAY handle rather than an identity check:
 -- it labels a player on brackets, standings and broadcast, so two players cannot

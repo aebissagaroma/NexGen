@@ -146,7 +146,7 @@ function RegisterInner() {
     const fd = new FormData(e.target as HTMLFormElement);
     if (fd.get('password') !== fd.get('passwordConfirm')) { setErr('Passwords do not match.'); return; }
     setBusy(true);
-    const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fullName: fd.get('fullName'), phone: fd.get('phone'), dateOfBirth: fd.get('dateOfBirth'), clubCode: fd.get('clubCode'), city: fd.get('city'), gamertag: tag, password: fd.get('password'), acceptedTerms: fd.get('acceptedTerms') === 'on' }) });
+    const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fullName: fd.get('fullName'), phone: fd.get('phone'), idNumber: fd.get('idNumber'), dateOfBirth: fd.get('dateOfBirth'), clubCode: fd.get('clubCode'), city: fd.get('city'), gamertag: tag, password: fd.get('password'), acceptedTerms: fd.get('acceptedTerms') === 'on' }) });
     const data = await res.json();
     if (!res.ok) {
       // 409 = they already hold an entry (a duplicate submit, or an alias of an
@@ -244,6 +244,7 @@ function RegisterInner() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }} className="reg-grid">
                 <div><label className="label">Full name</label><input className="field" name="fullName" required placeholder="Your legal name, as on your ID" onBlur={(e) => loadTags(e.target.value)} /></div>
                 <div><label className="label">Phone number</label><input className="field" name="phone" type="tel" required placeholder="+251…" autoComplete="tel" /></div>
+                <div><label className="label">ID number</label><input className="field" name="idNumber" required placeholder="Fayda, Kebele ID or passport" autoComplete="off" spellCheck={false} /></div>
                 <div><label className="label">Club to represent</label>
                   <select className="field" name="clubCode" defaultValue={preClub} required>
                     <option value="" disabled>Select a club…</option>
@@ -288,8 +289,9 @@ function RegisterInner() {
                 </div>
               </div>
               <p className="mono" style={{ fontSize: 10.5, letterSpacing: '.06em', color: 'var(--ink-4)', lineHeight: 1.6, margin: 0 }}>
-                Bring your photo ID to your Qualifier Center — we check it there to confirm your age and
-                keep no copy. No console or game needed.
+                Your ID number keeps entries to one per player. We store an irreversible code derived from
+                it, plus the last four characters — never the number itself, and never a photo or copy.
+                Bring the same ID to your Qualifier Center, where we check it and keep no copy.
               </p>
               {/* Shown as soon as the date of birth says 16 or 17, not on submit:
                   needing a guardian's signature is something to find out while
