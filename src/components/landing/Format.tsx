@@ -58,7 +58,7 @@ export function FormatSection({ ps5Mood = true }: { ps5Mood?: boolean }) {
           <DetailCell title="ELIGIBILITY" body="Ethiopia residents · 16+ · No game, console or controller needed. Photo ID is checked in person at the Qualifier Center — we do not collect or store ID documents. Entrants aged 16–17 need written consent from a parent or legal guardian. Winners under 18 receive the grand prize through a parent or legal guardian." />
           <DetailCell title="MATCH RULES" body="Match length, defending, tactics and squad restrictions are all published before qualifiers begin. Announced soon." />
           <DetailCell title="ANTI-CHEAT" body="All knockouts streamed. Final 3 rounds played on-site. Replay review on protest." />
-          <DetailCell title="ENTRY FEE" body="Free to register. A qualifier session fee is payable in person at the Qualifier Center on match day — it covers venue, tournament hardware, officials and stream. The amount is announced before registration closes. Subsidised and free places reviewed individually. No fee for season play." />
+          <DetailCell title="ENTRY FEE" body="Free to register. A qualifier session fee is paid online ahead of your session — it covers venue, tournament hardware, officials and stream. The amount, and how to pay it, are announced before registration closes. Subsidised and free places reviewed individually. No fee for season play." />
         </div>
       </div>
       <Css>{`@media (max-width:980px){.format-grid{grid-template-columns:1fr!important}.format-rail{grid-template-columns:1fr 1fr!important}}@media (max-width:560px){.format-rail{grid-template-columns:1fr!important}}`}</Css>

@@ -314,8 +314,8 @@ function RegisterInner() {
               </div>
               {err && <div className="notice notice-err">{err}</div>}
               <p className="mono" style={{ fontSize: 10.5, letterSpacing: '.06em', color: 'var(--ink-3)', lineHeight: 1.6, margin: 0 }}>
-                No payment is taken now. The session fee is collected at the Qualifier Center and the amount
-                will be announced before registration closes.
+                No payment is taken now. The qualifier session fee is paid online ahead of your session —
+                the amount, and how to pay it, are announced before registration closes.
               </p>
               <button className="btn" disabled={busy}>{busy ? 'SUBMITTING…' : 'SUBMIT ENTRY →'}</button>
               {/* Only after a rejection: offering an appeal to someone who has not
