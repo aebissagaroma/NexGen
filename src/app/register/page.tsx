@@ -244,7 +244,16 @@ function RegisterInner() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }} className="reg-grid">
                 <div><label className="label">Full name</label><input className="field" name="fullName" required placeholder="Your legal name, as on your ID" onBlur={(e) => loadTags(e.target.value)} /></div>
                 <div><label className="label">Phone number</label><input className="field" name="phone" type="tel" required placeholder="+251…" autoComplete="tel" /></div>
-                <div><label className="label">ID number</label><input className="field" name="idNumber" required placeholder="Fayda, Kebele ID or passport" autoComplete="off" spellCheck={false} /></div>
+                <div>
+                  <label className="label">ID number</label>
+                  <input className="field" name="idNumber" required placeholder="Fayda, Kebele ID or passport" autoComplete="off" spellCheck={false} />
+                  {/* Sits with the field, not in a paragraph further down: this
+                      is the moment someone decides whether to type it. */}
+                  <p className="mono" style={{ fontSize: 10, letterSpacing: '.04em', color: 'var(--ink-4)', lineHeight: 1.6, margin: '8px 0 0' }}>
+                    Used only to prevent duplicate entries. We store an irreversible code, never your number.{' '}
+                    <Link href="/privacy" target="_blank" style={{ color: 'var(--accent-glow)' }}>See our privacy notice.</Link>
+                  </p>
+                </div>
                 <div><label className="label">Club to represent</label>
                   <select className="field" name="clubCode" defaultValue={preClub} required>
                     <option value="" disabled>Select a club…</option>

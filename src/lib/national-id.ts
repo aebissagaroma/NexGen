@@ -8,20 +8,35 @@
 // A leak of the registrations table therefore leaks neither ID numbers nor
 // anything that can be reversed into one.
 import crypto from 'node:crypto';
-import { sessionSecret } from './session';
 
 /**
- * Secret for the ID HMAC.
+ * Secret for the ID HMAC. Required — there is deliberately NO fallback.
  *
- * IMPORTANT: changing this value orphans every existing hash — previously
- * registered IDs would stop matching and the same person could enter a second
- * time. It falls back to SESSION_SECRET so no new environment variable is
- * required to deploy, but that couples the two: rotating SESSION_SECRET (e.g.
- * after a leak) also resets duplicate detection. Set ID_HASH_SECRET to a
- * separate, stable random value to decouple them.
+ * It previously fell back to SESSION_SECRET so that no new variable was needed
+ * to deploy. That was worse than it looked: rotating SESSION_SECRET, which is
+ * exactly what you do after a leak, would silently orphan every existing hash
+ * and let already-registered people enter a second time. The failure was silent
+ * and looked like nothing at all.
+ *
+ * So a missing value throws. A registration that cannot be de-duplicated is not
+ * a registration worth taking, and an outage on the first request is a problem
+ * someone fixes in minutes — a broken uniqueness guarantee is one nobody
+ * notices until the disqualifications start.
+ *
+ * IMPORTANT: once entries exist, changing this value orphans every hash already
+ * stored. Set it once, keep it stable for the whole tournament.
  */
 function idSecret(): string {
-  return process.env.ID_HASH_SECRET || sessionSecret();
+  const s = process.env.ID_HASH_SECRET;
+  if (!s || s.length < 16) {
+    throw new Error(
+      'ID_HASH_SECRET is not set (or is shorter than 16 characters). Registration ' +
+      'cannot de-duplicate entries without it. Set it to a long random value and ' +
+      'keep it stable for the whole tournament — changing it later orphans every ' +
+      'ID hash already stored.',
+    );
+  }
+  return s;
 }
 
 /**
