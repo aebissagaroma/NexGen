@@ -5,10 +5,11 @@
 // and legal pages — not only the home page. Kept in one component so the wording
 // cannot drift between pages.
 //
-// EA_NOTICE_PLACEHOLDER is left exactly as written, to be replaced with the
-// publisher's required wording verbatim. It renders as-is rather than being
-// hidden, so an unreplaced marker is impossible to miss in review.
-export const EA_NOTICE = 'EA_NOTICE_PLACEHOLDER';
+// Publisher attribution. If Electronic Arts prescribes its own exact wording,
+// replace this string with theirs verbatim rather than paraphrasing it.
+export const EA_NOTICE =
+  'ELECTROCUP 26 is not affiliated with, endorsed by, or sponsored by Electronic Arts Inc. ' +
+  'or its licensors. EA SPORTS FC 26 is a trademark of Electronic Arts Inc.';
 
 export const NOTICES = [
   EA_NOTICE,

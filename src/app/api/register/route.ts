@@ -184,6 +184,8 @@ export async function POST(req: Request) {
           'of payment at this time.',
           '',
           'Bring your photo ID to your session. We check it there and keep no copy.',
+          'We do not store your identity number — only an irreversible code derived',
+          'from it.',
           ...(age.needsGuardianConsent ? ['', GUARDIAN_NOTICE] : []),
           '',
           'One entry per player. Registering twice means immediate disqualification.',
