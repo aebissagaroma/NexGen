@@ -24,8 +24,11 @@ export function ScheduleSection() {
         </div>
         <div data-reveal style={{ display: 'grid', gridTemplateColumns: `repeat(${TIMELINE.length}, 1fr)`, gap: 0, border: '1px solid var(--line)', background: 'var(--bg-1)', position: 'relative' }} className="timeline-grid">
           {TIMELINE.map((t, i) => (
-            <div key={t.phase} style={{ padding: '28px 18px 24px', borderRight: i < TIMELINE.length - 1 ? '1px solid var(--line)' : 'none', position: 'relative', background: t.state === 'live' ? 'rgba(var(--accent-rgb),0.05)' : 'transparent' }}>
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: t.state === 'live' ? 'var(--accent)' : 'var(--line-2)', boxShadow: t.state === 'live' ? '0 0 12px var(--accent)' : 'none' }} />
+            // A finished phase is dimmed with a solid rule; the live one glows;
+            // upcoming ones sit between. Without this, 'DONE' and 'NEXT' rows
+            // looked identical and the strip read as if nothing had happened yet.
+            <div key={t.phase} style={{ padding: '28px 18px 24px', borderRight: i < TIMELINE.length - 1 ? '1px solid var(--line)' : 'none', position: 'relative', background: t.state === 'live' ? 'rgba(var(--accent-rgb),0.05)' : 'transparent', opacity: t.state === 'done' ? 0.55 : 1 }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: t.state === 'live' ? 'var(--accent)' : t.state === 'done' ? 'var(--ink-4)' : 'var(--line-2)', boxShadow: t.state === 'live' ? '0 0 12px var(--accent)' : 'none' }} />
               <div className="mono" style={{ fontSize: 9.5, letterSpacing: '.22em', color: t.state === 'live' || t.justAnnounced ? 'var(--accent-glow)' : 'var(--ink-3)' }}>{String(i + 1).padStart(2, '0')} · {t.state === 'done' ? 'DONE' : t.justAnnounced ? 'JUST ANNOUNCED' : t.state === 'live' ? 'NOW' : 'NEXT'}</div>
               <div className="display-2" style={{ fontSize: 18, fontWeight: 800, marginTop: 10, lineHeight: 1.1 }}>{t.phase}</div>
               <div className="mono" style={{ fontSize: 10, letterSpacing: '.14em', color: 'var(--ink-3)', marginTop: 4 }}>{t.sub.toUpperCase()}</div>

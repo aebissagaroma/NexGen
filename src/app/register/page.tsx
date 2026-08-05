@@ -9,6 +9,8 @@ import { PageFooter } from '@/components/SiteNotices';
 import { CLUBS } from '@/data/static';
 import { AppealForm } from '@/components/AppealForm';
 import { parseDob, checkAge, GUARDIAN_NOTICE, MIN_AGE } from '@/lib/age';
+import { useRegistrationPhase } from '@/components/landing/primitives';
+import { REGISTRATION_OPENS_TIME, REGISTRATION_CLOSES_LABEL } from '@/data/static';
 
 type Step = 'email' | 'otp' | 'details' | 'done';
 
@@ -36,6 +38,7 @@ function RegisterInner() {
   const [tags, setTags] = React.useState<string[]>([]);
   const [tag, setTag] = React.useState('');
   const [tagsBusy, setTagsBusy] = React.useState(false);
+  const phase = useRegistrationPhase();
   const [dob, setDob] = React.useState('');
   // 16 or 17 — may enter, but needs a guardian consent form before playing.
   const minor = React.useMemo(() => {
@@ -162,6 +165,29 @@ function RegisterInner() {
       <div className="page-wrap" style={{ maxWidth: 720 }}>
         <PageTitle file="ENTER · QUALIFIER" title={<>REGISTER<br /><span style={{ color: 'var(--accent-glow)' }}>YOUR RUN.</span></>} sub="Verify your email, then enter the club bracket you want to represent. One entry per player — you represent a single club." />
 
+        {/* Outside the window there is nothing to fill in. Rendering the form
+            anyway would let someone complete every field and only then be told
+            by the API that sign-ups have not started. */}
+        {phase !== 'open' && !existing && (
+          <div className="form-card" style={{ marginTop: 28, textAlign: 'center', padding: '36px 24px' }}>
+            <div className="mono" style={{ fontSize: 10.5, letterSpacing: '.22em', color: 'var(--accent-glow)' }}>
+              {phase === 'before' ? 'NOT YET OPEN' : 'REGISTRATION CLOSED'}
+            </div>
+            <div className="display" style={{ fontSize: 'clamp(28px,5vw,48px)', lineHeight: 0.98, marginTop: 12 }}>
+              {phase === 'before' ? <>SIGN-UP OPENS<br /><span style={{ color: 'var(--accent-glow)' }}>{REGISTRATION_OPENS_TIME}</span></> : <>ENTRIES ARE<br /><span style={{ color: 'var(--accent-glow)' }}>CLOSED</span></>}
+            </div>
+            <p style={{ color: 'var(--ink-2)', fontSize: 15, lineHeight: 1.6, maxWidth: '44ch', margin: '18px auto 0' }}>
+              {phase === 'before'
+                ? 'Come back when sign-ups open and you can pick your club and enter its qualifier bracket. Registration is free.'
+                : `Registration closed on ${REGISTRATION_CLOSES_LABEL}. Brackets are drawn live on broadcast — follow the announcements for what comes next.`}
+            </p>
+            <div style={{ marginTop: 28, display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Link href="/" className="btn-ghost">BACK HOME</Link>
+            </div>
+          </div>
+        )}
+
+        {(phase === 'open' || existing) && <>
         {!existing && <Steps step={step} />}
 
         <div className="form-card" style={{ marginTop: 28 }}>
@@ -316,6 +342,7 @@ function RegisterInner() {
             </div>
           )}
         </div>
+        </>}
       </div>
       <PageFooter />
     </>
