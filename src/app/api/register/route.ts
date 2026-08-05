@@ -8,6 +8,33 @@ import { parseDob, checkAge, MIN_AGE, GUARDIAN_NOTICE } from '@/lib/age';
 import { registrationPhase, REGISTRATION_OPENS_TIME, REGISTRATION_CLOSES_LABEL } from '@/data/static';
 import { isPlausiblePhone } from '@/lib/phone';
 import { canonicalId, hashId, idLast4 } from '@/lib/national-id';
+import { rateLimit, peekCount, clientIp } from '@/lib/rate-limit';
+import { verifyChallenge, isChallengeConfigured, CHALLENGE_AFTER_FAILURES } from '@/lib/challenge';
+
+// Enumeration guard. The form tells someone when an ID is already registered,
+// which is necessary — an entrant who mistyped needs to know — but it also means
+// a script could test ID numbers one at a time. Two windows: a short one that
+// stops a burst, and an hourly one that stops a slow drip under it.
+const ATTEMPTS_PER_10_MIN = 5;
+const ATTEMPTS_PER_HOUR = 20;
+const FAILURE_WINDOW_SEC = 60 * 60;
+
+/** Rejected attempts from this IP in the last hour. Does not count as an attempt. */
+function failureCount(ip: string): Promise<number> {
+  return peekCount(`reg:fail:${ip}`, FAILURE_WINDOW_SEC);
+}
+
+/**
+ * Record a rejected attempt and return the response.
+ *
+ * Only rejections that could be probing are counted — a wrong ID or a duplicate.
+ * Being told to accept the rules is not an enumeration signal and must not push
+ * a genuine entrant towards a challenge.
+ */
+async function rejected(ip: string, status: number, error: string) {
+  await rateLimit(`reg:fail:${ip}`, Number.MAX_SAFE_INTEGER, FAILURE_WINDOW_SEC);
+  return NextResponse.json({ error }, { status });
+}
 
 // POST /api/register — create a qualifier registration for the logged-in player.
 // Requires a verified email session (see /api/auth/otp/verify).
@@ -32,7 +59,36 @@ export async function POST(req: Request) {
     );
   }
 
+  // Counted per IP before anything is parsed, so a malformed body still costs an
+  // attempt and cannot be used to probe for free.
+  const ip = clientIp(req);
+  const burst = await rateLimit(`reg:ip:10m:${ip}`, ATTEMPTS_PER_10_MIN, 10 * 60);
+  const hourly = await rateLimit(`reg:ip:1h:${ip}`, ATTEMPTS_PER_HOUR, 60 * 60);
+  if (!burst.ok || !hourly.ok) {
+    const retryAfter = !burst.ok ? burst.retryAfter : hourly.retryAfter;
+    // Logged without the submitted value — the point of the limit is defeated if
+    // the candidate IDs end up in the log instead of the database.
+    console.warn(`[register] rate limited ip=${ip} window=${!burst.ok ? '10m' : '1h'}`);
+    return NextResponse.json(
+      { error: 'Too many attempts from this connection. Try again shortly.' },
+      { status: 429, headers: { 'Retry-After': String(retryAfter) } },
+    );
+  }
+
   const body = await req.json().catch(() => ({}));
+
+  // A challenge is demanded only after repeated rejections from this IP, so a
+  // first-time entrant never sees one and a prober cannot continue without
+  // solving it. `failures` counts rejected attempts, not requests.
+  const failures = await failureCount(ip);
+  const challengeRequired = isChallengeConfigured() && failures >= CHALLENGE_AFTER_FAILURES;
+  if (challengeRequired && !(await verifyChallenge((body as { challengeToken?: unknown }).challengeToken, ip))) {
+    console.warn(`[register] challenge failed or missing ip=${ip} failures=${failures}`);
+    return NextResponse.json(
+      { error: 'Please complete the verification and try again.', challengeRequired: true },
+      { status: 403 },
+    );
+  }
   const fullName = str(body.fullName, { min: 2, max: 120 });
   const clubCode = str(body.clubCode, { min: 2, max: 4 });
   const password = str(body.password, { min: 8, max: 200 });
@@ -68,10 +124,9 @@ export async function POST(req: Request) {
     );
   }
   if (!idCanon) {
-    return NextResponse.json(
-      { error: 'Enter your ID number as it appears on your ID.' },
-      { status: 400 },
-    );
+    // Deliberately generic: naming the accepted length or character set would
+    // hand a prober the shape of a valid number.
+    return rejected(ip, 400, 'That ID number does not look right. Check it and try again.');
   }
   if (!acceptedTerms) {
     return NextResponse.json(
@@ -108,7 +163,7 @@ export async function POST(req: Request) {
     `SELECT 1 FROM registrations WHERE id_hash = $1 LIMIT 1`, [idHash],
   );
   if (idTaken) {
-    return NextResponse.json({ error: ID_TAKEN }, { status: 409 });
+    return rejected(ip, 409, ID_TAKEN);
   }
 
   const tagTaken = await queryOne(
