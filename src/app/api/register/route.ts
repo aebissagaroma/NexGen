@@ -7,6 +7,7 @@ import { notifyOps, notifyEachRegistration, sendMail } from '@/lib/mailer';
 import { parseDob, checkAge, MIN_AGE, GUARDIAN_NOTICE } from '@/lib/age';
 import { registrationPhase, REGISTRATION_OPENS_TIME, REGISTRATION_CLOSES_LABEL } from '@/data/static';
 import { isPlausiblePhone } from '@/lib/phone';
+import { canonicalId, hashId, idLast4 } from '@/lib/national-id';
 
 // POST /api/register — create a qualifier registration for the logged-in player.
 // Requires a verified email session (see /api/auth/otp/verify).
@@ -39,6 +40,9 @@ export async function POST(req: Request) {
   const phone = str(body.phone, { min: 7, max: 30 });
   const dob = parseDob(body.dateOfBirth);
   const acceptedTerms = body.acceptedTerms === true;
+  // The raw number is used here and then discarded — only an irreversible hash
+  // and the last four characters are stored. See src/lib/national-id.ts.
+  const idCanon = canonicalId(body.idNumber);
   // Chosen from the name-derived options offered by /api/tags/suggest. Not
   // re-derived here on purpose: the player may have picked one, then edited their
   // name slightly, and rejecting their choice for that would be baffling. It only
@@ -60,6 +64,12 @@ export async function POST(req: Request) {
   if (!age.ok) {
     return NextResponse.json(
       { error: `You must be ${MIN_AGE} or over to enter ELECTROCUP 26.` },
+      { status: 400 },
+    );
+  }
+  if (!idCanon) {
+    return NextResponse.json(
+      { error: 'Enter your ID number as it appears on your ID.' },
       { status: 400 },
     );
   }
@@ -93,13 +103,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: alreadyEntered(existing.club_code) }, { status: 409 });
   }
 
-  const phoneTaken = await queryOne(
-    `SELECT 1 FROM registrations
-     WHERE phone IS NOT NULL AND ec_phone_canon(phone) = ec_phone_canon($1) LIMIT 1`,
-    [phone],
+  const idHash = hashId(idCanon);
+  const idTaken = await queryOne(
+    `SELECT 1 FROM registrations WHERE id_hash = $1 LIMIT 1`, [idHash],
   );
-  if (phoneTaken) {
-    return NextResponse.json({ error: PHONE_TAKEN }, { status: 409 });
+  if (idTaken) {
+    return NextResponse.json({ error: ID_TAKEN }, { status: 409 });
   }
 
   const tagTaken = await queryOne(
@@ -122,10 +131,11 @@ export async function POST(req: Request) {
   try {
     const row = await queryOne<{ id: string }>(
       `INSERT INTO registrations
-         (user_id, full_name, email, club_code, city, phone, date_of_birth, accepted_terms_at, gamertag)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, now(), $8) RETURNING id`,
+         (user_id, full_name, email, club_code, city, phone, date_of_birth,
+          accepted_terms_at, gamertag, id_hash, id_last4)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, now(), $8, $9, $10) RETURNING id`,
       [session.sub, fullName, session.email, clubCode.toUpperCase(), city, phone,
-       dob.toISOString().slice(0, 10), gamertag],
+       dob.toISOString().slice(0, 10), gamertag, idHash, idLast4(idCanon)],
     );
 
     // Staff copy of the entry. Deliberately after the INSERT and never awaited
@@ -141,6 +151,7 @@ export async function POST(req: Request) {
         `Email:     ${session.email ?? '—'}`,
         `City:      ${city || '—'}`,
         `Phone:     ${phone}`,
+        `ID ending: ${idLast4(idCanon)}`,
         `Age:       ${age.age}${age.needsGuardianConsent ? ' — GUARDIAN CONSENT FORM REQUIRED' : ''}`,
         `Entry ID:  ${row!.id}`,
       ].join('\n'),
@@ -190,7 +201,7 @@ export async function POST(req: Request) {
       // their address). Which index fired tells us what to say.
       const msg =
         err.constraint === 'uniq_reg_tag' ? TAG_TAKEN
-        : err.constraint === 'uniq_reg_phone' ? PHONE_TAKEN
+        : err.constraint === 'uniq_reg_idnum' ? ID_TAKEN
         : alreadyEntered(null);
       return NextResponse.json({ error: msg }, { status: 409 });
     }
@@ -201,8 +212,8 @@ export async function POST(req: Request) {
 const TAG_TAKEN =
   'Someone just took that gamertag. Pick another from the list.';
 
-const PHONE_TAKEN =
-  'That phone number is already registered for ELECTROCUP 26. Registering twice means immediate disqualification. If this is a mistake, appeal below and we will review it.';
+const ID_TAKEN =
+  'That ID is already registered for ELECTROCUP 26. Registering twice means immediate disqualification. If this is a mistake, appeal below and we will review it.';
 
 // One entry per player is enforced by disqualification, so this message has to
 // state the consequence plainly — and point at the appeal, since honest mistakes
