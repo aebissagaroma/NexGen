@@ -5,9 +5,10 @@ import { str } from '@/lib/validation';
 import { hashPassword } from '@/lib/password';
 import { notifyOps, notifyEachRegistration, sendMail } from '@/lib/mailer';
 import { parseDob, checkAge, MIN_AGE, GUARDIAN_NOTICE } from '@/lib/age';
-import { registrationPhase, REGISTRATION_OPENS_TIME, REGISTRATION_CLOSES_LABEL } from '@/data/static';
+import { registrationPhase, REGISTRATION_OPENS, REGISTRATION_OPENS_TIME, CLUBS } from '@/data/static';
 import { isPlausiblePhone } from '@/lib/phone';
 import { canonicalTag, TAG_MIN, TAG_MAX } from '@/lib/gamertag';
+import { CONFIRM_URL } from '@/lib/confirm-reminder';
 import { isBlockedTag } from '@/lib/tag-blocklist';
 import { rateLimit, peekCount, clientIp } from '@/lib/rate-limit';
 import { verifyChallenge, isChallengeConfigured, CHALLENGE_AFTER_FAILURES } from '@/lib/challenge';
@@ -44,17 +45,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Verify your email first.' }, { status: 401 });
   }
 
-  // The window is enforced here, not only by the disabled buttons: those are a
-  // courtesy, and a hand-made POST would otherwise take an entry before sign-ups
-  // open or after they close.
-  const phase = registrationPhase();
-  if (phase !== 'open') {
+  // Enforced here, not only by the disabled buttons: those are a courtesy, and a
+  // hand-made POST would otherwise take an entry before sign-ups open.
+  //
+  // Only the opening is time-based. Whether a bracket has CLOSED depends on the
+  // club being entered, which is not known until the body is parsed, so that
+  // check sits further down beside the club lookup.
+  if (Date.now() < REGISTRATION_OPENS) {
     return NextResponse.json(
-      {
-        error: phase === 'before'
-          ? `Registration opens ${REGISTRATION_OPENS_TIME}.`
-          : `Registration closed on ${REGISTRATION_CLOSES_LABEL}.`,
-      },
+      { error: `Registration opens ${REGISTRATION_OPENS_TIME}.` },
       { status: 403 },
     );
   }
@@ -147,6 +146,21 @@ export async function POST(req: Request) {
 
   const club = await queryOne(`SELECT code FROM clubs WHERE code = $1`, [clubCode.toUpperCase()]);
   if (!club) return NextResponse.json({ error: 'Unknown club.' }, { status: 400 });
+
+  // A group closes when its draw is announced, so this is a flag rather than an
+  // instant. Checked server-side because the dimmed card is only a courtesy —
+  // a hand-made POST must not take an entry into a bracket that is already drawn.
+  const group = CLUBS.find((c) => c.code === clubCode.toUpperCase())?.group;
+  if (group && registrationPhase(group) === 'closed') {
+    return NextResponse.json(
+      {
+        error: group === 'A'
+          ? 'The top-ten brackets are closed — their draw has been announced. Ten clubs are still open.'
+          : 'Registration has closed.',
+      },
+      { status: 403 },
+    );
+  }
 
   // One entry per player, for the whole tournament. These lookups exist to give a
   // useful message ("you're already in with ARS"); they are NOT the enforcement —
@@ -242,9 +256,14 @@ export async function POST(req: Request) {
           'published before registration closes. No action is required from you in respect',
           'of payment at this time.',
           '',
+          'CONFIRM YOUR ENTRY BEFORE THE DRAW.',
+          'Your entry is recorded against this email address. Before your bracket is',
+          'drawn you must confirm it with your national ID number — entries that are',
+          'not confirmed by then are not included in the draw. We store only an',
+          'irreversible code derived from your number, never the number itself.',
+          'Confirm it any time at: ' + CONFIRM_URL,
+          '',
           'Bring your photo ID to your session. We check it there and keep no copy.',
-          'Your entry is recorded against this email address. We will ask for your',
-          'national ID number later to confirm it — we will announce when, and how.',
           ...(age.needsGuardianConsent ? ['', GUARDIAN_NOTICE] : []),
           '',
           'One entry per player. Registering twice means immediate disqualification.',

@@ -1,35 +1,48 @@
 -- ELECTROCUP 26 — seed data
 -- Run with: npm run db:seed  (after db:migrate). Idempotent via ON CONFLICT.
--- The 20 Premier League clubs = the 20 qualifier brackets.
+-- The 20 current top-flight English clubs = the 20 qualifier brackets.
+--
+-- Keep in step with CLUBS in src/data/static.ts — code, name, city and group all
+-- have to agree, and every club change must update both files plus this seed.
+--
+-- grp: 'A' is last season's top ten, whose brackets close first when their draw
+-- is announced. 'B' is everyone else, including the three clubs promoted this
+-- summer, and stays open after Group A closes.
 
-INSERT INTO clubs (code, name, city, sort) VALUES
-  ('MCI', 'Manchester City',        'Manchester',    1),
-  ('ARS', 'Arsenal',                'London',        2),
-  ('LIV', 'Liverpool',              'Liverpool',     3),
-  ('MUN', 'Manchester United',      'Manchester',    4),
-  ('CHE', 'Chelsea',                'London',        5),
-  ('TOT', 'Tottenham Hotspur',      'London',        6),
-  ('NEW', 'Newcastle United',       'Newcastle',     7),
-  ('AVL', 'Aston Villa',            'Birmingham',    8),
-  ('WHU', 'West Ham United',        'London',        9),
-  ('BHA', 'Brighton & Hove Albion', 'Brighton',     10),
-  ('CRY', 'Crystal Palace',         'London',       11),
-  ('FUL', 'Fulham',                 'London',       12),
-  ('BRE', 'Brentford',              'London',       13),
-  ('EVE', 'Everton',                'Liverpool',    14),
-  ('WOL', 'Wolverhampton',          'Wolverhampton',15),
-  ('NFO', 'Nottingham Forest',      'Nottingham',   16),
-  ('BOU', 'AFC Bournemouth',        'Bournemouth',  17),
-  ('LEE', 'Leeds United',            'Leeds',        18),
-  ('BUR', 'Burnley',                 'Burnley',      19),
-  ('SUN', 'Sunderland',              'Sunderland',   20)
+INSERT INTO clubs (code, name, city, sort, grp) VALUES
+  ('MCI', 'Manchester City',        'Manchester',    1, 'A'),
+  ('ARS', 'Arsenal',                'London',        2, 'A'),
+  ('LIV', 'Liverpool',              'Liverpool',     3, 'A'),
+  ('MUN', 'Manchester United',      'Manchester',    4, 'A'),
+  ('CHE', 'Chelsea',                'London',        5, 'A'),
+  ('AVL', 'Aston Villa',            'Birmingham',    6, 'A'),
+  ('BHA', 'Brighton & Hove Albion', 'Brighton',      7, 'A'),
+  ('BRE', 'Brentford',              'London',        8, 'A'),
+  ('BOU', 'AFC Bournemouth',        'Bournemouth',   9, 'A'),
+  ('SUN', 'Sunderland',             'Sunderland',   10, 'A'),
+  ('TOT', 'Tottenham Hotspur',      'London',       11, 'B'),
+  ('NEW', 'Newcastle United',       'Newcastle',    12, 'B'),
+  ('CRY', 'Crystal Palace',         'London',       13, 'B'),
+  ('FUL', 'Fulham',                 'London',       14, 'B'),
+  ('EVE', 'Everton',                'Liverpool',    15, 'B'),
+  ('NFO', 'Nottingham Forest',      'Nottingham',   16, 'B'),
+  ('LEE', 'Leeds United',           'Leeds',        17, 'B'),
+  ('COV', 'Coventry City',          'Coventry',     18, 'B'),
+  ('IPS', 'Ipswich Town',           'Ipswich',      19, 'B'),
+  ('HUL', 'Hull City',              'Hull',         20, 'B')
 ON CONFLICT (code) DO UPDATE
-  SET name = EXCLUDED.name, city = EXCLUDED.city, sort = EXCLUDED.sort;
+  SET name = EXCLUDED.name, city = EXCLUDED.city, sort = EXCLUDED.sort,
+      grp  = EXCLUDED.grp;
 
--- Retire clubs that are no longer in the competition. Leicester, Ipswich and
--- Southampton were replaced by Leeds, Burnley and Sunderland; without this an
--- already-seeded database keeps all six, and the three retired ones linger in
--- the API response and the admin filters.
+-- Retire clubs that are no longer in the competition.
+--
+-- West Ham, Wolverhampton and Burnley were replaced by Coventry, Ipswich and
+-- Hull. Leicester and Southampton were retired in an earlier round of this and
+-- are listed again so a database seeded before that still converges.
+--
+-- NOTE: Ipswich is deliberately NOT in this list any more. It was retired
+-- previously and is now a competing club again, so re-adding it above and
+-- deleting it here would fight each other on every run.
 --
 -- Guarded by NOT EXISTS: registrations reference clubs (code), so deleting a
 -- club that someone has entered would either fail on the foreign key or, worse,
@@ -37,14 +50,14 @@ ON CONFLICT (code) DO UPDATE
 -- place and reported below — that is an ops decision, not something a seed
 -- script should make.
 DELETE FROM clubs c
- WHERE c.code IN ('LEI', 'IPS', 'SOU')
+ WHERE c.code IN ('WHU', 'WOL', 'BUR', 'LEI', 'SOU')
    AND NOT EXISTS (SELECT 1 FROM registrations r WHERE r.club_code = c.code);
 
 DO $do$
 DECLARE stuck TEXT;
 BEGIN
   SELECT string_agg(c.code, ', ') INTO stuck
-    FROM clubs c WHERE c.code IN ('LEI', 'IPS', 'SOU');
+    FROM clubs c WHERE c.code IN ('WHU', 'WOL', 'BUR', 'LEI', 'SOU');
   IF stuck IS NOT NULL THEN
     RAISE WARNING 'Retired clubs still present because entries reference them: %. Move those entrants to a current club, then re-run: npm run db:seed', stuck;
   END IF;

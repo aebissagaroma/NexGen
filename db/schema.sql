@@ -51,6 +51,23 @@ CREATE TABLE IF NOT EXISTS clubs (
   sort  INT  NOT NULL DEFAULT 0
 );
 
+-- Closing group. 'A' is last season's top ten, whose brackets close first when
+-- their draw is announced; 'B' is everyone else and stays open after that.
+--
+-- Mirrors the `group` field on CLUBS in src/data/static.ts. Defaulted to 'B' so
+-- an existing row gets a legal value, then set correctly by db/seed.sql — the
+-- default is a migration convenience, not the intended value for any club.
+-- Named grp because GROUP is a reserved word.
+DO $do$ BEGIN
+  ALTER TABLE clubs ADD COLUMN grp TEXT NOT NULL DEFAULT 'B';
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $do$;
+
+DO $do$ BEGIN
+  ALTER TABLE clubs ADD CONSTRAINT clubs_grp_valid CHECK (grp IN ('A', 'B'));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $do$;
+
 -- ── Registrations (a player entering a club's qualifier) ────────────────────
 -- TODO(dev): confirm the full field set with NexGen ops. The columns below are
 -- a working minimum. Likely additions: platform (PS5/PC/Xbox), EA/PSN/Xbox id,
@@ -202,6 +219,37 @@ DO $do$ BEGIN
     CHECK (id_hash IS NULL OR id_hash ~ '^v[0-9]+\$[0-9a-f]{64}$') NOT VALID;
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $do$;
+
+-- Where an entry stands in the confirm-your-entry flow.
+--
+--   unconfirmed — registered, no ID supplied yet. Every entry starts here.
+--   confirmed   — ID supplied and hashed. Only these go into the draw.
+--   void        — the ID matched an entry that confirmed earlier. The earliest
+--                 registration by created_at stands; this one does not, and the
+--                 entrant is given an appeal route rather than being removed.
+--
+-- Separate from `status`, which is the ops workflow (pending/confirmed/rejected)
+-- and means something different. Overloading that column would make "confirmed"
+-- ambiguous in exactly the query that decides who plays.
+DO $do$ BEGIN
+  ALTER TABLE registrations ADD COLUMN id_status TEXT NOT NULL DEFAULT 'unconfirmed';
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $do$;
+
+DO $do$ BEGIN
+  ALTER TABLE registrations ADD CONSTRAINT id_status_valid
+    CHECK (id_status IN ('unconfirmed', 'confirmed', 'void'));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $do$;
+
+-- When the ID was confirmed. Used to tell an entrant what they already did, and
+-- to order an audit if two entries dispute the same number.
+DO $do$ BEGIN
+  ALTER TABLE registrations ADD COLUMN id_confirmed_at TIMESTAMPTZ;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $do$;
+
+CREATE INDEX IF NOT EXISTS idx_reg_id_status ON registrations (id_status);
 
 -- NULLs must stay legal: entries taken while ID numbers were not collected have
 -- no hash, and a NULL must not collide with another NULL.

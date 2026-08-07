@@ -2,30 +2,55 @@
 // Live counts/brackets/standings come from the API + Postgres; this is the
 // editorial copy that doesn't live in the DB.
 
-export interface StaticClub { code: string; name: string; city: string; }
+/**
+ * Which closing group a club's bracket belongs to.
+ *
+ * 'A' — last season's top ten. These brackets close first, when their draw is
+ *       announced. 'B' — everyone else, including the three clubs promoted this
+ *       summer. Stays open after Group A closes.
+ */
+export type ClubGroup = 'A' | 'B';
 
+export interface StaticClub {
+  code: string; name: string; city: string; group: ClubGroup;
+  /**
+   * The club whose squad stands in during qualifiers.
+   *
+   * Qualifiers are played on FC 26, where the three clubs promoted this summer
+   * are not selectable. Each uses the club it replaced. The player still wins
+   * the real club's slot and represents it from Gameweek 1 on FC 27. Undefined
+   * for every club that is selectable in FC 26.
+   */
+  standIn?: string;
+}
+
+// Keep in step with db/seed.sql — every club change must update both, plus a
+// migration so production data agrees. See CLAUDE.md, "Working conventions".
 export const CLUBS: StaticClub[] = [
-  { code: 'MCI', name: 'Manchester City', city: 'Manchester' },
-  { code: 'ARS', name: 'Arsenal', city: 'London' },
-  { code: 'LIV', name: 'Liverpool', city: 'Liverpool' },
-  { code: 'MUN', name: 'Manchester United', city: 'Manchester' },
-  { code: 'CHE', name: 'Chelsea', city: 'London' },
-  { code: 'TOT', name: 'Tottenham Hotspur', city: 'London' },
-  { code: 'NEW', name: 'Newcastle United', city: 'Newcastle' },
-  { code: 'AVL', name: 'Aston Villa', city: 'Birmingham' },
-  { code: 'WHU', name: 'West Ham United', city: 'London' },
-  { code: 'BHA', name: 'Brighton & Hove Albion', city: 'Brighton' },
-  { code: 'CRY', name: 'Crystal Palace', city: 'London' },
-  { code: 'FUL', name: 'Fulham', city: 'London' },
-  { code: 'BRE', name: 'Brentford', city: 'London' },
-  { code: 'EVE', name: 'Everton', city: 'Liverpool' },
-  { code: 'WOL', name: 'Wolverhampton', city: 'Wolverhampton' },
-  { code: 'NFO', name: 'Nottingham Forest', city: 'Nottingham' },
-  { code: 'BOU', name: 'AFC Bournemouth', city: 'Bournemouth' },
-  { code: 'LEE', name: 'Leeds United', city: 'Leeds' },
-  { code: 'BUR', name: 'Burnley', city: 'Burnley' },
-  { code: 'SUN', name: 'Sunderland', city: 'Sunderland' },
+  { code: 'MCI', name: 'Manchester City', city: 'Manchester', group: 'A' },
+  { code: 'ARS', name: 'Arsenal', city: 'London', group: 'A' },
+  { code: 'LIV', name: 'Liverpool', city: 'Liverpool', group: 'A' },
+  { code: 'MUN', name: 'Manchester United', city: 'Manchester', group: 'A' },
+  { code: 'CHE', name: 'Chelsea', city: 'London', group: 'A' },
+  { code: 'AVL', name: 'Aston Villa', city: 'Birmingham', group: 'A' },
+  { code: 'BHA', name: 'Brighton & Hove Albion', city: 'Brighton', group: 'A' },
+  { code: 'BRE', name: 'Brentford', city: 'London', group: 'A' },
+  { code: 'BOU', name: 'AFC Bournemouth', city: 'Bournemouth', group: 'A' },
+  { code: 'SUN', name: 'Sunderland', city: 'Sunderland', group: 'A' },
+  { code: 'TOT', name: 'Tottenham Hotspur', city: 'London', group: 'B' },
+  { code: 'NEW', name: 'Newcastle United', city: 'Newcastle', group: 'B' },
+  { code: 'CRY', name: 'Crystal Palace', city: 'London', group: 'B' },
+  { code: 'FUL', name: 'Fulham', city: 'London', group: 'B' },
+  { code: 'EVE', name: 'Everton', city: 'Liverpool', group: 'B' },
+  { code: 'NFO', name: 'Nottingham Forest', city: 'Nottingham', group: 'B' },
+  { code: 'LEE', name: 'Leeds United', city: 'Leeds', group: 'B' },
+  { code: 'COV', name: 'Coventry City', city: 'Coventry', group: 'B', standIn: 'West Ham United' },
+  { code: 'IPS', name: 'Ipswich Town', city: 'Ipswich', group: 'B', standIn: 'Burnley' },
+  { code: 'HUL', name: 'Hull City', city: 'Hull', group: 'B', standIn: 'Wolverhampton' },
 ];
+
+export const CLUBS_A = CLUBS.filter((c) => c.group === 'A');
+export const CLUBS_B = CLUBS.filter((c) => c.group === 'B');
 
 export interface TimelinePhase {
   phase: string; sub: string; date: string; note: string; state: 'done' | 'live' | 'upcoming';
@@ -47,7 +72,7 @@ export const announcedPhases = (): TimelinePhase[] =>
 // `state: 'live'` marker to it.
 export const TIMELINE: TimelinePhase[] = [
   { phase: 'Announcement', sub: 'Public Reveal', date: 'AUG 04, 2026', note: 'Done · this page is live', state: 'done' },
-  { phase: 'Registration', sub: 'Open Sign-up', date: 'OPENS 05 AUG 2026 · 20:00', note: '20 brackets · free to register · closes 01 SEP', state: 'upcoming', justAnnounced: true },
+  { phase: 'Registration', sub: 'Open Sign-up', date: 'OPENS 09 AUG 2026 · 20:00', note: 'all twenty clubs · free to register', state: 'upcoming', justAnnounced: true },
   { phase: 'Bracket Draw', sub: 'Live Broadcast', date: 'TBA', note: 'Random draw · streamed', state: 'upcoming' },
   { phase: 'Qualifiers', sub: 'BO3 Knockouts', date: 'TBA', note: '20 winners surface', state: 'upcoming' },
   { phase: 'Draft Day', sub: 'Live Broadcast', date: 'TBA', note: 'Host venue · Addis Ababa', state: 'upcoming' },
@@ -135,15 +160,33 @@ export const NEXGEN_PILLARS: Pillar[] = [
 // Registration has a window: it opens, then it closes. Both ends live here so
 // the countdown, every CTA and every status label read the same two instants and
 // cannot drift apart.
-export const REGISTRATION_OPENS = new Date('2026-08-05T20:00:00+03:00').getTime();
-export const REGISTRATION_CLOSES = new Date('2026-09-01T09:00:00+03:00').getTime();
+export const REGISTRATION_OPENS = new Date('2026-08-09T20:00:00+03:00').getTime();
 
-// Display forms of the timestamps above, kept beside them for the same reason.
-export const REGISTRATION_OPENS_LABEL = '05 AUG 2026';
-export const REGISTRATION_OPENS_SHORT = 'AUG 05';
-export const REGISTRATION_OPENS_TIME = '05 AUG 2026 · 20:00 EAT';
-export const REGISTRATION_CLOSES_LABEL = '01 SEP 2026';
-export const REGISTRATION_CLOSES_TIME = '01 SEP 2026 · 09:00 EAT';
+// Display forms of the timestamp above, kept beside it for the same reason.
+export const REGISTRATION_OPENS_LABEL = '09 AUG 2026';
+export const REGISTRATION_OPENS_SHORT = 'AUG 09';
+export const REGISTRATION_OPENS_TIME = '09 AUG 2026 · 20:00 EAT';
+
+// There is deliberately NO closing instant, and no REGISTRATION_CLOSES constant
+// to reintroduce one. Brackets close in two groups, each when its own draw is
+// announced, and no date is ever published in advance — see CLAUDE.md.
+// A countdown to a close, a "places remaining" counter or a published deadline
+// would all contradict that, so the value they would read from does not exist.
+
+/**
+ * Whether each group's brackets have closed.
+ *
+ * Flipped by hand when that group's draw is announced, in the same edit that
+ * publishes the draw — there is no date to schedule against, which is the point.
+ * Group A (last season's top ten) closes first; Group B stays open after it, so
+ * anyone knocked out of a Group A bracket can enter one there.
+ */
+export const GROUP_A_CLOSED = false;
+export const GROUP_B_CLOSED = false;
+
+export function groupIsClosed(group: ClubGroup): boolean {
+  return group === 'A' ? GROUP_A_CLOSED : GROUP_B_CLOSED;
+}
 
 /**
  * Where we are in the registration window.
@@ -154,14 +197,36 @@ export const REGISTRATION_CLOSES_TIME = '01 SEP 2026 · 09:00 EAT';
  */
 export type RegistrationPhase = 'before' | 'open' | 'closed';
 
-export function registrationPhase(now: number = Date.now()): RegistrationPhase {
+/**
+ * Phase for one group's brackets.
+ *
+ * Time only decides the opening. Closing is a flag, not an instant, because no
+ * closing date is ever published — a group closes when its draw is announced.
+ */
+export function registrationPhase(group: ClubGroup, now: number = Date.now()): RegistrationPhase {
   if (now < REGISTRATION_OPENS) return 'before';
-  if (now < REGISTRATION_CLOSES) return 'open';
-  return 'closed';
+  return groupIsClosed(group) ? 'closed' : 'open';
 }
 
+/** True while any bracket can still be entered — drives the site-wide CTAs. */
 export function registrationIsOpen(now: number = Date.now()): boolean {
-  return registrationPhase(now) === 'open';
+  return registrationPhase('A', now) === 'open' || registrationPhase('B', now) === 'open';
+}
+
+/**
+ * The page has three states worth distinguishing: not yet open, open with
+ * everything available, and open with only Group B left. Callers use this
+ * instead of re-deriving the combination.
+ */
+export type SitePhase = 'before' | 'open' | 'group-b-only' | 'closed';
+
+export function sitePhase(now: number = Date.now()): SitePhase {
+  if (now < REGISTRATION_OPENS) return 'before';
+  const a = !GROUP_A_CLOSED;
+  const b = !GROUP_B_CLOSED;
+  if (a && b) return 'open';
+  if (b) return 'group-b-only';
+  return 'closed';
 }
 
 /**

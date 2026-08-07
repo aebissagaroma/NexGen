@@ -2,7 +2,7 @@
 // Shared primitives ported from primitives.jsx (Countdown, marks, ClubCode, etc.)
 import * as React from 'react';
 import Link from 'next/link';
-import { registrationPhase, REGISTRATION_OPENS_TIME, type RegistrationPhase } from '@/data/static';
+import { registrationPhase, sitePhase, REGISTRATION_OPENS_TIME, type RegistrationPhase, type SitePhase, type ClubGroup } from '@/data/static';
 
 export function NexGenMark({ size = 28 }: { size?: number }) {
   const eGlyph = 'M26 16 H80 L70 32 H42 V44 H70 L60 60 H42 V70 H74 L64 86 H26 Z';
@@ -119,13 +119,27 @@ export function useGrandPrize(): PrizeDetails | null {
  * hydration mismatch does not degrade gracefully here — it blanks the page (see
  * components/Css.tsx).
  */
-export function useRegistrationPhase(): RegistrationPhase {
+export function useRegistrationPhase(group: ClubGroup = 'A'): RegistrationPhase {
   const [phase, setPhase] = React.useState<RegistrationPhase>('before');
   React.useEffect(() => {
-    setPhase(registrationPhase());
+    setPhase(registrationPhase(group));
     // Re-check on a timer so a visitor sitting on the page when sign-ups open
     // sees it happen, rather than a dead button until they reload.
-    const t = setInterval(() => setPhase(registrationPhase()), 1000);
+    const t = setInterval(() => setPhase(registrationPhase(group)), 1000);
+    return () => clearInterval(t);
+  }, [group]);
+  return phase;
+}
+
+/**
+ * Site-wide state, for the copy that is not about one group: the ticker, the
+ * hero strip and the club-grid notice all read from this.
+ */
+export function useSitePhase(): SitePhase {
+  const [phase, setPhase] = React.useState<SitePhase>('before');
+  React.useEffect(() => {
+    setPhase(sitePhase());
+    const t = setInterval(() => setPhase(sitePhase()), 1000);
     return () => clearInterval(t);
   }, []);
   return phase;
@@ -133,7 +147,8 @@ export function useRegistrationPhase(): RegistrationPhase {
 
 /** Convenience for the many callers that only care whether entry is possible. */
 export function useRegistrationOpen(): boolean {
-  return useRegistrationPhase() === 'open';
+  const p = useSitePhase();
+  return p === 'open' || p === 'group-b-only';
 }
 
 /**
@@ -147,8 +162,8 @@ export function useRegistrationOpen(): boolean {
 export function RegisterCta({ className = 'btn', style, label = 'REGISTER NOW →' }: {
   className?: string; style?: React.CSSProperties; label?: string;
 }) {
-  const phase = useRegistrationPhase();
-  if (phase !== 'open') {
+  const phase = useSitePhase();
+  if (phase === 'before' || phase === 'closed') {
     return (
       <span className={className} aria-disabled="true"
         style={{ ...style, opacity: 0.55, cursor: 'default', pointerEvents: 'none' }}>
