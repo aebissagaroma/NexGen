@@ -3,6 +3,7 @@
 // Ported from app.jsx (the ACCENT_PALETTES / CSS-var application logic is intact).
 import * as React from 'react';
 import { Nav, Hero } from './Hero';
+import { TeaserSection } from '@/components/teaser/TeaserSection';
 import { FormatSection } from './Format';
 import { ClubsSection } from './Clubs';
 import { BracketSection } from './Bracket';
@@ -66,6 +67,7 @@ export default function Landing() {
     <>
       <Nav />
       <Hero />
+      <TeaserSection />
       <FormatSection ps5Mood={t.ps5Mood} />
       <ClubsSection />
       <BracketSection />
