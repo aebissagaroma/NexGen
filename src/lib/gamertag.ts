@@ -13,6 +13,34 @@
 const MIN = 3;
 const MAX = 20;
 
+export const TAG_MIN = MIN;
+export const TAG_MAX = MAX;
+
+/**
+ * A player's own choice of tag, canonicalised, or null if it cannot be one.
+ *
+ * Players type their own handle — the suggestions below are only a starting
+ * point for anyone who does not want to invent one. Stored uppercase so the
+ * brackets, the standings table and the broadcast lower third all read the same
+ * way regardless of how it was typed.
+ *
+ * A–Z and 0–9 only, and no spaces. This is narrower than ec_tag_canon() in
+ * db/schema.sql, which only lowercases and strips whitespace: if punctuation
+ * were allowed here then "AB-C" and "ABC" would be two different tags to the
+ * unique index while being indistinguishable to a commentator reading them out.
+ * Keeping the accepted set tight is what makes that index mean what it looks
+ * like it means.
+ */
+export function canonicalTag(raw: unknown): string | null {
+  const t = String(raw ?? '').trim().toUpperCase();
+  if (t.length < MIN || t.length > MAX) return null;
+  if (!/^[A-Z0-9]+$/.test(t)) return null;
+  // At least one letter. An all-digit tag reads as an entry number on a bracket
+  // and is impossible to say out loud as a name.
+  if (!/[A-Z]/.test(t)) return null;
+  return t;
+}
+
 /**
  * Punchy words paired with the player's name, so tags read like a competitor's
  * handle rather than a username. Kept to short, broadcast-friendly words that a

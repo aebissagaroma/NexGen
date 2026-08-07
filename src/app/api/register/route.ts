@@ -7,33 +7,33 @@ import { notifyOps, notifyEachRegistration, sendMail } from '@/lib/mailer';
 import { parseDob, checkAge, MIN_AGE, GUARDIAN_NOTICE } from '@/lib/age';
 import { registrationPhase, REGISTRATION_OPENS_TIME, REGISTRATION_CLOSES_LABEL } from '@/data/static';
 import { isPlausiblePhone } from '@/lib/phone';
-import { canonicalId, hashId, idLast4 } from '@/lib/national-id';
+import { canonicalTag, TAG_MIN, TAG_MAX } from '@/lib/gamertag';
+import { isBlockedTag } from '@/lib/tag-blocklist';
 import { rateLimit, peekCount, clientIp } from '@/lib/rate-limit';
 import { verifyChallenge, isChallengeConfigured, CHALLENGE_AFTER_FAILURES } from '@/lib/challenge';
 
-// Enumeration guard. The form tells someone when an ID is already registered,
-// which is necessary — an entrant who mistyped needs to know — but it also means
-// a script could test ID numbers one at a time. Two windows: a short one that
-// stops a burst, and an hourly one that stops a slow drip under it.
+// Rate limit. Two windows: a short one that stops a burst, and an hourly one
+// that stops a slow drip under it.
+//
+// This was sized against ID-number probing. ID numbers are no longer collected
+// at registration (see below), so there is nothing to enumerate one value at a
+// time today, but the limit still caps how fast one connection can create
+// entries — and it is the guard that must already be in place on the day ID
+// collection is reinstated.
 const ATTEMPTS_PER_10_MIN = 5;
 const ATTEMPTS_PER_HOUR = 20;
 const FAILURE_WINDOW_SEC = 60 * 60;
 
-/** Rejected attempts from this IP in the last hour. Does not count as an attempt. */
+/**
+ * Rejected attempts from this IP in the last hour. Does not count as an attempt.
+ *
+ * Nothing increments this counter at present: the only rejections that ever
+ * counted as probing were a bad or duplicate ID number, and neither can happen
+ * while ID collection is deferred. It is left wired up because the challenge
+ * escalation below is keyed to it, and both come back into play together.
+ */
 function failureCount(ip: string): Promise<number> {
   return peekCount(`reg:fail:${ip}`, FAILURE_WINDOW_SEC);
-}
-
-/**
- * Record a rejected attempt and return the response.
- *
- * Only rejections that could be probing are counted — a wrong ID or a duplicate.
- * Being told to accept the rules is not an enumeration signal and must not push
- * a genuine entrant towards a challenge.
- */
-async function rejected(ip: string, status: number, error: string) {
-  await rateLimit(`reg:fail:${ip}`, Number.MAX_SAFE_INTEGER, FAILURE_WINDOW_SEC);
-  return NextResponse.json({ error }, { status });
 }
 
 // POST /api/register — create a qualifier registration for the logged-in player.
@@ -96,14 +96,14 @@ export async function POST(req: Request) {
   const phone = str(body.phone, { min: 7, max: 30 });
   const dob = parseDob(body.dateOfBirth);
   const acceptedTerms = body.acceptedTerms === true;
-  // The raw number is used here and then discarded — only an irreversible hash
-  // and the last four characters are stored. See src/lib/national-id.ts.
-  const idCanon = canonicalId(body.idNumber);
-  // Chosen from the name-derived options offered by /api/tags/suggest. Not
-  // re-derived here on purpose: the player may have picked one, then edited their
-  // name slightly, and rejecting their choice for that would be baffling. It only
-  // has to be a sane, unused handle.
-  const gamertag = str(body.gamertag, { min: 3, max: 20 });
+  // No national ID number is collected at registration. Entries are taken on a
+  // verified email address, and ID is gathered later to confirm them — see the
+  // note on the INSERT below for what that means for one-entry-per-player.
+  // The player's own choice. /api/tags/suggest offers options built from their
+  // name, but those are a starting point, not the permitted set — anyone can
+  // type their own. It only has to be a sane, unused handle, and it can be
+  // changed from the entry page until the qualifiers begin.
+  const gamertag = canonicalTag(body.gamertag);
 
   if (!fullName || !clubCode) {
     return NextResponse.json({ error: 'Name and club are required.' }, { status: 400 });
@@ -123,11 +123,6 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
-  if (!idCanon) {
-    // Deliberately generic: naming the accepted length or character set would
-    // hand a prober the shape of a valid number.
-    return rejected(ip, 400, 'That ID number does not look right. Check it and try again.');
-  }
   if (!acceptedTerms) {
     return NextResponse.json(
       { error: 'You need to accept the rulebook and privacy policy to enter.' },
@@ -135,7 +130,16 @@ export async function POST(req: Request) {
     );
   }
   if (!gamertag) {
-    return NextResponse.json({ error: 'Pick one of the suggested gamertags.' }, { status: 400 });
+    return NextResponse.json(
+      { error: `Choose a gamertag: ${TAG_MIN}–${TAG_MAX} letters and numbers, no spaces or punctuation, and at least one letter.` },
+      { status: 400 },
+    );
+  }
+  if (isBlockedTag(gamertag)) {
+    return NextResponse.json(
+      { error: 'That gamertag is not allowed. Please choose another.' },
+      { status: 400 },
+    );
   }
   if (!password) {
     return NextResponse.json({ error: 'Choose a password of at least 8 characters — you sign in with it from now on.' }, { status: 400 });
@@ -158,14 +162,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: alreadyEntered(existing.club_code) }, { status: 409 });
   }
 
-  const idHash = hashId(idCanon);
-  const idTaken = await queryOne(
-    `SELECT 1 FROM registrations WHERE id_hash = $1 LIMIT 1`, [idHash],
-  );
-  if (idTaken) {
-    return rejected(ip, 409, ID_TAKEN);
-  }
-
   const tagTaken = await queryOne(
     `SELECT 1 FROM registrations
      WHERE gamertag IS NOT NULL AND ec_tag_canon(gamertag) = ec_tag_canon($1) LIMIT 1`,
@@ -184,13 +180,22 @@ export async function POST(req: Request) {
   ]);
 
   try {
+    // id_hash and id_last4 are left NULL. Both columns stay in the table, and
+    // uniq_reg_idnum stays a PARTIAL unique index over the non-NULL rows, so
+    // rows written now do not collide with each other and de-duplication starts
+    // working again by itself as soon as IDs are collected and backfilled.
+    //
+    // Until then one-entry-per-player rests on the verified email address, the
+    // user account and the gamertag. That is weaker than a national ID — one
+    // person can hold several inboxes — so duplicates are deferred rather than
+    // prevented, and will have to be found at the point IDs are gathered.
     const row = await queryOne<{ id: string }>(
       `INSERT INTO registrations
          (user_id, full_name, email, club_code, city, phone, date_of_birth,
-          accepted_terms_at, gamertag, id_hash, id_last4)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, now(), $8, $9, $10) RETURNING id`,
+          accepted_terms_at, gamertag)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, now(), $8) RETURNING id`,
       [session.sub, fullName, session.email, clubCode.toUpperCase(), city, phone,
-       dob.toISOString().slice(0, 10), gamertag, idHash, idLast4(idCanon)],
+       dob.toISOString().slice(0, 10), gamertag],
     );
 
     // Staff copy of the entry. Deliberately after the INSERT and never awaited
@@ -206,7 +211,6 @@ export async function POST(req: Request) {
         `Email:     ${session.email ?? '—'}`,
         `City:      ${city || '—'}`,
         `Phone:     ${phone}`,
-        `ID ending: ${idLast4(idCanon)}`,
         `Age:       ${age.age}${age.needsGuardianConsent ? ' — GUARDIAN CONSENT FORM REQUIRED' : ''}`,
         `Entry ID:  ${row!.id}`,
       ].join('\n'),
@@ -239,8 +243,8 @@ export async function POST(req: Request) {
           'of payment at this time.',
           '',
           'Bring your photo ID to your session. We check it there and keep no copy.',
-          'We do not store your identity number — only an irreversible code derived',
-          'from it.',
+          'Your entry is recorded against this email address. We will ask for your',
+          'national ID number later to confirm it — we will announce when, and how.',
           ...(age.needsGuardianConsent ? ['', GUARDIAN_NOTICE] : []),
           '',
           'One entry per player. Registering twice means immediate disqualification.',

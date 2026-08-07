@@ -1,10 +1,13 @@
 // Privacy notice content.
 //
-// STATUS: the "Your identity number" section below is the wording supplied by
-// NexGen and is reproduced verbatim, with ONE sentence appended — see the note
-// on that section. Everything else is a factual description of what the code
-// actually does, written from the schema and the API routes, and is marked for
-// review. It is NOT legal drafting.
+// STATUS: identity numbers are NOT collected at registration at present — see
+// the "Your identity number" section, which says so plainly and then reproduces
+// NexGen's supplied wording as what will apply once collection begins. When the
+// ID field is reinstated on the registration form, that section has to be put
+// back into the present tense in the same edit, and the bullet for the code and
+// final four characters restored to "What we collect". Everything else is a
+// factual description of what the code actually does, written from the schema
+// and the API routes, and is marked for review. It is NOT legal drafting.
 //
 // Three things a lawyer must supply before this is complete; they are shown on
 // the page as outstanding rather than invented here:
@@ -17,7 +20,7 @@
 
 export interface PrivacySection { id: string; title: string; body: string[]; bullets?: string[]; note?: string }
 
-export const PRIVACY_UPDATED = '05 August 2026';
+export const PRIVACY_UPDATED = '08 August 2026';
 
 export const PRIVACY_INTRO =
   'NexGen PLC ("we") runs ELECTROCUP 26. This notice explains what we collect when you ' +
@@ -36,10 +39,11 @@ export const PRIVACY: PrivacySection[] = [
     id: 'identity',
     title: 'Your identity number',
     body: [
-      'When you register we ask for your national identity number. We use it only to make sure the same person cannot enter more than once. We convert it immediately into an irreversible code and store only that code — we never store, log or share the number itself. At the Qualifier Center we check your photo ID in person and keep no copy or image of it.',
-      'Alongside that code we keep the final four characters of the number, and nothing else from it. Officials use those four characters to tell two entries apart when someone speaks to us in person. The rest of the number is discarded the moment the code is produced, and the code cannot be turned back into it.',
+      'We do not ask for your national identity number when you register. Registration is on your email address alone, and nothing about your ID is collected or stored at this stage.',
+      'We will ask for it later, to confirm your entry before the competition proper. We will announce when and how before that happens. At the Qualifier Center we check your photo ID in person and keep no copy or image of it.',
+      'When we do ask for it, this is what will happen to it. We use it only to make sure the same person cannot enter more than once. We convert it immediately into an irreversible code and store only that code — we never store, log or share the number itself. Alongside that code we keep the final four characters of the number, and nothing else from it. Officials use those four characters to tell two entries apart when someone speaks to us in person. The rest of the number is discarded the moment the code is produced, and the code cannot be turned back into it.',
     ],
-    note: 'The first paragraph is the wording supplied by NexGen. The second was added so the notice matches what the system actually stores.',
+    note: 'The handling described in the third paragraph is the wording supplied by NexGen, and is what will apply once identity numbers are collected. The first two paragraphs record that collection has not started yet, so the notice matches what the system does today.',
   },
   {
     id: 'collect',
@@ -52,7 +56,6 @@ export const PRIVACY: PrivacySection[] = [
       'your date of birth — used to apply the minimum age of 16, and to identify entrants aged 16 or 17 who need a guardian consent form',
       'the club you choose to represent, and the gamertag you pick from the options we offer',
       'your city, if you choose to give it',
-      'the irreversible code and final four characters described above',
       'the date and time you accepted the competition rules and this notice',
       'a password, which is stored only in scrambled (hashed) form and cannot be read back',
     ],
