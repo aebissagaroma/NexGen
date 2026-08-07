@@ -184,6 +184,25 @@ END $do$;
 -- Identity document. This is what now stops one person entering twice — the
 -- tournament supplies the hardware, so a gamertag no longer identifies anyone.
 -- Partial, because entries taken before this change have no id_hash and many
+-- Shape check on the stored digest.
+--
+-- Normalisation of the ID number itself CANNOT be mirrored here the way
+-- ec_phone_canon() mirrors phone formatting: the database never receives the
+-- number, only an HMAC of it, and a hash cannot be re-normalised after the fact.
+-- Canonicalisation therefore happens once, server-side, in canonicalId() before
+-- hashing — see src/lib/national-id.ts.
+--
+-- What the database can enforce is that nothing but a versioned digest ever
+-- lands in this column, so a direct INSERT cannot slip a raw number, a
+-- truncated value or an arbitrary string into it. NOT VALID applies the rule to
+-- every new and updated row without failing on rows written before it existed.
+DO $do$ BEGIN
+  ALTER TABLE registrations
+    ADD CONSTRAINT id_hash_is_versioned_digest
+    CHECK (id_hash IS NULL OR id_hash ~ '^v[0-9]+\$[0-9a-f]{64}$') NOT VALID;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $do$;
+
 -- NULLs must stay legal: entries taken while ID numbers were not collected have
 -- no hash, and a NULL must not collide with another NULL.
 DO $do$ BEGIN
