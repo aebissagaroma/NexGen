@@ -10,18 +10,24 @@
 // the reveal date. See data/static.ts for the sealed copy the page shows in the
 // meantime.
 
+// No make or model appears in this file, including in examples and templates.
+// The vehicle is sealed until it is announced on broadcast, and this repository
+// is public — an illustrative example names the car just as effectively as a
+// real value does. Placeholders below are written as <ANGLE BRACKETS> so that
+// anything left unfilled is obvious on sight rather than plausible.
+
 export interface GrandPrizeDetails {
   /** Closes the headline: "THE WINNER DRIVES HOME …" */
   headline: string;
-  /** Full name, e.g. '2026 Volkswagen ID.3 Pro'. */
+  /** Full name: year, make, model, trim. */
   name: string;
   /** Reads after "The grand prize for ELECTROCUP 26 is …". */
   teaser: string;
-  /** Image plate label, e.g. '[ 2026 VOLKSWAGEN ID.3 PRO ]'. */
+  /** Image plate label — the full name, upper case, in square brackets. */
   plate: string;
-  /** Single word behind the photo, e.g. 'ID.3'. */
+  /** Single word behind the photo — the model alone. */
   watermark: string;
-  /** Short form for the hero metric strip, e.g. '2026 VW ID.3'. */
+  /** Short form for the hero metric strip: year and abbreviated model. */
   short: string;
   /** The five cells in the prize spec strip. */
   specs: { k: string; v: string }[];
@@ -39,28 +45,31 @@ export interface GrandPrizeDetails {
 /**
  * The vehicle, or null while it is undecided.
  *
- * NOT SET: the prize is no longer the BYD Seagull and the replacement has not
- * been confirmed. Filling this in IS the reveal — the vehicle appears on the
- * site as soon as this ships. Leave it null and the prize stays sealed.
+ * NOT SET: the vehicle is not confirmed. Filling this in IS the reveal — the
+ * car appears on the site as soon as this ships. Leave it null and the prize
+ * stays sealed.
  *
- * Template — every field below is shown somewhere on the page, so all of them
- * need real values:
+ * Ship this together with the broadcast announcement, not before it. There is
+ * no staging step between committing a value here and the site naming the car.
+ *
+ * Template — every field is shown somewhere on the page, so all of them need
+ * real values. Replace every <PLACEHOLDER>; do not ship a partly-filled object:
  *
  *   export const GRAND_PRIZE_DETAILS: GrandPrizeDetails | null = {
- *     headline: 'AN ID.3.',
- *     name: '2026 Volkswagen ID.3 Pro',
- *     teaser: 'a brand-new 2026 Volkswagen ID.3 Pro',
- *     plate: '[ 2026 VOLKSWAGEN ID.3 PRO ]',
- *     watermark: 'ID.3',
- *     short: '2026 VW ID.3',
+ *     headline: 'A <MODEL>.',
+ *     name: '<YEAR> <MAKE> <MODEL> <TRIM>',
+ *     teaser: 'a brand-new <YEAR> <MAKE> <MODEL> <TRIM>',
+ *     plate: '[ <YEAR> <MAKE> <MODEL> <TRIM> ]',
+ *     watermark: '<MODEL>',
+ *     short: '<YEAR> <MAKE-ABBREVIATED> <MODEL>',
  *     specs: [
- *       { k: 'MAKE', v: 'VOLKSWAGEN' }, { k: 'MODEL', v: 'ID.3 PRO' },
- *       { k: 'YEAR', v: '2026' }, { k: 'RANGE', v: '426 KM' },
+ *       { k: 'MAKE', v: '<MAKE>' }, { k: 'MODEL', v: '<MODEL> <TRIM>' },
+ *       { k: 'YEAR', v: '<YEAR>' }, { k: 'RANGE', v: '<NNN> KM' },
  *       { k: 'POWERTRAIN', v: '100% EV' },
  *     ],
  *     teaserSpecs: [
- *       { k: 'RANGE', v: '426 KM' }, { k: 'TYPE', v: '100% EV' },
- *       { k: 'MODEL', v: '2026 MY' },
+ *       { k: 'RANGE', v: '<NNN> KM' }, { k: 'TYPE', v: '100% EV' },
+ *       { k: 'MODEL', v: '<YEAR> MY' },
  *     ],
  *   };
  */
