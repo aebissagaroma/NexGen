@@ -60,6 +60,32 @@ export default function DashboardPage() {
     load();
   }
 
+  /**
+   * Ops override on a gamertag.
+   *
+   * Unlike the selects above this can fail in ways staff must see — the handle
+   * is taken, or the shape is wrong — so it reports instead of silently
+   * reloading. The server updates brackets and standings in the same
+   * transaction, so a rename after the draw stays consistent.
+   */
+  async function renameTag(id: string, current: string | null) {
+    const next = window.prompt(
+      'New gamertag for this entry.\n\n'
+      + 'This is an override: it ignores the blocklist, the qualifier lock, and\n'
+      + 'whether the tag is already on a bracket. Brackets and standings are\n'
+      + 'updated to match.',
+      current ?? '',
+    );
+    if (next === null) return;
+    const res = await fetch('/api/admin/registrations', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, gamertag: next }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { window.alert(data.error || 'Could not rename that entry.'); return; }
+    load();
+  }
+
   async function setHandled(id: string, handled: boolean) {
     await fetch('/api/admin/sponsors', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, handled }) });
     loadSponsors();
@@ -116,7 +142,22 @@ export default function DashboardPage() {
               {rows.map((r) => (
                 <tr key={r.id}>
                   <td style={{ color: 'var(--ink)' }}>{r.full_name}</td>
-                  <td>{r.gamertag || '—'}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
+                    {r.gamertag || '—'}
+                    <button
+                      type="button"
+                      onClick={() => renameTag(r.id, r.gamertag)}
+                      title="Rename this gamertag (ops override)"
+                      className="mono"
+                      style={{
+                        marginLeft: 8, padding: '2px 7px', fontSize: 9.5, letterSpacing: '.1em',
+                        cursor: 'pointer', border: '1px solid var(--line-2)',
+                        background: 'var(--bg-1)', color: 'var(--ink-3)',
+                      }}
+                    >
+                      EDIT
+                    </button>
+                  </td>
                   <td className="mono" style={{ color: 'var(--ink-3)' }}>{r.club_code}</td>
                   <td className="mono">{r.email}</td>
                   <td className="mono">{r.phone || '—'}</td>

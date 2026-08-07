@@ -9,6 +9,7 @@ import { PageFooter } from '@/components/SiteNotices';
 import { CLUBS } from '@/data/static';
 import { AppealForm } from '@/components/AppealForm';
 import { parseDob, checkAge, GUARDIAN_NOTICE, MIN_AGE } from '@/lib/age';
+import { TAG_MAX } from '@/lib/gamertag';
 import { useRegistrationPhase } from '@/components/landing/primitives';
 import { REGISTRATION_OPENS_TIME, REGISTRATION_CLOSES_LABEL } from '@/data/static';
 
@@ -132,8 +133,10 @@ function RegisterInner() {
       const data = await res.json();
       const opts: string[] = data.options || [];
       setTags(opts);
-      // Keep their pick only if it is still on offer.
-      setTag((cur) => (opts.includes(cur) ? cur : opts[0] || ''));
+      // Never overwrite what they typed. Suggestions refresh as the name is
+      // edited, and silently replacing a handle someone chose themselves would
+      // be the worst version of this field.
+      setTag((cur) => cur);
     } catch {
       setTags([]);
     } finally {
@@ -146,7 +149,7 @@ function RegisterInner() {
     const fd = new FormData(e.target as HTMLFormElement);
     if (fd.get('password') !== fd.get('passwordConfirm')) { setErr('Passwords do not match.'); return; }
     setBusy(true);
-    const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fullName: fd.get('fullName'), phone: fd.get('phone'), idNumber: fd.get('idNumber'), dateOfBirth: fd.get('dateOfBirth'), clubCode: fd.get('clubCode'), city: fd.get('city'), gamertag: tag, password: fd.get('password'), acceptedTerms: fd.get('acceptedTerms') === 'on' }) });
+    const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fullName: fd.get('fullName'), phone: fd.get('phone'), dateOfBirth: fd.get('dateOfBirth'), clubCode: fd.get('clubCode'), city: fd.get('city'), gamertag: tag, password: fd.get('password'), acceptedTerms: fd.get('acceptedTerms') === 'on' }) });
     const data = await res.json();
     if (!res.ok) {
       // 409 = they already hold an entry (a duplicate submit, or an alias of an
@@ -244,16 +247,6 @@ function RegisterInner() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }} className="reg-grid">
                 <div><label className="label">Full name</label><input className="field" name="fullName" required placeholder="Your legal name, as on your ID" onBlur={(e) => loadTags(e.target.value)} /></div>
                 <div><label className="label">Phone number</label><input className="field" name="phone" type="tel" required placeholder="+251…" autoComplete="tel" /></div>
-                <div>
-                  <label className="label">ID number</label>
-                  <input className="field" name="idNumber" required placeholder="Fayda, Kebele ID or passport" autoComplete="off" spellCheck={false} />
-                  {/* Sits with the field, not in a paragraph further down: this
-                      is the moment someone decides whether to type it. */}
-                  <p className="mono" style={{ fontSize: 10, letterSpacing: '.04em', color: 'var(--ink-4)', lineHeight: 1.6, margin: '8px 0 0' }}>
-                    Used only to prevent duplicate entries. We store an irreversible code, never your number.{' '}
-                    <Link href="/privacy" target="_blank" style={{ color: 'var(--accent-glow)' }}>See our privacy notice.</Link>
-                  </p>
-                </div>
                 <div><label className="label">Club to represent</label>
                   <select className="field" name="clubCode" defaultValue={preClub} required>
                     <option value="" disabled>Select a club…</option>
@@ -267,18 +260,30 @@ function RegisterInner() {
               </div>
               <p className="mono" style={{ fontSize: 10.5, letterSpacing: '.06em', color: 'var(--ink-4)' }}>You&apos;ll sign in with your email and this password — no more codes.</p>
               <div>
-                <label className="label">Pick your gamertag</label>
+                <label className="label">Your gamertag</label>
                 <p className="mono" style={{ fontSize: 10.5, letterSpacing: '.06em', color: 'var(--ink-4)', margin: '0 0 10px' }}>
-                  Built from your name — this is how you appear on brackets and broadcast.
+                  Choose your own — this is how you appear on brackets and broadcast. You can change it
+                  from your entry page any time before the qualifiers begin.
                 </p>
-                {tagsBusy && <div className="mono" style={{ fontSize: 11, letterSpacing: '.14em', color: 'var(--ink-3)' }}>FINDING OPTIONS…</div>}
-                {!tagsBusy && tags.length === 0 && (
-                  <div className="mono" style={{ fontSize: 11, letterSpacing: '.1em', color: 'var(--ink-3)' }}>
-                    Enter your full name above and we&apos;ll suggest some.
-                  </div>
-                )}
+                <input
+                  className="field"
+                  value={tag}
+                  onChange={(e) => setTag(e.target.value.toUpperCase())}
+                  placeholder="e.g. ABEBE10"
+                  maxLength={TAG_MAX}
+                  autoComplete="off"
+                  spellCheck={false}
+                  style={{ fontFamily: 'var(--f-mono)', letterSpacing: '.1em' }}
+                />
+                <TagHint tag={tag} />
+                {/* Suggestions are a way out for someone who does not want to
+                    invent a handle, not the permitted set. Below the field on
+                    purpose: the field is the primary way in. */}
+                <p className="mono" style={{ fontSize: 10.5, letterSpacing: '.06em', color: 'var(--ink-4)', margin: '14px 0 8px' }}>
+                  {tagsBusy ? 'FINDING SUGGESTIONS…' : tags.length > 0 ? 'OR USE ONE OF THESE:' : 'Enter your full name above for suggestions.'}
+                </p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {tags.map((t) => (
+                  {tags.slice(0, 8).map((t) => (
                     <button
                       key={t}
                       type="button"
@@ -297,11 +302,6 @@ function RegisterInner() {
                   ))}
                 </div>
               </div>
-              <p className="mono" style={{ fontSize: 10.5, letterSpacing: '.06em', color: 'var(--ink-4)', lineHeight: 1.6, margin: 0 }}>
-                Your ID number keeps entries to one per player. We store an irreversible code derived from
-                it, plus the last four characters — never the number itself, and never a photo or copy.
-                Bring the same ID to your Qualifier Center, where we check it and keep no copy.
-              </p>
               {/* Shown as soon as the date of birth says 16 or 17, not on submit:
                   needing a guardian's signature is something to find out while
                   filling the form in, not after committing to an entry. */}
@@ -365,12 +365,14 @@ function RegisterInner() {
 
 // Shown instead of the form when the player already holds an entry.
 function AlreadyEntered({ reg }: { reg: Existing }) {
+  const [tag, setTag] = React.useState(reg.gamertag ?? '');
   return (
     <div style={{ textAlign: 'center', padding: '20px 0' }}>
       <div className="display" style={{ fontSize: 'clamp(30px,5vw,52px)', color: 'var(--accent-glow)', lineHeight: 0.95 }}>ALREADY IN.</div>
       <p style={{ color: 'var(--ink-2)', fontSize: 15.5, lineHeight: 1.6, maxWidth: '44ch', margin: '18px auto 0' }}>
-        You are entered as <strong style={{ color: 'var(--ink)' }}>{reg.gamertag || reg.full_name}</strong> representing <strong style={{ color: 'var(--ink)' }}>{reg.club_name}</strong>. It is one entry per player, so there is nothing more to submit.
+        You are entered as <strong style={{ color: 'var(--ink)' }}>{tag || reg.full_name}</strong> representing <strong style={{ color: 'var(--ink)' }}>{reg.club_name}</strong>. It is one entry per player, so there is nothing more to submit.
       </p>
+      <ChangeTag current={tag} onChanged={setTag} />
       <div className="mono" style={{ fontSize: 10.5, letterSpacing: '.14em', color: 'var(--ink-4)', marginTop: 16 }}>
         STATUS · {String(reg.status).toUpperCase()}
       </div>
@@ -388,6 +390,130 @@ function AlreadyEntered({ reg }: { reg: Existing }) {
         <Link href="/bracket" className="btn">VIEW BRACKETS →</Link>
         <Link href="/" className="btn-ghost">BACK HOME</Link>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Change your gamertag from your own entry page.
+ *
+ * Open until the qualifiers begin — the server decides that, and says so if the
+ * window has closed or the handle is already on a bracket. Collapsed by default
+ * so the entry page still reads as "you are in, nothing to do".
+ */
+function ChangeTag({ current, onChanged }: { current: string; onChanged: (t: string) => void }) {
+  const [open, setOpen] = React.useState(false);
+  const [value, setValue] = React.useState(current);
+  const [busy, setBusy] = React.useState(false);
+  const [err, setErr] = React.useState<string | null>(null);
+  const [saved, setSaved] = React.useState(false);
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true); setErr(null); setSaved(false);
+    try {
+      const res = await fetch('/api/tags/claim', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gamertag: value }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setErr(data.error || 'Could not change it. Try again.'); return; }
+      onChanged(data.gamertag);
+      setValue(data.gamertag);
+      setSaved(true);
+      setOpen(false);
+    } catch {
+      setErr('Could not reach the server. Try again.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <div style={{ marginTop: 14 }}>
+        <button type="button" className="btn-ghost" onClick={() => { setOpen(true); setSaved(false); }}>
+          CHANGE GAMERTAG
+        </button>
+        {saved && (
+          <div className="mono" style={{ fontSize: 10.5, letterSpacing: '.08em', color: 'var(--accent-glow)', marginTop: 10 }}>
+            SAVED — YOU NOW APPEAR AS {current}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={save} style={{ maxWidth: '34ch', margin: '18px auto 0', textAlign: 'left', display: 'grid', gap: 10 }}>
+      <label className="label">New gamertag</label>
+      <input
+        className="field"
+        value={value}
+        onChange={(e) => setValue(e.target.value.toUpperCase())}
+        maxLength={TAG_MAX}
+        autoFocus
+        autoComplete="off"
+        spellCheck={false}
+        style={{ fontFamily: 'var(--f-mono)', letterSpacing: '.1em' }}
+      />
+      <TagHint tag={value} />
+      {err && <div className="notice notice-err">{err}</div>}
+      <p className="mono" style={{ fontSize: 10, letterSpacing: '.06em', color: 'var(--ink-4)', lineHeight: 1.6, margin: 0 }}>
+        You can keep changing this until the qualifiers begin. After that it is fixed — it is what appears
+        on the bracket and the broadcast.
+      </p>
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button className="btn" disabled={busy || !value.trim() || value.trim() === current}>
+          {busy ? 'SAVING…' : 'SAVE →'}
+        </button>
+        <button type="button" className="btn-ghost" onClick={() => { setOpen(false); setValue(current); setErr(null); }}>
+          CANCEL
+        </button>
+      </div>
+    </form>
+  );
+}
+
+/**
+ * Live "available / taken" under the gamertag field.
+ *
+ * Debounced, because it fires per keystroke. The answer is advisory only — the
+ * write is what decides, and two people typing the same handle at once are
+ * separated by uniq_reg_tag, not by this.
+ */
+function TagHint({ tag }: { tag: string }) {
+  const [state, setState] = React.useState<'idle' | 'checking' | 'free' | 'taken' | 'bad'>('idle');
+  const [why, setWhy] = React.useState('');
+
+  React.useEffect(() => {
+    const t = tag.trim();
+    if (!t) { setState('idle'); return; }
+    setState('checking');
+    const id = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/tags/claim?tag=${encodeURIComponent(t)}`);
+        const data = await res.json();
+        if (!data.ok) { setWhy(data.reason || 'That will not work as a gamertag.'); setState('bad'); return; }
+        setState(data.available ? 'free' : 'taken');
+      } catch {
+        // A failed check must not look like a verdict.
+        setState('idle');
+      }
+    }, 350);
+    return () => clearTimeout(id);
+  }, [tag]);
+
+  if (state === 'idle') return null;
+  const [text, colour] =
+    state === 'checking' ? ['CHECKING…', 'var(--ink-4)']
+    : state === 'free' ? [`${tag.trim()} IS AVAILABLE`, 'var(--accent-glow)']
+    : state === 'taken' ? ['ALREADY TAKEN — TRY ANOTHER', 'var(--ink-2)']
+    : [why.toUpperCase(), 'var(--ink-2)'];
+
+  return (
+    <div className="mono" style={{ fontSize: 10.5, letterSpacing: '.08em', color: colour, marginTop: 8, lineHeight: 1.5 }}>
+      {text}
     </div>
   );
 }

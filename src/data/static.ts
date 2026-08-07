@@ -163,3 +163,29 @@ export function registrationPhase(now: number = Date.now()): RegistrationPhase {
 export function registrationIsOpen(now: number = Date.now()): boolean {
   return registrationPhase(now) === 'open';
 }
+
+/**
+ * When the qualifiers begin, once that date is announced. null = still TBA,
+ * matching the 'TBA' row in TIMELINE above — set both in the same edit.
+ *
+ * This is the deadline for changing a gamertag. It is not a policy preference:
+ * matches.player_a / player_b and standings.player_tag hold the tag BY VALUE
+ * with no foreign key, so a tag changed after a bracket is drawn leaves those
+ * rows pointing at a handle that no longer exists.
+ */
+export const QUALIFIERS_BEGIN: number | null = null;
+
+/**
+ * Whether gamertags can still be changed.
+ *
+ * While the date is TBA this stays true, so players can settle on a handle
+ * during the whole registration period. The API does NOT rely on this alone —
+ * it also refuses once a tag appears in a bracket or the standings table, so
+ * forgetting to set QUALIFIERS_BEGIN cannot corrupt a published bracket.
+ *
+ * Same hydration caveat as registrationPhase(): do not derive this during
+ * render without a mounted guard once QUALIFIERS_BEGIN is an actual date.
+ */
+export function gamertagsEditable(now: number = Date.now()): boolean {
+  return QUALIFIERS_BEGIN === null || now < QUALIFIERS_BEGIN;
+}
