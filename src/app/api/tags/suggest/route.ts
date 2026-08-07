@@ -3,6 +3,7 @@ import { query } from '@/lib/db';
 import { getSession } from '@/lib/session';
 import { str } from '@/lib/validation';
 import { tagCandidates } from '@/lib/gamertag';
+import { isBlockedTag } from '@/lib/tag-blocklist';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 
 const WANTED = 6;
@@ -29,7 +30,11 @@ export async function POST(req: Request) {
   const fullName = str(body.fullName, { min: 1, max: 120 });
   if (!fullName) return NextResponse.json({ options: [] });
 
-  const candidates = tagCandidates(fullName);
+  // Suggestions are built from the player's own name, which is exactly how an
+  // unusable one gets offered — a surname can be a reserved word, and a first
+  // name can be blocked outright. Filtered here so the form never proposes a
+  // tag the write would then refuse.
+  const candidates = tagCandidates(fullName).filter((c) => !isBlockedTag(c));
   if (candidates.length === 0) return NextResponse.json({ options: [] });
 
   // One query for the whole batch: ask which of these are already taken, then
