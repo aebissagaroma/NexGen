@@ -23,7 +23,7 @@ export function BracketSection() {
               <div className="marker">FILE/04 · BRACKETS</div>
               <h2 className="section-title" style={{ marginTop: 16 }}>THE PATH<br /><span style={{ color: 'var(--accent-glow)' }}>FROM ENTRY</span> <span style={{ fontStyle: 'italic', color: 'var(--ink-3)' }}>TO</span><br />CLUB REP.</h2>
             </div>
-            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>Each club bracket is a single-elimination knockout, BO3 throughout. Group A brackets are drawn at random live on broadcast once Group A closes — <strong style={{ color: 'var(--ink)' }}>the date is announced on the day</strong>.</p>
+            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>Each club bracket is a single-elimination knockout, BO3 throughout. The top-ten brackets <strong style={{ color: 'var(--ink)' }}>close the moment their draw is announced</strong>, then draw at random live on broadcast. The other ten stay open until their own draw is called. No closing date is published in advance — enter early.</p>
           </div>
         </div>
 

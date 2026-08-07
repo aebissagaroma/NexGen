@@ -69,17 +69,21 @@ export function SponsorsSection() {
                 {/* Seat counts stay off the page on purpose — see SPONSORS_TIERS. */}
                 <div className="mono" style={{ fontSize: 10, letterSpacing: '.14em', color: 'var(--ink-3)', marginTop: 4 }}>{tier.focus.toUpperCase()}</div>
               </div>
-              {/* A filled tier is drawn solid and dimmed; an open one keeps the
-                  dashed outline. The difference has to read at a glance, or
-                  "FILLED" is just more text on an identical-looking row. */}
-              <div className="stripe ticks" style={{ position: 'relative', padding: '20px 22px', border: tier.filled ? '1px solid var(--line-2)' : '1px dashed var(--line-2)', background: tier.filled ? 'var(--bg)' : 'var(--bg-1)', opacity: tier.filled ? 0.72 : 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6, minHeight: 76 }}>
+              {/* A signed partner is the strongest thing in this section, so it
+                  is drawn as a credit, not as struck-off inventory: gold rule,
+                  faint gold wash, name set large. Dimming it — which this used
+                  to do — buried the one brand that has actually committed under
+                  the four that have not. Open tiers keep the dashed outline. */}
+              <div className="stripe ticks" style={{ position: 'relative', padding: '20px 22px', border: tier.filled ? '1px solid rgba(var(--accent-rgb),0.42)' : '1px dashed var(--line-2)', background: tier.filled ? 'linear-gradient(90deg, rgba(var(--accent-rgb),0.07), rgba(var(--accent-rgb),0.02) 60%, transparent)' : 'var(--bg-1)', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6, minHeight: 76 }}>
                 <span className="tk1" /><span className="tk2" />
+                {tier.filled && (
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap', marginBottom: 2 }}>
+                    <span className="display-2" style={{ fontSize: 24, fontWeight: 800, color: 'var(--accent-glow)', lineHeight: 1.1 }}>{tier.filled.toUpperCase()}</span>
+                    <span className="mono" style={{ fontSize: 9.5, letterSpacing: '.22em', color: 'var(--ink-3)' }}>{tier.focus.toUpperCase()}</span>
+                  </div>
+                )}
                 <p style={{ margin: 0, color: 'var(--ink-2)', fontSize: 13, lineHeight: 1.55, maxWidth: '52ch' }}>{tier.note}</p>
-                {tier.filled
-                  ? <div className="mono" style={{ fontSize: 10, letterSpacing: '.16em', color: 'var(--ink-3)' }}>
-                      FILLED · {tier.filled.toUpperCase()}
-                    </div>
-                  : <div className="mono" style={{ fontSize: 10, letterSpacing: '.16em', color: 'var(--accent-glow)' }}>ACCEPTING PROPOSALS</div>}
+                {!tier.filled && <div className="mono" style={{ fontSize: 10, letterSpacing: '.16em', color: 'var(--accent-glow)' }}>ACCEPTING PROPOSALS</div>}
               </div>
             </div>
           ))}
@@ -171,7 +175,12 @@ export function AboutSection() {
             <h2 className="display" style={{ fontSize: 'clamp(48px, 6vw, 88px)', margin: '16px 0 24px', lineHeight: 0.95 }}>ABOUT<br /><span style={{ background: 'linear-gradient(180deg, var(--ink), var(--chrome-2))', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>NEXGEN</span> <span style={{ color: 'var(--accent-glow)' }}>PLC.</span></h2>
             <p style={{ color: 'var(--ink-2)', fontSize: 16, lineHeight: 1.65, maxWidth: '44ch' }}>NexGen PLC is an Ethiopian esports and entertainment company building national-scale competitive platforms, broadcast productions and youth programming. ELECTROCUP 26 is our debut tournament — and the first of many.</p>
             <div style={{ marginTop: 28, display: 'flex', flexDirection: 'column', gap: 0, borderTop: '1px solid var(--line)' }}>
-              {[{ k: 'FOUNDED', v: '2025 · ADDIS ABABA' }, { k: 'FOCUS', v: 'ESPORTS · MEDIA · LIVE EVENTS' }, { k: 'REACH', v: 'ETHIOPIA · EAST AFRICA' }, { k: 'TEAM', v: '12 FULL-TIME · 40+ FREELANCE' }].map((r) => (
+              {/* No headcount. A number here answers a question nobody asked and
+                  invites the wrong comparison — a partner wants to know whether
+                  380 fixtures can actually be delivered, which is a question
+                  about production model, not desks. Says the true thing instead:
+                  a small permanent team, crew contracted per event. */}
+              {[{ k: 'FOUNDED', v: '2025 · ADDIS ABABA' }, { k: 'FOCUS', v: 'ESPORTS · MEDIA · LIVE EVENTS' }, { k: 'REACH', v: 'ETHIOPIA · EAST AFRICA' }, { k: 'STRUCTURE', v: 'CORE TEAM · CREWED PER EVENT' }].map((r) => (
                 <div key={r.k} style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 20, padding: '14px 0', borderBottom: '1px solid var(--line)' }}>
                   <span className="mono" style={{ fontSize: 10.5, letterSpacing: '.22em', color: 'var(--ink-3)' }}>{r.k}</span>
                   <span className="mono" style={{ fontSize: 11.5, letterSpacing: '.10em', color: 'var(--ink)' }}>{r.v}</span>

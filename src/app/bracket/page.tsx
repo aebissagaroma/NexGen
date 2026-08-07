@@ -25,7 +25,7 @@ export default function BracketPage() {
     <>
       <PageHeader />
       <div className="page-wrap">
-        <PageTitle file="FILE/04 · BRACKETS" title={<>QUALIFIER<br /><span style={{ color: 'var(--accent-glow)' }}>BRACKETS.</span></>} sub="Single-elimination, BO3 throughout. Brackets are drawn live on broadcast once registration closes; the date is announced nearer the time. Until then this view is empty." />
+        <PageTitle file="FILE/04 · BRACKETS" title={<>QUALIFIER<br /><span style={{ color: 'var(--accent-glow)' }}>BRACKETS.</span></>} sub="Single-elimination, BO3 throughout. Each bracket closes when its draw is announced, and is drawn live on broadcast. Until then this view is empty." />
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 32 }}>
           {CLUBS.map((c) => (
@@ -40,7 +40,7 @@ export default function BracketPage() {
             <span className="tk1" /><span className="tk2" />
             <span className="mono" style={{ fontSize: 10, letterSpacing: '.26em', color: 'var(--accent-glow)' }}>NOT YET DRAWN</span>
             <div className="display" style={{ fontSize: 'clamp(32px,5vw,56px)', lineHeight: 0.95 }}>{CLUBS.find((c) => c.code === club)?.name}<br /><span style={{ color: 'var(--ink-3)', fontStyle: 'italic' }}>DRAW DATE TBA</span></div>
-            <p style={{ color: 'var(--ink-2)', maxWidth: '46ch', fontSize: 14.5 }}>Each club bracket is a single-elimination knockout, BO3 throughout. Group A brackets are drawn at random live on broadcast once Group A closes — the date is announced on the day. Qualifier registration opens {REGISTRATION_OPENS_TIME}.</p>
+            <p style={{ color: 'var(--ink-2)', maxWidth: '46ch', fontSize: 14.5 }}>Each club bracket is a single-elimination knockout, BO3 throughout. The top-ten brackets close the moment their draw is announced, then draw at random live on broadcast. The other ten stay open until their own draw is called. No closing date is published in advance. Qualifier registration opens {REGISTRATION_OPENS_TIME}.</p>
           </div>
         ) : (
           <div style={{ display: 'flex', gap: 24, overflowX: 'auto', paddingBottom: 16 }}>

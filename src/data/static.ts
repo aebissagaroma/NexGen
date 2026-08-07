@@ -71,7 +71,7 @@ export const announcedPhases = (): TimelinePhase[] =>
 // placeholder to fill in. When a phase is announced, set its `date` and move the
 // `state: 'live'` marker to it.
 export const TIMELINE: TimelinePhase[] = [
-  { phase: 'Announcement', sub: 'Public Reveal', date: 'AUG 04, 2026', note: 'Done · this page is live', state: 'done' },
+  { phase: 'Announcement', sub: 'Public Reveal', date: 'AUG 09, 2026', note: 'public launch · with registration', state: 'upcoming' },
   { phase: 'Registration', sub: 'Open Sign-up', date: 'OPENS 09 AUG 2026 · 20:00', note: 'all twenty clubs · free to register', state: 'upcoming', justAnnounced: true },
   { phase: 'Bracket Draw', sub: 'Live Broadcast', date: 'TBA', note: 'Random draw · streamed', state: 'upcoming' },
   { phase: 'Qualifiers', sub: 'BO3 Knockouts', date: 'TBA', note: '20 winners surface', state: 'upcoming' },
