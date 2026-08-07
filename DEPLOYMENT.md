@@ -38,6 +38,9 @@ are gitignored.
 | `DATABASE_URL` | ✅ | Neon **pooled** connection string (host contains `-pooler`). |
 | `PGSSL` | ✅ | `true` for Neon (TLS **with certificate verification**). `no-verify` only for self-signed chains (Render internal). `false` = plain, local dev only. |
 | `SESSION_SECRET` | ✅ | 32-byte random; signs session cookies. Generate: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. Use a **fresh** value in prod. |
+| `ID_HASH_SECRET` | ✅ | Key for the identity-number HMAC, min 16 chars. Generate: `openssl rand -hex 32`. **Set once and never change it** — rotating it orphans every ID hash already stored, and everyone already registered could enter a second time. Not the same value as `SESSION_SECRET`. |
+| `TURNSTILE_SECRET_KEY` | ⛔️ optional | Cloudflare Turnstile, used to challenge an IP after 3+ rejected registration attempts. Unset = challenge skipped entirely, registration unaffected. **Do not set until the widget is rendered on the form** — the server would demand a token the page cannot supply. |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | ⛔️ | Turnstile site key, paired with the above. |
 | `ADMIN_EMAIL` | ✅ | Admin dashboard login. |
 | `ADMIN_PASSWORD` | ✅ | Change from any placeholder before launch. |
 | `SMTP_HOST` | ⛔️ optional | **Unset = dev mode** (OTP code returned in the API response, no email sent). Set it to send real OTP emails. |
@@ -50,6 +53,13 @@ are gitignored.
 > dev mode is disabled: if `SMTP_HOST` is **unset**, users request a code but
 > never receive one — **registration will not work**. You must set the SMTP vars
 > before real users can register. See step 5.
+
+> ⚠️ `ID_HASH_SECRET`, `SESSION_SECRET` and `DATABASE_URL` are checked at server
+> **start-up** (`src/instrumentation.ts`), and in production a missing one makes
+> the server refuse to boot rather than fail on the first person who registers.
+> This check deliberately does **not** run during `next build` — a build has no
+> production environment, so a green build tells you nothing about whether these
+> are set on the server. Set them in the project settings, not just in `.env`.
 
 ---
 

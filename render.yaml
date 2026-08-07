@@ -21,6 +21,12 @@ services:
         value: "no-verify"
       - key: SESSION_SECRET
         generateValue: true
+      # Deliberately NOT generateValue. A regenerated session secret only signs
+      # people out; a regenerated ID_HASH_SECRET orphans every identity hash
+      # already stored, and everyone already registered could enter a second
+      # time. Set it by hand once (`openssl rand -hex 32`) and leave it alone.
+      - key: ID_HASH_SECRET
+        sync: false
       - key: ADMIN_EMAIL
         sync: false
       - key: ADMIN_PASSWORD
