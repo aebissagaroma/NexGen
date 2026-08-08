@@ -5,7 +5,7 @@ import './globals.css';
 // drift from the page. It names no vehicle make or model — the prize is sealed
 // until it is announced on broadcast (src/lib/grand-prize.ts).
 const DESCRIPTION =
-  "NexGen PLC presents ELECTROCUP 26 — Ethiopia's first national FC 26 league. " +
+  "NexGen PLC presents ELECTROCUP 26 — Ethiopia's first national FC league. " +
   '20 clubs. 38 gameweeks. One champion. One electric car.';
 
 export const metadata: Metadata = {

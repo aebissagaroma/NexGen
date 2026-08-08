@@ -1,11 +1,10 @@
 // Privacy notice content.
 //
-// STATUS: identity numbers are NOT collected at registration at present — see
-// the "Your identity number" section, which says so plainly and then reproduces
-// NexGen's supplied wording as what will apply once collection begins. When the
-// ID field is reinstated on the registration form, that section has to be put
-// back into the present tense in the same edit, and the bullet for the code and
-// final four characters restored to "What we collect". Everything else is a
+// STATUS: identity numbers are NOT collected at registration. They are collected
+// once, before the bracket draw, through the confirm-your-entry flow — see the
+// "Your identity number" section. If that flow ever moves back into sign-up,
+// this section has to move back into the present tense in the same edit.
+// Everything else is a
 // factual description of what the code actually does, written from the schema
 // and the API routes, and is marked for review. It is NOT legal drafting.
 //
@@ -39,11 +38,11 @@ export const PRIVACY: PrivacySection[] = [
     id: 'identity',
     title: 'Your identity number',
     body: [
-      'We do not ask for your national identity number when you register. Registration is on your email address alone, and nothing about your ID is collected or stored at this stage.',
-      'We will ask for it later, to confirm your entry before the competition proper. We will announce when and how before that happens. At the Qualifier Center we check your photo ID in person and keep no copy or image of it.',
-      'When we do ask for it, this is what will happen to it. We use it only to make sure the same person cannot enter more than once. We convert it immediately into an irreversible code and store only that code — we never store, log or share the number itself. Alongside that code we keep the final four characters of the number, and nothing else from it. Officials use those four characters to tell two entries apart when someone speaks to us in person. The rest of the number is discarded the moment the code is produced, and the code cannot be turned back into it.',
+      'We do not ask for your national identity number when you register. Registration is on your email address alone, and nothing about your ID is collected or stored at that stage.',
+      'We ask for it before the bracket draw, to confirm your entry. An entry that is not confirmed by then is not included in the draw. You do this once, signed in, at nexgentournaments.com/confirm-entry — we never ask for it by direct message, phone call or email. At the Qualifier Center we check your photo ID in person and keep no copy or image of it.',
+      'This is what happens to it. We use it only to make sure the same person cannot enter more than once. We convert it immediately into an irreversible code and store only that code — we never store, log or share the number itself. Nothing else from the number is kept: it is discarded the moment the code is produced, and the code cannot be turned back into it.',
     ],
-    note: 'The handling described in the third paragraph is the wording supplied by NexGen, and is what will apply once identity numbers are collected. The first two paragraphs record that collection has not started yet, so the notice matches what the system does today.',
+    note: 'The handling described in the third paragraph is the wording supplied by NexGen. It is reproduced without the sentence about keeping the final four characters: the confirmation flow stores the irreversible code and nothing else, so that sentence would have described something the system does not do.',
   },
   {
     id: 'collect',
@@ -57,6 +56,7 @@ export const PRIVACY: PrivacySection[] = [
       'the club you choose to represent, and the gamertag you pick from the options we offer',
       'your city, if you choose to give it',
       'the date and time you accepted the competition rules and this notice',
+      'when you confirm your entry before the draw: an irreversible code derived from your identity number — never the number itself, and nothing else from it',
       'a password, which is stored only in scrambled (hashed) form and cannot be read back',
     ],
   },

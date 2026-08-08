@@ -11,7 +11,7 @@ import { AppealForm } from '@/components/AppealForm';
 import { parseDob, checkAge, GUARDIAN_NOTICE, MIN_AGE } from '@/lib/age';
 import { TAG_MAX } from '@/lib/gamertag';
 import { useRegistrationPhase } from '@/components/landing/primitives';
-import { REGISTRATION_OPENS_TIME, REGISTRATION_CLOSES_LABEL } from '@/data/static';
+import { REGISTRATION_OPENS_TIME } from '@/data/static';
 
 type Step = 'email' | 'otp' | 'details' | 'done';
 
@@ -182,7 +182,7 @@ function RegisterInner() {
             <p style={{ color: 'var(--ink-2)', fontSize: 15, lineHeight: 1.6, maxWidth: '44ch', margin: '18px auto 0' }}>
               {phase === 'before'
                 ? 'Come back when sign-ups open and you can pick your club and enter its qualifier bracket. Registration is free.'
-                : `Registration closed on ${REGISTRATION_CLOSES_LABEL}. Brackets are drawn live on broadcast — follow the announcements for what comes next.`}
+                : 'Registration has closed. Brackets are drawn live on broadcast — follow the announcements for what comes next.'}
             </p>
             <div style={{ marginTop: 28, display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
               <Link href="/" className="btn-ghost">BACK HOME</Link>

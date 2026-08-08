@@ -14,7 +14,8 @@ export const EA_NOTICE =
 export const NOTICES = [
   EA_NOTICE,
   'ELECTROCUP 26 is not affiliated with, endorsed by, or licensed by the Premier League or any club named on this site.',
-  'Played on EA SPORTS FC 26.',
+  'Played on EA SPORTS FC 26 and EA SPORTS FC 27.',
+  'ELECTROCUP® is a registered trade mark of NexGen PLC, Ethiopia.',
 ];
 
 export function SiteNotices({ style }: { style?: React.CSSProperties }) {

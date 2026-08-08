@@ -4,8 +4,8 @@
 import * as React from 'react';
 import { Css } from '@/components/Css';
 import Link from 'next/link';
-import { NexGenMark, Countdown, RegisterCta, useRegistrationPhase } from './primitives';
-import { TIMELINE, SPONSORS_TIERS, NEXGEN_PILLARS, REGISTRATION_OPENS, REGISTRATION_CLOSES, PARTNER_SELECTION_CLOSES, EXCLUDED_PARTNER_CATEGORIES } from '@/data/static';
+import { NexGenMark, Countdown, RegisterCta, useRegistrationPhase, useSitePhase } from './primitives';
+import { TIMELINE, SPONSORS_TIERS, NEXGEN_PILLARS, REGISTRATION_OPENS, PARTNER_SELECTION_CLOSES, EXCLUDED_PARTNER_CATEGORIES } from '@/data/static';
 import { NotifyBox } from './Announce';
 import { SiteNotices } from '@/components/SiteNotices';
 
@@ -17,9 +17,9 @@ export function ScheduleSection() {
           <div className="section-head-row">
             <div>
               <div className="marker">FILE/06 · CALENDAR</div>
-              <h2 className="section-title" style={{ marginTop: 16 }}>NINE MONTHS.<br /><span style={{ fontStyle: 'italic', color: 'var(--ink-3)' }}>ONE</span> CHAMPION.</h2>
+              <h2 className="section-title" style={{ marginTop: 16 }}>38 GAMEWEEKS.<br /><span style={{ fontStyle: 'italic', color: 'var(--ink-3)' }}>ONE</span> CHAMPION.</h2>
             </div>
-            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>Registration opens 05 August 2026 at 20:00 EAT and closes 01 September 2026. Each phase after that — the bracket draw, qualifiers, Draft Day and the season — is announced as it approaches, so check back or register to be told first.</p>
+            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>Registration opens 09 August 2026 at 20:00 EAT, for all twenty clubs. Each phase after that — the bracket draw, qualifiers, Draft Day and the season — is announced as it approaches, so check back or register to be told first.</p>
           </div>
         </div>
         <div data-reveal style={{ display: 'grid', gridTemplateColumns: `repeat(${TIMELINE.length}, 1fr)`, gap: 0, border: '1px solid var(--line)', background: 'var(--bg-1)', position: 'relative' }} className="timeline-grid">
@@ -56,7 +56,7 @@ export function SponsorsSection() {
               <div className="marker">FILE/07 · PARTNERS</div>
               <h2 className="section-title" style={{ marginTop: 16 }}>BUILT WITH<br /><span style={{ fontStyle: 'italic', color: 'var(--ink-3)' }}>BRANDS</span> THAT MOVE<br />ETHIOPIA.</h2>
             </div>
-            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>ELECTROCUP 26 is delivered with a tiered partner system covering banking, telecom, hospitality, retail and broadcast. Reach an audience of 18–34 across Ethiopia for nine months of consistent programming.</p>
+            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>ELECTROCUP 26 is delivered with a tiered partner system covering banking, telecom, hospitality, retail and broadcast. Reach an audience of 18–34 across Ethiopia across a full competitive season.</p>
           </div>
         </div>
 
@@ -69,17 +69,21 @@ export function SponsorsSection() {
                 {/* Seat counts stay off the page on purpose — see SPONSORS_TIERS. */}
                 <div className="mono" style={{ fontSize: 10, letterSpacing: '.14em', color: 'var(--ink-3)', marginTop: 4 }}>{tier.focus.toUpperCase()}</div>
               </div>
-              {/* A filled tier is drawn solid and dimmed; an open one keeps the
-                  dashed outline. The difference has to read at a glance, or
-                  "FILLED" is just more text on an identical-looking row. */}
-              <div className="stripe ticks" style={{ position: 'relative', padding: '20px 22px', border: tier.filled ? '1px solid var(--line-2)' : '1px dashed var(--line-2)', background: tier.filled ? 'var(--bg)' : 'var(--bg-1)', opacity: tier.filled ? 0.72 : 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6, minHeight: 76 }}>
+              {/* A signed partner is the strongest thing in this section, so it
+                  is drawn as a credit, not as struck-off inventory: gold rule,
+                  faint gold wash, name set large. Dimming it — which this used
+                  to do — buried the one brand that has actually committed under
+                  the four that have not. Open tiers keep the dashed outline. */}
+              <div className="stripe ticks" style={{ position: 'relative', padding: '20px 22px', border: tier.filled ? '1px solid rgba(var(--accent-rgb),0.42)' : '1px dashed var(--line-2)', background: tier.filled ? 'linear-gradient(90deg, rgba(var(--accent-rgb),0.07), rgba(var(--accent-rgb),0.02) 60%, transparent)' : 'var(--bg-1)', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6, minHeight: 76 }}>
                 <span className="tk1" /><span className="tk2" />
+                {tier.filled && (
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap', marginBottom: 2 }}>
+                    <span className="display-2" style={{ fontSize: 24, fontWeight: 800, color: 'var(--accent-glow)', lineHeight: 1.1 }}>{tier.filled.toUpperCase()}</span>
+                    <span className="mono" style={{ fontSize: 9.5, letterSpacing: '.22em', color: 'var(--ink-3)' }}>{tier.focus.toUpperCase()}</span>
+                  </div>
+                )}
                 <p style={{ margin: 0, color: 'var(--ink-2)', fontSize: 13, lineHeight: 1.55, maxWidth: '52ch' }}>{tier.note}</p>
-                {tier.filled
-                  ? <div className="mono" style={{ fontSize: 10, letterSpacing: '.16em', color: 'var(--ink-3)' }}>
-                      FILLED · {tier.filled.toUpperCase()}
-                    </div>
-                  : <div className="mono" style={{ fontSize: 10, letterSpacing: '.16em', color: 'var(--accent-glow)' }}>ACCEPTING PROPOSALS</div>}
+                {!tier.filled && <div className="mono" style={{ fontSize: 10, letterSpacing: '.16em', color: 'var(--accent-glow)' }}>ACCEPTING PROPOSALS</div>}
               </div>
             </div>
           ))}
@@ -171,7 +175,12 @@ export function AboutSection() {
             <h2 className="display" style={{ fontSize: 'clamp(48px, 6vw, 88px)', margin: '16px 0 24px', lineHeight: 0.95 }}>ABOUT<br /><span style={{ background: 'linear-gradient(180deg, var(--ink), var(--chrome-2))', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>NEXGEN</span> <span style={{ color: 'var(--accent-glow)' }}>PLC.</span></h2>
             <p style={{ color: 'var(--ink-2)', fontSize: 16, lineHeight: 1.65, maxWidth: '44ch' }}>NexGen PLC is an Ethiopian esports and entertainment company building national-scale competitive platforms, broadcast productions and youth programming. ELECTROCUP 26 is our debut tournament — and the first of many.</p>
             <div style={{ marginTop: 28, display: 'flex', flexDirection: 'column', gap: 0, borderTop: '1px solid var(--line)' }}>
-              {[{ k: 'FOUNDED', v: '2025 · ADDIS ABABA' }, { k: 'FOCUS', v: 'ESPORTS · MEDIA · LIVE EVENTS' }, { k: 'REACH', v: 'ETHIOPIA · EAST AFRICA' }, { k: 'TEAM', v: '12 FULL-TIME · 40+ FREELANCE' }].map((r) => (
+              {/* No headcount. A number here answers a question nobody asked and
+                  invites the wrong comparison — a partner wants to know whether
+                  380 fixtures can actually be delivered, which is a question
+                  about production model, not desks. Says the true thing instead:
+                  a small permanent team, crew contracted per event. */}
+              {[{ k: 'FOUNDED', v: '2025 · ADDIS ABABA' }, { k: 'FOCUS', v: 'ESPORTS · MEDIA · LIVE EVENTS' }, { k: 'REACH', v: 'ETHIOPIA · EAST AFRICA' }, { k: 'STRUCTURE', v: 'CORE TEAM · CREWED PER EVENT' }].map((r) => (
                 <div key={r.k} style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 20, padding: '14px 0', borderBottom: '1px solid var(--line)' }}>
                   <span className="mono" style={{ fontSize: 10.5, letterSpacing: '.22em', color: 'var(--ink-3)' }}>{r.k}</span>
                   <span className="mono" style={{ fontSize: 11.5, letterSpacing: '.10em', color: 'var(--ink)' }}>{r.v}</span>
@@ -203,22 +212,33 @@ export function AboutSection() {
 }
 
 export function RegisterCTA() {
-  const footerPhase = useRegistrationPhase();
+  const footerPhase = useSitePhase();
   return (
     <section id="register" className="section" style={{ background: 'var(--bg-1)', backgroundImage: 'radial-gradient(900px 500px at 50% 0%, rgba(var(--accent-rgb),0.18), transparent 60%)', paddingBlock: 'clamp(80px, 10vw, 140px)', position: 'relative', overflow: 'hidden' }}>
       <div className="grid-bg" style={{ position: 'absolute', inset: 0, opacity: 0.45, pointerEvents: 'none', maskImage: 'radial-gradient(ellipse at 50% 50%, black 10%, transparent 75%)', WebkitMaskImage: 'radial-gradient(ellipse at 50% 50%, black 10%, transparent 75%)' }} />
       <div className="wrap" style={{ position: 'relative', textAlign: 'center' }} data-reveal>
         <div className="marker" style={{ justifyContent: 'center' }}>FILE/09 · ENTER</div>
         <h2 className="display" style={{ fontSize: 'clamp(64px, 10vw, 144px)', margin: '20px 0 24px', lineHeight: 0.92 }}>EARN <span style={{ fontStyle: 'italic', color: 'var(--ink-3)' }}>YOUR</span> CLUB.<br /><span style={{ background: 'linear-gradient(180deg, var(--ink), var(--chrome-2))', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>DRIVE THE PRIZE.</span></h2>
-        <p style={{ color: 'var(--ink-2)', fontSize: 17, lineHeight: 1.6, maxWidth: '52ch', margin: '0 auto' }}>Registration opens 05 August 2026 at 20:00 EAT and closes 01 September. Verify your email, pick your club, and enter its qualifier bracket. Brackets are drawn live on broadcast — we announce the date once sign-ups close.</p>
+        <p style={{ color: 'var(--ink-2)', fontSize: 17, lineHeight: 1.6, maxWidth: '52ch', margin: '0 auto' }}>Registration opens 09 August 2026 at 20:00 EAT, for all twenty clubs. Verify your email, pick your club, and enter its qualifier bracket. The top-ten brackets close first, when their draw is announced — no date is given in advance.</p>
         <div style={{ marginTop: 36, display: 'flex', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
           <RegisterCta className="btn" style={{ padding: '18px 28px', fontSize: 13 }} label="REGISTER NOW →" />
           <a href="#format" className="btn-ghost" style={{ padding: '18px 28px', fontSize: 13 }}>READ THE FORMAT</a>
         </div>
+        {/* Counts down to the opening only. Once sign-ups are open there is no
+            second instant to count to — no closing date is ever published — so
+            the strip states what is open instead of running a timer to nothing. */}
         <div style={{ marginTop: 48, display: 'inline-flex', alignItems: 'center', gap: 14, padding: '12px 18px', border: '1px solid var(--line-2)', borderRadius: 999, background: 'rgba(0,0,0,0.4)' }}>
           <span className="tag tag-live" style={{ border: 0, padding: 0, background: 'transparent' }} />
-          <span className="mono" style={{ fontSize: 10.5, letterSpacing: '.18em', color: 'var(--ink-2)' }}>{footerPhase === 'before' ? 'REGISTRATION OPENS IN' : 'REGISTRATION CLOSES IN'}</span>
-          <Countdown target={footerPhase === 'before' ? REGISTRATION_OPENS : REGISTRATION_CLOSES} compact />
+          {footerPhase === 'before' ? (
+            <>
+              <span className="mono" style={{ fontSize: 10.5, letterSpacing: '.18em', color: 'var(--ink-2)' }}>REGISTRATION OPENS IN</span>
+              <Countdown target={REGISTRATION_OPENS} compact />
+            </>
+          ) : (
+            <span className="mono" style={{ fontSize: 10.5, letterSpacing: '.18em', color: 'var(--ink-2)' }}>
+              {footerPhase === 'group-b-only' ? 'GROUP A CLOSED · TEN BRACKETS STILL OPEN' : 'REGISTRATION OPEN · ALL TWENTY CLUBS'}
+            </span>
+          )}
         </div>
       </div>
     </section>
@@ -239,14 +259,13 @@ export function Footer() {
     { title: 'COMPANY', links: [
       { label: 'About NexGen', href: '/#about' },
       { label: 'Partners', href: '/#partners' },
-      { label: 'Press', href: null },
-      { label: 'Careers', href: null },
     ] },
     { title: 'FOLLOW', links: [
-      { label: 'TikTok @electrocup26', href: null },
-      { label: 'Instagram @electrocup26', href: null },
-      { label: 'YouTube /nexgenplc', href: null },
-      { label: 'Twitch /electrocup', href: null },
+      { label: 'TikTok @electrocup26', href: 'https://www.tiktok.com/@electrocup26' },
+      { label: 'Instagram @electrocup26', href: 'https://www.instagram.com/electrocup26' },
+      { label: 'Telegram t.me/electrocup26', href: 'https://t.me/electrocup26' },
+      { label: 'YouTube /nexgenplc', href: 'https://www.youtube.com/@nexgenplc' },
+      { label: 'Twitch /electrocup', href: 'https://www.twitch.tv/electrocup' },
     ] },
   ];
   return (
@@ -261,7 +280,7 @@ export function Footer() {
                 <div className="display-2" style={{ fontSize: 18, fontWeight: 800, marginTop: 2 }}>ELECTROCUP 26</div>
               </div>
             </div>
-            <p style={{ color: 'var(--ink-3)', fontSize: 13, lineHeight: 1.6, marginTop: 18, maxWidth: '40ch' }}>Ethiopia&apos;s national FC&nbsp;26 league. Twenty clubs. Thirty-eight gameweeks. One champion. Built and broadcast from Addis Ababa.</p>
+            <p style={{ color: 'var(--ink-3)', fontSize: 13, lineHeight: 1.6, marginTop: 18, maxWidth: '40ch' }}>Ethiopia&apos;s national FC league. Twenty clubs. Thirty-eight gameweeks. One champion. Built and broadcast from Addis Ababa.</p>
           </div>
           {COLS.map((col) => (
             <div key={col.title}>
@@ -280,6 +299,13 @@ export function Footer() {
         </div>
         <div style={{ marginTop: 48, paddingTop: 22, borderTop: '1px solid var(--line)' }}>
           <SiteNotices />
+        </div>
+        {/* Above the copyright on purpose: someone checking whether a message
+            or a payment request is genuine looks at the bottom of the page. */}
+        <div style={{ marginTop: 16 }} className="mono">
+          <Link href="/official-channels" style={{ fontSize: 10.5, letterSpacing: '.14em', color: 'var(--ink-2)', borderBottom: '1px solid var(--line-strong)', paddingBottom: 2 }}>
+            Official channels · Registration only at nexgentournaments.com
+          </Link>
         </div>
         <div style={{ marginTop: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           <div className="mono" style={{ fontSize: 10.5, letterSpacing: '.14em', color: 'var(--ink-4)' }}>© 2026 NEXGEN PLC · ADDIS ABABA, ETHIOPIA · ALL RIGHTS RESERVED</div>

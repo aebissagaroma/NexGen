@@ -3,8 +3,8 @@
 import * as React from 'react';
 import { Css } from '@/components/Css';
 import Link from 'next/link';
-import { NexGenMark, Countdown, Placeholder, RegisterCta, useGrandPrize, useRegistrationPhase } from './primitives';
-import { REGISTRATION_OPENS, REGISTRATION_OPENS_TIME, REGISTRATION_OPENS_LABEL, REGISTRATION_CLOSES, REGISTRATION_CLOSES_TIME, GRAND_PRIZE_SEALED } from '@/data/static';
+import { NexGenMark, Countdown, Placeholder, RegisterCta, useGrandPrize, useRegistrationPhase, useSitePhase } from './primitives';
+import { REGISTRATION_OPENS, REGISTRATION_OPENS_TIME, REGISTRATION_OPENS_LABEL, GRAND_PRIZE_SEALED } from '@/data/static';
 import { AnnouncementBanner } from './Announce';
 
 const NAV_LINKS = [
@@ -14,7 +14,7 @@ const NAV_LINKS = [
 ];
 
 export function Nav() {
-  const navPhase = useRegistrationPhase();
+  const navPhase = useSitePhase();
   const [scrolled, setScrolled] = React.useState(false);
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 32);
@@ -40,7 +40,15 @@ export function Nav() {
           ))}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span className="tag" style={{ color: 'var(--accent-glow)', borderColor: 'rgba(var(--accent-glow-rgb),0.35)' }}>ANNOUNCING · 2026 · {navPhase === 'open' ? 'REGISTRATION OPEN' : navPhase === 'before' ? `OPENS ${REGISTRATION_OPENS_LABEL}` : 'REGISTRATION CLOSED'}</span>
+          <span className="tag" style={{ color: 'var(--accent-glow)', borderColor: 'rgba(var(--accent-glow-rgb),0.35)' }}>
+            {navPhase === 'before'
+              ? `ANNOUNCING · 2026 · REGISTRATION OPENS ${REGISTRATION_OPENS_LABEL}`
+              : navPhase === 'open'
+                ? 'REGISTRATION OPEN · ALL TWENTY CLUBS · TOP-TEN BRACKETS CLOSE FIRST'
+                : navPhase === 'group-b-only'
+                  ? 'GROUP A CLOSED · TEN BRACKETS STILL OPEN'
+                  : 'REGISTRATION CLOSED'}
+          </span>
           <RegisterCta className="btn" style={{ padding: '10px 18px', fontSize: 11 }} />
         </div>
       </div>
@@ -67,7 +75,7 @@ export function Hero() {
             <span className="mono" style={{ fontSize: 11, letterSpacing: '.18em', color: 'var(--ink-3)' }}>ADDIS ABABA · ETHIOPIA</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <span className="mono" style={{ fontSize: 11, letterSpacing: '.18em', color: 'var(--ink-3)' }}>EDITION 01 · FC 26</span>
+            <span className="mono" style={{ fontSize: 11, letterSpacing: '.18em', color: 'var(--ink-3)' }}>EDITION 01</span>
             <span style={{ width: 1, height: 14, background: 'var(--line-strong)' }} />
             <span className="mono" style={{ fontSize: 11, letterSpacing: '.18em', color: 'var(--ink-3)' }}>SEASON 2026/27</span>
           </div>
@@ -77,7 +85,7 @@ export function Hero() {
         </div>
         <HeroDefault />
         <div data-reveal style={{ marginTop: 56, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0, borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)', paddingTop: 22, paddingBottom: 22 }} className="hero-metrics">
-          <Metric kicker="EDITION" value="01" sub="Inaugural · FC 26" />
+          <Metric kicker="EDITION" value="01" sub="Inaugural" />
           <Metric kicker="CLUB SLOTS" value="20" sub="All open" />
           <Metric kicker="GAMEWEEKS" value="38" sub="Round-robin season" />
           <Metric kicker="GRAND PRIZE" value="1 CAR" sub={prize ? prize.short : "Sealed · reveal on broadcast"} accent />
@@ -125,7 +133,7 @@ function HeroDefault() {
           <span style={{ fontFamily: 'var(--f-display)', fontWeight: 700, fontSize: 'clamp(20px, 2.4vw, 30px)', letterSpacing: '-0.01em', color: 'var(--ink-3)', fontStyle: 'italic' }}>DRIVE THE PRIZE.</span>
         </div>
         <p style={{ marginTop: 24, fontSize: 16, lineHeight: 1.6, color: 'var(--ink-2)', maxWidth: '52ch' }}>
-          Ethiopia&apos;s first national FC&nbsp;26 league. Twenty Premier League clubs. One slot per club. Earn your seat through open qualifiers — then play a full 38-gameweek season for the title and <strong style={{ color: 'var(--ink)' }}>{prize ? prize.name : 'a brand-new 100% electric car'}</strong>.
+          Ethiopia&apos;s first national FC league. Twenty top-flight English clubs. One slot per club. Earn your seat through open qualifiers — then play a full 38-gameweek season for the title and <strong style={{ color: 'var(--ink)' }}>{prize ? prize.name : 'a brand-new 100% electric car'}</strong>.
         </p>
         <div style={{ display: 'flex', gap: 14, marginTop: 32, flexWrap: 'wrap' }}>
           <RegisterCta className="btn" label="REGISTER NOW →" />
@@ -142,31 +150,79 @@ function HeroDefault() {
 }
 
 function CountdownPanel() {
-  // One panel, two jobs. Before sign-ups open it counts down to the start;
-  // from the moment they open it counts down to the deadline, so the timer is
-  // never showing a moment that has already passed.
-  const phase = useRegistrationPhase();
+  // One panel, two jobs. Before sign-ups open it counts down to the start. Once
+  // they are open there is nothing left to count down to — no closing instant
+  // exists — so it becomes a live tally of entries taken instead.
+  const phase = useSitePhase();
   const before = phase === 'before';
-  const target = before ? REGISTRATION_OPENS : REGISTRATION_CLOSES;
+
+  if (before) {
+    return (
+      <div className="ticks" style={{ position: 'relative', padding: 24, background: 'linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.005))', border: '1px solid var(--line-2)' }}>
+        <span className="tk1" /><span className="tk2" />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
+          <div>
+            <div className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--ink-3)' }}>REGISTRATION</div>
+            <div className="display-2" style={{ fontSize: 22, marginTop: 4, fontWeight: 800, letterSpacing: '.02em' }}>OPENS IN</div>
+          </div>
+          <span className="tag" style={{ color: 'var(--accent-glow)', borderColor: 'rgba(var(--accent-glow-rgb),0.35)' }}>SIGN-UP OPENING</span>
+        </div>
+        <Countdown target={REGISTRATION_OPENS} />
+        <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px dashed var(--line-2)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+          <span className="mono" style={{ fontSize: 11, letterSpacing: '.14em', color: 'var(--ink-3)' }}>OPENS {REGISTRATION_OPENS_TIME}</span>
+          <span className="mono" style={{ fontSize: 11, letterSpacing: '.14em', color: 'var(--ink-3)' }}>ALL TWENTY CLUBS · FREE TO REGISTER</span>
+        </div>
+      </div>
+    );
+  }
+
+  return <EntriesPanel groupAClosed={phase === 'group-b-only'} />;
+}
+
+/**
+ * Live entry tally, shown from the moment sign-ups open.
+ *
+ * Real database numbers only — this reads the same /api/clubs counts the grid
+ * does. It replaces the countdown rather than sitting beside it, because a
+ * timer here would need a closing instant, and publishing one is exactly what
+ * the competition does not do.
+ */
+function EntriesPanel({ groupAClosed }: { groupAClosed: boolean }) {
+  const [total, setTotal] = React.useState<number | null>(null);
+  React.useEffect(() => {
+    const load = () => fetch('/api/clubs')
+      .then((r) => r.json())
+      .then((d: { clubs?: { regs?: number }[] }) => {
+        if (d.clubs?.length) setTotal(d.clubs.reduce((s, c) => s + (c.regs ?? 0), 0));
+      })
+      .catch(() => {});
+    load();
+    const t = setInterval(load, 30000);
+    return () => clearInterval(t);
+  }, []);
+
   return (
     <div className="ticks" style={{ position: 'relative', padding: 24, background: 'linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.005))', border: '1px solid var(--line-2)' }}>
       <span className="tk1" /><span className="tk2" />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
         <div>
           <div className="mono" style={{ fontSize: 10, letterSpacing: '.22em', color: 'var(--ink-3)' }}>REGISTRATION</div>
-          <div className="display-2" style={{ fontSize: 22, marginTop: 4, fontWeight: 800, letterSpacing: '.02em' }}>
-            {phase === 'closed' ? 'CLOSED' : before ? 'OPENS IN' : 'CLOSES IN'}
-          </div>
+          <div className="display-2" style={{ fontSize: 22, marginTop: 4, fontWeight: 800, letterSpacing: '.02em' }}>OPEN NOW</div>
         </div>
         <span className="tag" style={{ color: 'var(--accent-glow)', borderColor: 'rgba(var(--accent-glow-rgb),0.35)' }}>
-          {before ? 'SIGN-UP OPENING' : phase === 'open' ? 'SIGN-UP CLOSING' : 'SIGN-UP CLOSED'}
+          {groupAClosed ? 'GROUP B OPEN' : 'SIGN-UP OPEN'}
         </span>
       </div>
-      <Countdown target={target} />
+      <div className="display num" style={{ fontSize: 'clamp(48px,7vw,84px)', lineHeight: 1, color: 'var(--accent-glow)' }}>
+        {total === null ? '—' : total}
+      </div>
+      <div className="mono" style={{ fontSize: 10.5, letterSpacing: '.16em', color: 'var(--ink-3)', marginTop: 8, lineHeight: 1.6 }}>
+        {groupAClosed
+          ? 'ENTRIES SO FAR · THE TOP-TEN BRACKETS ARE CLOSED · TEN CLUBS REMAIN OPEN'
+          : 'ENTRIES SO FAR · TOP-TEN BRACKETS CLOSE WHEN THEIR DRAW IS ANNOUNCED'}
+      </div>
       <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px dashed var(--line-2)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-        <span className="mono" style={{ fontSize: 11, letterSpacing: '.14em', color: 'var(--ink-3)' }}>
-          {before ? `OPENS ${REGISTRATION_OPENS_TIME}` : `CLOSES ${REGISTRATION_CLOSES_TIME}`}
-        </span>
+        <span className="mono" style={{ fontSize: 11, letterSpacing: '.14em', color: 'var(--ink-3)' }}>ALL TWENTY CLUBS · FREE TO REGISTER</span>
         <span className="mono" style={{ fontSize: 11, letterSpacing: '.14em', color: 'var(--ink-3)' }}>20 CLUB BRACKETS · ETHIOPIA</span>
       </div>
     </div>
