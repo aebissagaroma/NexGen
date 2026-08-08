@@ -5,6 +5,13 @@
 -- Keep in step with CLUBS in src/data/static.ts — code, name, city and group all
 -- have to agree, and every club change must update both files plus this seed.
 --
+-- This file is the desired state for a NEW database. An existing one is moved by
+-- a numbered file in db/migrations, which npm run db:migrate applies once and
+-- records. The two overlap on purpose: a fresh database should not have to
+-- replay history to arrive at today's list, and a live one must not be reset to
+-- get there. So a club change needs BOTH — edit the list here, and add a
+-- migration that moves databases already carrying the old one.
+--
 -- grp: 'A' is last season's top ten, whose brackets close first when their draw
 -- is announced. 'B' is everyone else, including the three clubs promoted this
 -- summer, and stays open after Group A closes.
