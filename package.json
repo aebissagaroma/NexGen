@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "db:migrate": "node scripts/migrate.mjs",
+    "db:migrate:deploy": "node scripts/deploy-migrate.mjs",
     "db:seed": "node scripts/seed.mjs",
     "db:reset": "node scripts/migrate.mjs && node scripts/seed.mjs",
     "db:cleanup": "node scripts/cleanup.mjs",
