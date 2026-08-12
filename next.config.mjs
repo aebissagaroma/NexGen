@@ -1,3 +1,5 @@
+import { withSentryConfig } from '@sentry/nextjs';
+
 const isDev = process.env.NODE_ENV === 'development';
 
 // Content-Security-Policy.
@@ -14,7 +16,10 @@ const csp = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   "img-src 'self' data: blob:",
-  `connect-src 'self'${isDev ? ' ws:' : ''}`,
+  // Sentry ingest is listed even when the DSN is unset — an unused allowance
+  // costs nothing, and forgetting this line is the classic way error reporting
+  // silently never arrives. Vercel Analytics posts same-origin ('self').
+  `connect-src 'self' https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io${isDev ? ' ws:' : ''}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -65,4 +70,11 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+// Sentry's wrapper injects the client config and (only when SENTRY_AUTH_TOKEN
+// is present) uploads sourcemaps at build. With no token it skips the upload
+// and the build behaves exactly as before, so this is safe to keep permanently.
+export default withSentryConfig(nextConfig, {
+  silent: true,
+  telemetry: false,
+  disableLogger: true,
+});

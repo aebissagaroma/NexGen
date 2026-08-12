@@ -36,6 +36,19 @@ function checkRequiredEnv(): string[] {
 }
 
 export async function register() {
+  // Error tracking. Inert until SENTRY_DSN is set — the import stays lazy so a
+  // deployment without Sentry configured carries no runtime cost. Runs on both
+  // the node and edge runtimes (middleware errors land in Sentry too).
+  if (process.env.SENTRY_DSN) {
+    const Sentry = await import('@sentry/nextjs');
+    Sentry.init({
+      dsn: process.env.SENTRY_DSN,
+      environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
+      // Errors are the point; keep transaction tracing cheap.
+      tracesSampleRate: 0.1,
+    });
+  }
+
   if (process.env.NEXT_RUNTIME !== 'nodejs') return;
 
   const problems = checkRequiredEnv();

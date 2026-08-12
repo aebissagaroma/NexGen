@@ -316,3 +316,35 @@ What's enforced in code (all verified by live tests):
 
 Registration fields, payment gateway, multi-admin, and bracket/standings
 ingestion remain open — see the main `README.md` and inline `TODO(dev)` markers.
+
+---
+
+## 11. Monitoring & the staff panel
+
+**Health.** `GET /api/health` returns `{ok, db, dbMs}` — 200 when the database
+answers, 503 when it doesn't. Point an external uptime monitor at it.
+
+**Uptime (do this — 5 minutes):** create a free monitor at UptimeRobot or
+BetterStack checking BOTH `https://<site>/` and `https://<site>/api/health`
+every 1–5 minutes, with e-mail (and ideally Telegram) alerts. An external
+service is non-negotiable: the site cannot report its own death.
+
+**Errors (Sentry).** Wired but inert until configured. Create a free project at
+sentry.io → set `SENTRY_DSN` and `NEXT_PUBLIC_SENTRY_DSN` in Vercel → redeploy.
+Optional `SENTRY_AUTH_TOKEN` uploads sourcemaps for readable stack traces.
+Session replay is deliberately off (the register form carries personal data).
+In Sentry, set an alert rule on first-seen errors and error-rate spikes.
+
+**Traffic.** `@vercel/analytics` is in the layout — enable Web Analytics on the
+Vercel project (Analytics tab) and numbers appear. Also enable Vercel usage
+alerts (Settings → Usage), and confirm the project is on the Pro plan:
+commercial use is outside the Hobby terms, and Pro raises the function limits
+registration-night traffic will lean on.
+
+**Database.** Neon's dashboard covers connections/storage/compute. The
+registrations-per-day view on the staff panel's Overview tab is the
+business-level pulse.
+
+**Staff panel.** Lives in `admin/` — a separate app on the same repo, deployed
+as a second Vercel project (Root Directory = `admin`), with per-person accounts
+(`npm run admin:create`). Full instructions: `admin/README.md`.

@@ -6,8 +6,14 @@ import { PageFooter } from '@/components/SiteNotices';
 import { CLUBS, REGISTRATION_OPENS_TIME } from '@/data/static';
 
 interface Match { id: string; club_code: string; round: string; slot: number; player_a: string | null; player_b: string | null; score_a: number | null; score_b: number | null; winner: string | null; }
-const ROUND_ORDER = ['RD256', 'RD64', 'RD16', 'QF', 'FINAL'];
-const ROUND_LABEL: Record<string, string> = { RD256: 'Round of 256', RD64: 'Round of 64', RD16: 'Round of 16', QF: 'Quarter-finals', FINAL: 'Final' };
+// The complete single-elimination ladder. The draw generator (admin panel)
+// labels each round by its player count, so every gap has to exist here —
+// a round whose label is missing from this list would silently not render.
+const ROUND_ORDER = ['RD256', 'RD128', 'RD64', 'RD32', 'RD16', 'QF', 'SF', 'FINAL'];
+const ROUND_LABEL: Record<string, string> = {
+  RD256: 'Round of 256', RD128: 'Round of 128', RD64: 'Round of 64', RD32: 'Round of 32',
+  RD16: 'Round of 16', QF: 'Quarter-finals', SF: 'Semi-finals', FINAL: 'Final',
+};
 
 export default function BracketPage() {
   const [club, setClub] = React.useState('MCI');
