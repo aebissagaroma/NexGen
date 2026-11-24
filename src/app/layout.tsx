@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Analytics } from '@vercel/analytics/react';
 import './globals.css';
 
 // One description, reused for Open Graph and Twitter so a share card can never
@@ -33,7 +34,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800;900&family=Saira:wght@500;600;700;800&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        {/* Traffic metrics. No-op locally; activates once Web Analytics is
+            enabled on the Vercel project. Posts same-origin (/_vercel/insights),
+            so the CSP's connect-src 'self' already allows it. */}
+        <Analytics />
+      </body>
     </html>
   );
 }

@@ -370,3 +370,26 @@ CREATE TABLE IF NOT EXISTS standings (
   points      INT NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_standings_points ON standings (points DESC);
+
+-- ── Admin accounts (staff panel) ─────────────────────────────────────────────
+-- Per-person staff logins for the admin panel (the separate app in admin/),
+-- replacing the single ADMIN_EMAIL/ADMIN_PASSWORD env credential — individual
+-- accounts mean one person leaving doesn't force a shared-password rotation,
+-- and last_login_at says who was actually in.
+-- Passwords use the same scrypt format as players (src/lib/password.ts).
+-- Accounts are created with scripts/create-admin.mjs, never self-service.
+CREATE TABLE IF NOT EXISTS admins (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email         TEXT UNIQUE NOT NULL,          -- normalised lowercase
+  full_name     TEXT,
+  password_hash TEXT NOT NULL,
+  role          TEXT NOT NULL DEFAULT 'staff', -- 'owner' | 'staff'
+  -- Disabled instead of deleted, so audit trails keep pointing at a real row.
+  disabled      BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  last_login_at TIMESTAMPTZ
+);
+DO $do$ BEGIN
+  ALTER TABLE admins ADD CONSTRAINT admins_role_valid CHECK (role IN ('owner', 'staff'));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $do$;

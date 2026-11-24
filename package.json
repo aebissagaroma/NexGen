@@ -14,9 +14,12 @@
     "db:reset": "node scripts/migrate.mjs && node scripts/seed.mjs",
     "db:cleanup": "node scripts/cleanup.mjs",
     "db:duplicates": "node scripts/duplicates.mjs",
-    "email:test": "node scripts/test-email.mjs"
+    "email:test": "node scripts/test-email.mjs",
+    "admin:create": "node scripts/create-admin.mjs"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.70.0",
+    "@vercel/analytics": "^2.0.1",
     "next": "^14.2.35",
     "nodemailer": "^9.0.3",
     "pg": "8.12.0",
