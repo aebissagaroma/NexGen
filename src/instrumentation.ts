@@ -41,11 +41,14 @@ export async function register() {
   // the node and edge runtimes (middleware errors land in Sentry too).
   if (process.env.SENTRY_DSN) {
     const Sentry = await import('@sentry/nextjs');
+    const { scrubEvent } = await import('@/lib/sentry-scrub');
     Sentry.init({
       dsn: process.env.SENTRY_DSN,
       environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
       // Errors are the point; keep transaction tracing cheap.
       tracesSampleRate: 0.1,
+      sendDefaultPii: false,
+      beforeSend: scrubEvent,
     });
   }
 

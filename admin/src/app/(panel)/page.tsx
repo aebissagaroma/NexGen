@@ -26,7 +26,7 @@ export default async function Overview() {
   const clubs = await query<{ code: string; name: string; grp: string; regs: number; confirmed: number }>(
     `SELECT c.code, c.name, c.grp,
             COUNT(r.id)::int AS regs,
-            COUNT(r.id) FILTER (WHERE r.status = 'confirmed')::int AS confirmed
+            COUNT(r.id) FILTER (WHERE r.id_status = 'confirmed' AND r.status <> 'rejected')::int AS confirmed
      FROM clubs c LEFT JOIN registrations r ON r.club_code = c.code
      GROUP BY c.code, c.name, c.grp, c.sort ORDER BY c.grp, c.sort`);
 

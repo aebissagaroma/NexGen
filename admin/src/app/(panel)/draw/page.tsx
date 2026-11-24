@@ -16,7 +16,7 @@ const ROUND_ORDER = Object.keys(ROUND_LABEL);
 export default async function DrawPage({ searchParams }: { searchParams: { club?: string } }) {
   const clubs = await query<{ code: string; name: string; grp: string; confirmed: number; drawn: boolean }>(
     `SELECT c.code, c.name, c.grp,
-            (SELECT COUNT(*) FROM registrations r WHERE r.club_code = c.code AND r.status = 'confirmed' AND r.gamertag IS NOT NULL)::int AS confirmed,
+            (SELECT COUNT(*) FROM registrations r WHERE r.club_code = c.code AND r.id_status = 'confirmed' AND r.status <> 'rejected' AND r.gamertag IS NOT NULL)::int AS confirmed,
             EXISTS (SELECT 1 FROM matches m WHERE m.club_code = c.code) AS drawn
      FROM clubs c ORDER BY c.grp, c.sort`,
   );

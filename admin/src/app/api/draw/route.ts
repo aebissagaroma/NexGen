@@ -21,7 +21,9 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 // POST /api/draw { clubCode } — generate the knockout bracket for one club from
-// its CONFIRMED entries (unconfirmed entries are not in the draw, by rule).
+// its ID-CONFIRMED entries (id_status = 'confirmed'; unconfirmed and void entries
+// are not in the draw, by rule). `status` is the ops workflow and only excludes
+// rejected entries here.
 //
 // Writes every round up front: round 1 holds the drawn players (byes resolve
 // immediately), later rounds are empty slots that fill as results are entered.
@@ -43,13 +45,13 @@ export async function POST(req: Request) {
 
   const entrants = await query<{ gamertag: string }>(
     `SELECT gamertag FROM registrations
-     WHERE club_code = $1 AND status = 'confirmed' AND gamertag IS NOT NULL
+     WHERE club_code = $1 AND id_status = 'confirmed' AND status <> 'rejected' AND gamertag IS NOT NULL
      ORDER BY created_at`,
     [clubCode],
   );
   if (entrants.length < 2) {
     return NextResponse.json(
-      { error: `Only ${entrants.length} confirmed ${entrants.length === 1 ? 'entry' : 'entries'} — a draw needs at least 2. Confirm entries on the Registrations tab first.` },
+      { error: `Only ${entrants.length} confirmed ${entrants.length === 1 ? 'entry' : 'entries'} — a draw needs at least 2. Entrants confirm with their ID number on the site before the draw.` },
       { status: 400 },
     );
   }
