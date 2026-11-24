@@ -534,7 +534,7 @@ export function Teaser({ fit = 'width', standalone = false }: { fit?: Fit; stand
                     <div className="tz-partner">Official vehicle partner &nbsp;·&nbsp; <b>Kairos Addis Auto</b></div>
                     <p className="tz-notice">
                       Not affiliated with, endorsed by or sponsored by Electronic Arts Inc. or its licensors,
-                      nor by the Premier League or any club. Played on EA SPORTS FC 26 and EA SPORTS FC 27.
+                      nor by the Premier League or any club. Played on EA SPORTS FC 27.
                     </p>
                   </div>
                 </div>

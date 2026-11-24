@@ -19,7 +19,7 @@ export function ScheduleSection() {
               <div className="marker">FILE/06 · CALENDAR</div>
               <h2 className="section-title" style={{ marginTop: 16 }}>38 GAMEWEEKS.<br /><span style={{ fontStyle: 'italic', color: 'var(--ink-3)' }}>ONE</span> CHAMPION.</h2>
             </div>
-            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>Registration opens 09 August 2026 at 20:00 EAT, for all twenty clubs. Each phase after that — the bracket draw, qualifiers, Draft Day and the season — is announced as it approaches, so check back or register to be told first.</p>
+            <p className="section-sub" style={{ alignSelf: 'flex-end' }}>Registration opens 26 December 2026 at 20:00 EAT, for all twenty clubs. Each phase after that — the bracket draw, qualifiers, Draft Day and the season — is announced as it approaches, so check back or register to be told first.</p>
           </div>
         </div>
         <div data-reveal style={{ display: 'grid', gridTemplateColumns: `repeat(${TIMELINE.length}, 1fr)`, gap: 0, border: '1px solid var(--line)', background: 'var(--bg-1)', position: 'relative' }} className="timeline-grid">
@@ -219,7 +219,7 @@ export function RegisterCTA() {
       <div className="wrap" style={{ position: 'relative', textAlign: 'center' }} data-reveal>
         <div className="marker" style={{ justifyContent: 'center' }}>FILE/09 · ENTER</div>
         <h2 className="display" style={{ fontSize: 'clamp(64px, 10vw, 144px)', margin: '20px 0 24px', lineHeight: 0.92 }}>EARN <span style={{ fontStyle: 'italic', color: 'var(--ink-3)' }}>YOUR</span> CLUB.<br /><span style={{ background: 'linear-gradient(180deg, var(--ink), var(--chrome-2))', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>DRIVE THE PRIZE.</span></h2>
-        <p style={{ color: 'var(--ink-2)', fontSize: 17, lineHeight: 1.6, maxWidth: '52ch', margin: '0 auto' }}>Registration opens 09 August 2026 at 20:00 EAT, for all twenty clubs. Verify your email, pick your club, and enter its qualifier bracket. The top-ten brackets close first, when their draw is announced — no date is given in advance.</p>
+        <p style={{ color: 'var(--ink-2)', fontSize: 17, lineHeight: 1.6, maxWidth: '52ch', margin: '0 auto' }}>Registration opens 26 December 2026 at 20:00 EAT, for all twenty clubs. Verify your email, pick your club, and enter its qualifier bracket. The top-ten brackets close first, when their draw is announced — no date is given in advance.</p>
         <div style={{ marginTop: 36, display: 'flex', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
           <RegisterCta className="btn" style={{ padding: '18px 28px', fontSize: 13 }} label="REGISTER NOW →" />
           <a href="#format" className="btn-ghost" style={{ padding: '18px 28px', fontSize: 13 }}>READ THE FORMAT</a>

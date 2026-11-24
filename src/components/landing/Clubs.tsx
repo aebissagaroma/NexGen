@@ -100,12 +100,6 @@ export function ClubsSection() {
                   <ClubCell key={c.code} club={c} idx={i} phase={phase} standIn={standInOf(c)} />
                 ))}
               </div>
-
-              {g === 'B' && (
-                <p className="mono" data-reveal style={{ fontSize: 10.5, letterSpacing: '.06em', color: 'var(--ink-4)', lineHeight: 1.7, margin: '14px 0 0', maxWidth: '86ch' }}>
-                  Qualifiers are played on FC 26, where these three clubs are not selectable, so each uses a stand-in — the club it replaced. You win the club slot itself, and represent your real club from Gameweek 1 on FC 27.
-                </p>
-              )}
             </div>
           );
         })}

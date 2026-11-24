@@ -9,12 +9,12 @@
 // replace this string with theirs verbatim rather than paraphrasing it.
 export const EA_NOTICE =
   'ELECTROCUP 26 is not affiliated with, endorsed by, or sponsored by Electronic Arts Inc. ' +
-  'or its licensors. EA SPORTS FC 26 is a trademark of Electronic Arts Inc.';
+  'or its licensors. EA SPORTS FC 27 is a trademark of Electronic Arts Inc.';
 
 export const NOTICES = [
   EA_NOTICE,
   'ELECTROCUP 26 is not affiliated with, endorsed by, or licensed by the Premier League or any club named on this site.',
-  'Played on EA SPORTS FC 26 and EA SPORTS FC 27.',
+  'Played on EA SPORTS FC 27.',
   'ELECTROCUP® is a registered trade mark of NexGen PLC, Ethiopia.',
 ];
 
