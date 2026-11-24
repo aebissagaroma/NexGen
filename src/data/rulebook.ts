@@ -52,7 +52,7 @@ export const RULEBOOK: RuleSection[] = [
     title: 'Match rules',
     blurb: 'Identical hardware and identical conditions, every match.',
     clauses: [
-      { n: '6.1', title: 'Game and platform', body: 'Qualifiers are played on EA SPORTS FC 26; the Season is played on EA SPORTS FC 27. Both on PlayStation 5, on hardware supplied by the Organiser. Three clubs promoted this summer are not selectable in FC 26, so their Brackets are played using the club each replaced \u2014 Coventry City as West Ham United, Ipswich Town as Burnley, Hull City as Wolverhampton. The entrant wins the Club Slot itself and represents their real club from Gameweek 1.' },
+      { n: '6.1', title: 'Game and platform', body: 'Qualifiers and the Season are both played on EA SPORTS FC 27, on PlayStation 5, on hardware supplied by the Organiser.' },
       { n: '6.2', title: 'Game mode', body: 'Kick Off.' },
       { n: '6.3', title: 'Match settings', body: 'Half length, difficulty, game speed, extra time and penalties, squad and formation restrictions and custom tactics rules are published in full before qualifiers begin and are fixed for the duration of the Competition.' },
       { n: '6.4', title: 'Controllers', body: 'Tournament-supplied controllers are provided at every station. Entrants may instead use their own controller, subject to inspection and approval by an Official before the Tie begins. Controllers with macro, turbo or programmable functions are not permitted. An entrant whose own controller fails during a match continues on tournament-supplied hardware; the match is not restarted.' },

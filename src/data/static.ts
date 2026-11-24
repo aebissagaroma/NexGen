@@ -16,10 +16,9 @@ export interface StaticClub {
   /**
    * The club whose squad stands in during qualifiers.
    *
-   * Qualifiers are played on FC 26, where the three clubs promoted this summer
-   * are not selectable. Each uses the club it replaced. The player still wins
-   * the real club's slot and represents it from Gameweek 1 on FC 27. Undefined
-   * for every club that is selectable in FC 26.
+   * Unused since qualifiers moved to FC 27 (Nov 2026), where every 2026/27
+   * club is selectable. Kept so a stand-in can be shown again if a club is
+   * ever missing from the game used for qualifiers.
    */
   standIn?: string;
 }
@@ -44,9 +43,9 @@ export const CLUBS: StaticClub[] = [
   { code: 'EVE', name: 'Everton', city: 'Liverpool', group: 'B' },
   { code: 'NFO', name: 'Nottingham Forest', city: 'Nottingham', group: 'B' },
   { code: 'LEE', name: 'Leeds United', city: 'Leeds', group: 'B' },
-  { code: 'COV', name: 'Coventry City', city: 'Coventry', group: 'B', standIn: 'West Ham United' },
-  { code: 'IPS', name: 'Ipswich Town', city: 'Ipswich', group: 'B', standIn: 'Burnley' },
-  { code: 'HUL', name: 'Hull City', city: 'Hull', group: 'B', standIn: 'Wolverhampton' },
+  { code: 'COV', name: 'Coventry City', city: 'Coventry', group: 'B' },
+  { code: 'IPS', name: 'Ipswich Town', city: 'Ipswich', group: 'B' },
+  { code: 'HUL', name: 'Hull City', city: 'Hull', group: 'B' },
 ];
 
 export const CLUBS_A = CLUBS.filter((c) => c.group === 'A');
@@ -71,8 +70,8 @@ export const announcedPhases = (): TimelinePhase[] =>
 // placeholder to fill in. When a phase is announced, set its `date` and move the
 // `state: 'live'` marker to it.
 export const TIMELINE: TimelinePhase[] = [
-  { phase: 'Announcement', sub: 'Public Reveal', date: 'AUG 09, 2026', note: 'public launch · with registration', state: 'upcoming' },
-  { phase: 'Registration', sub: 'Open Sign-up', date: 'OPENS 09 AUG 2026 · 20:00', note: 'all twenty clubs · free to register', state: 'upcoming', justAnnounced: true },
+  { phase: 'Announcement', sub: 'Public Reveal', date: 'DEC 26, 2026', note: 'public launch · with registration', state: 'upcoming' },
+  { phase: 'Registration', sub: 'Open Sign-up', date: 'OPENS 26 DEC 2026 · 20:00', note: 'all twenty clubs · free to register', state: 'upcoming', justAnnounced: true },
   { phase: 'Bracket Draw', sub: 'Live Broadcast', date: 'TBA', note: 'Random draw · streamed', state: 'upcoming' },
   { phase: 'Qualifiers', sub: 'BO3 Knockouts', date: 'TBA', note: '20 winners surface', state: 'upcoming' },
   { phase: 'Draft Day', sub: 'Live Broadcast', date: 'TBA', note: 'Host venue · Addis Ababa', state: 'upcoming' },
@@ -160,12 +159,12 @@ export const NEXGEN_PILLARS: Pillar[] = [
 // Registration has a window: it opens, then it closes. Both ends live here so
 // the countdown, every CTA and every status label read the same two instants and
 // cannot drift apart.
-export const REGISTRATION_OPENS = new Date('2026-08-09T20:00:00+03:00').getTime();
+export const REGISTRATION_OPENS = new Date('2026-12-26T20:00:00+03:00').getTime();
 
 // Display forms of the timestamp above, kept beside it for the same reason.
-export const REGISTRATION_OPENS_LABEL = '09 AUG 2026';
-export const REGISTRATION_OPENS_SHORT = 'AUG 09';
-export const REGISTRATION_OPENS_TIME = '09 AUG 2026 · 20:00 EAT';
+export const REGISTRATION_OPENS_LABEL = '26 DEC 2026';
+export const REGISTRATION_OPENS_SHORT = 'DEC 26';
+export const REGISTRATION_OPENS_TIME = '26 DEC 2026 · 20:00 EAT';
 
 // There is deliberately NO closing instant, and no REGISTRATION_CLOSES constant
 // to reintroduce one. Brackets close in two groups, each when its own draw is

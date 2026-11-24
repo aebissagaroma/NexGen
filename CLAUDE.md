@@ -8,7 +8,7 @@ ELECTROCUP 26 — Ethiopia's first national FC league, organised by NexGen PLC (
 
 ## Registration model (current, decided)
 
-- All twenty brackets open together: **09 Aug 2026, 20:00 EAT**. Both instants live in `static.ts`; every label reads from them.
+- All twenty brackets open together: **26 Dec 2026, 20:00 EAT**. Both instants live in `static.ts`; every label reads from them.
 - **No closing date is ever published.** No capacity limits, no places-remaining counters.
 - Brackets close in two groups:
   - **GROUP A — closes first, when its draw is announced:** Arsenal, Manchester City, Manchester United, Aston Villa, Liverpool, Bournemouth, Sunderland, Brighton & Hove Albion, Brentford, Chelsea (last season's top ten).
@@ -20,8 +20,8 @@ ELECTROCUP 26 — Ethiopia's first national FC league, organised by NexGen PLC (
 ## Clubs
 
 - Club list follows the **current (2026/27) Premier League** — includes Coventry City, Ipswich Town, Hull City; excludes West Ham, Wolves, Burnley.
-- Qualifiers are played on **EA SPORTS FC 26**; the season on **EA SPORTS FC 27**. The "26" in ELECTROCUP 26 / EC/26 / EDITION 01 is the edition number, not the game — never change those.
-- The three promoted clubs are not in FC 26, so their qualifiers use a stand-in (the club each replaced): Coventry → West Ham United, Ipswich → Burnley, Hull → Wolverhampton. Players win the club slot itself and represent the real club from Gameweek 1.
+- Qualifiers and the season are both played on **EA SPORTS FC 27** (decided 24 Nov 2026, replacing FC 26 for qualifiers). The "26" in ELECTROCUP 26 / EC/26 / EDITION 01 is the edition number, not the game — never change those.
+- All twenty 2026/27 clubs are selectable in FC 27, so no club uses a stand-in.
 - No club crests, kits, club colours or crest placeholders anywhere. Club names in plain text, site palette only.
 
 ## Fees
@@ -36,7 +36,7 @@ ELECTROCUP 26 — Ethiopia's first national FC league, organised by NexGen PLC (
 
 ## Legal and identity
 
-- Footer on every page carries: the EA non-affiliation notice, the Premier League non-affiliation line, "Played on EA SPORTS FC 26 and EA SPORTS FC 27.", and "ELECTROCUP® is a registered trade mark of NexGen PLC, Ethiopia."
+- Footer on every page carries: the EA non-affiliation notice, the Premier League non-affiliation line, "Played on EA SPORTS FC 27.", and "ELECTROCUP® is a registered trade mark of NexGen PLC, Ethiopia."
 - Never use EA or EA SPORTS FC logos. Never imply endorsement by EA, the Premier League or any club.
 - ID collection is **deferred by design**: nothing is collected at sign-up. Entrants confirm their entry with their national ID number **before the Group A draw**, via an authenticated confirm-your-entry flow. Unconfirmed entries are not included in the draw.
 - When collected: hashed server-side only (HMAC-SHA256 keyed with `ID_HASH_SECRET`, via the existing `hashId()` in `src/lib/national-id.ts`), writing `id_hash`. The raw number is never stored, logged, returned, or sent to error reporting.

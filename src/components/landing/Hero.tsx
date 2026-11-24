@@ -100,7 +100,7 @@ function SideRail({ side }: { side: 'left' | 'right' }) {
   return (
     <div style={{ position: 'absolute', top: 'var(--rail-h)', bottom: 0, [side]: 0, width: 28, borderInlineEnd: side === 'left' ? '1px solid var(--line)' : 'none', borderInlineStart: side === 'right' ? '1px solid var(--line)' : 'none', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 18, pointerEvents: 'none' } as React.CSSProperties}>
       <span className="mono" style={{ fontSize: 9, letterSpacing: '.22em', color: 'var(--ink-4)', writingMode: 'vertical-rl', transform: side === 'left' ? 'rotate(180deg)' : 'none' }}>
-        {side === 'left' ? 'ELECTROCUP · 26 · FC26 · NATIONAL EDITION' : 'EARN YOUR CLUB · DRIVE THE PRIZE · 38 GAMEWEEKS'}
+        {side === 'left' ? 'ELECTROCUP · 26 · FC27 · NATIONAL EDITION' : 'EARN YOUR CLUB · DRIVE THE PRIZE · 38 GAMEWEEKS'}
       </span>
     </div>
   );
